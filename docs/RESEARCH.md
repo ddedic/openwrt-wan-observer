@@ -15,6 +15,10 @@ The narrow custom gap is bounded, privacy-minimizing measurement history and por
 
 Compatibility: jq 1.6+ and POSIX shell are the runtime target. OpenWrt SDK packaging and vendor firmware installation must be tested separately. The initial recipe is not evidence of compatibility with every OpenWrt/GL.iNet release. No kernel modules are required.
 
+## Disposable local preview — 2026-11-11
+
+Reuse Python's [HTTP server API](https://docs.python.org/3/library/http.server.html) for a developer-only loopback preview. Upstream explicitly excludes production use. Fixed routes and the existing CLI's validated projection avoid directory serving and duplicate measurement validation. No third-party UI code or runtime dependencies are added; Python is needed only on the development computer, never on the router. The temporary UI is disposable pending the final design. It makes no speed tests or router configuration changes. Synthetic fixtures demonstrate behavior; live collection and router UI integration remain untested and unimplemented.
+
 ## Foundation verification
 
 2026-11-11: nine offline development tests pass. Synthetic normalize/import/list/CSV smoke test passed on a GL-MT6000 with BusyBox1.33.2 and jq1.6. Its jq lacks the optional regex library; timestamp validation uses parsing and round-trip comparison instead. Test files were temporary and removed; no throughput test, daemon or firmware package was installed. SDK compilation and package lifecycle testing remain unverified.
