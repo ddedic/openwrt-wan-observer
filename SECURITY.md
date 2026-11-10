@@ -1,6 +1,6 @@
 # Security and privacy
 
-This is pre-release software. Do not expose a future administration interface publicly. The current CLI has no listener or remote API.
+This is pre-release software. Do not expose a future administration interface publicly. The current CLI has no listener or remote API. The optional desktop preview has a read-only loopback listener; never expose it through a proxy, tunnel or public interface.
 
 Report vulnerabilities using GitHub private vulnerability reporting when available. If it is unavailable, open an issue requesting a private contact channel without disclosing exploit details, credentials or real measurement data.
 

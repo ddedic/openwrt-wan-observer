@@ -1,8 +1,15 @@
 # WAN Observer
 
-Reusable internet-performance history for OpenWrt routers.
+Internet slow again? Keep a history you can inspect, export and discuss with your provider.
 
-**Early development — headless foundation only.** The current package imports existing Ookla JSON, stores a bounded history and exports CSV. Continuous collection, scheduling, a dashboard and printable reports are planned; they are **not implemented yet**. No background service or network test starts on installation.
+[![Offline tests](https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml/badge.svg)](https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+WAN Observer is a lightweight, local-first internet-performance history tool for OpenWrt routers. Built for small devices, with portable exports and no cloud account.
+
+> **Status: experimental.** The router package currently imports existing Ookla JSON and exports CSV. A disposable desktop dashboard is available for testing. Automated measurements, a router dashboard and printable reports are on the roadmap. There are no stable or prebuilt releases yet.
+
+[Try the preview](#dashboard-preview) · [Use the CLI](#try-locally) · [Roadmap](#roadmap) · [Contribute](CONTRIBUTING.md)
 
 The goal is to help people understand recurring connection problems and share useful measurements with their provider. Results are diagnostic records, not certified evidence or proof that a provider breached a contract.
 
@@ -15,6 +22,22 @@ The goal is to help people understand recurring connection problems and share us
 - Retention by imported-record count (default 1,000, maximum 10,000).
 - Allowlisted numeric fields and UTC timestamps; IP/MAC addresses, hostnames, ISP labels, result links and arbitrary backend fields are discarded.
 - CSV export with stable columns.
+
+## Dashboard preview
+
+Requires Python 3.9+ on your development computer. No router connection or speed test is needed:
+
+```sh
+git clone https://github.com/ddedic/openwrt-wan-observer.git
+cd openwrt-wan-observer
+python3 tools/preview.py
+```
+
+Open **http://127.0.0.1:8765**. The default view is prominently labelled **synthetic demo**, with download history, a configurable reference, exact measurements and CSV export. Stop with Ctrl+C.
+
+To inspect your already imported history instead, add `--store /path/to/history`. This reads a local snapshot; Refresh reloads that snapshot. It does not fetch new results from a router. Imported history additionally requires jq.
+
+This temporary developer UI is separate from the OpenWrt package. It listens only on loopback, serves fixed routes, and has no write or test-starting API. Do not deploy it as a production server or expose it through a proxy or tunnel. The final router interface is a later milestone.
 
 ## Try locally
 
@@ -63,3 +86,20 @@ sh -n package/wan-observer/files/wan-observer
 Tests are synthetic and offline. Python is only a development dependency.
 
 See [scope](docs/SCOPE.md), [upstream research](docs/RESEARCH.md) and [contributing](CONTRIBUTING.md). Not affiliated with OpenWrt, GL.iNet, Ookla or any ISP. License: MIT; external tools retain their own licenses.
+
+## Roadmap
+
+| Stage | Status |
+| --- | --- |
+| Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
+| Disposable local dashboard | Available for development; synthetic demo and local history |
+| OpenWrt SDK build and package lifecycle | Not yet verified |
+| Opt-in collection with schedules and bandwidth budgets | Planned |
+| WAN traffic, router load and measurement context | Planned |
+| Router dashboard and printable diagnostic reports | Planned |
+
+See [scope and limitations](docs/SCOPE.md) for the delivery boundaries. Feature requests and small, focused contributions are welcome. Start with [contributing](CONTRIBUTING.md); report vulnerabilities through [private security reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new).
+
+## Maintainer and license
+
+Created and maintained by [Danijel Dedic (@ddedic)](https://github.com/ddedic). Copyright © 2026 Danijel Dedic. Released under the [MIT License](LICENSE).

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WAN Observer · Temporary preview</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body><main><header><p>WAN OBSERVER / DEVELOPMENT PREVIEW</p><h1>Connection history</h1>
+<p id="source" role="status">Loading…</p><p>Temporary dashboard. No tests run from this page. Diagnostic records, not certified evidence.</p></header>
+<section aria-label="Comparison settings"><label>Download reference (Mbps) <input id="reference" type="number" min="1" max="100000" value="100"></label>
+<button id="refresh" type="button">Refresh history</button><button id="export" type="button" disabled>Export displayed CSV</button>
+<p>The reference is a local comparison setting, not a contractual minimum. Default: 100 Mbps.</p></section>
+<p id="summary"></p><figure><canvas id="chart" width="1100" height="280" aria-label="Download throughput chart. Exact values in the table below." role="img"></canvas><figcaption>Download Mbps · dashed line: reference · timestamps in UTC</figcaption></figure>
+<div class="table"><table><caption>Measurements, oldest first</caption><thead><tr><th>Time (UTC)</th><th>Server ID</th><th>Download Mbps</th><th>Upload Mbps</th><th>Idle latency ms</th><th>Loss %</th></tr></thead><tbody id="rows"></tbody></table></div>
+</main></body></html>
