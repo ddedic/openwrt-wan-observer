@@ -1,0 +1,13 @@
+name: Offline tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        run: sh -n package/wan-observer/files/wan-observer
+      - name: Synthetic privacy and behavior tests
+        run: python3 -m unittest discover -s tests -v

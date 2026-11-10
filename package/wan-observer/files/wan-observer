@@ -1,0 +1,75 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# No network access. Input and history are private; exports use an explicit allowlist.
+set -eu
+umask 077
+lib=${WAN_OBSERVER_LIB:-/usr/share/wan-observer}
+store=${WAN_OBSERVER_STORE:-/etc/wan-observer/history}
+limit=${WAN_OBSERVER_MAX_RECORDS:-1000}
+die() { printf '%s\n' "wan-observer: $1" >&2; exit 1; }
+case "$limit" in ''|*[!0-9]*) die 'invalid retention count';; esac
+[ "$limit" -ge 1 ] && [ "$limit" -le 10000 ] || die 'retention must be 1..10000 records'
+command -v jq >/dev/null 2>&1 || die 'jq is required'
+[ "$#" -eq 1 ] || die 'usage: wan-observer normalize-ookla|import-ookla|list|export-csv'
+work=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer.XXXXXX")
+locked=0
+cleanup() {
+  rm -rf "$work"
+  if [ "$locked" = 1 ]; then
+    rm -f "$store/.next"
+    rmdir "$store/.lock" 2>/dev/null || :
+  fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+
+normalize() {
+  head -c 1048577 > "$work/input"
+  [ "$(wc -c < "$work/input")" -le 1048576 ] || die 'input exceeds 1 MiB'
+  jq -L "$lib" -sce 'import "record" as r;
+    if length == 1 then .[0] | r::ookla else error("expected one result") end' \
+    "$work/input" > "$work/record" 2>/dev/null || die 'invalid or incomplete measurement'
+}
+
+read_history() {
+  [ ! -L "$store" ] && [ ! -L "$store/measurements.jsonl" ] || die 'symlink store refused'
+  if [ -f "$store/measurements.jsonl" ]; then
+    [ "$(wc -c < "$store/measurements.jsonl")" -le 16777216 ] || die 'history exceeds 16 MiB'
+    jq -L "$lib" -sce 'import "record" as r; map(r::validate)[]' \
+      "$store/measurements.jsonl" > "$work/history" 2>/dev/null || die 'invalid history; original preserved'
+  else
+    : > "$work/history"
+  fi
+}
+
+case "$1" in
+  normalize-ookla)
+    normalize
+    cat "$work/record"
+    ;;
+  import-ookla)
+    normalize
+    [ ! -L "$store" ] || die 'symlink store refused'
+    mkdir -p "$store"
+    chmod 700 "$store"
+    mkdir "$store/.lock" 2>/dev/null || die 'history locked; another writer or interrupted import'
+    locked=1
+    [ ! -L "$store/.next" ] || die 'symlink staging file refused'
+    read_history
+    cat "$work/history" "$work/record" | tail -n "$limit" > "$store/.next"
+    chmod 600 "$store/.next"
+    mv "$store/.next" "$store/measurements.jsonl"
+    printf '%s\n' 'Measurement imported.'
+    ;;
+  list)
+    read_history
+    cat "$work/history"
+    ;;
+  export-csv)
+    read_history
+    jq -L "$lib" -sr 'import "record" as r; r::fields as $fields |
+      ($fields | @csv), (.[] | . as $row | [$fields[] | $row[.]] | @csv)' "$work/history"
+    ;;
+  *) die 'unknown command';;
+esac
