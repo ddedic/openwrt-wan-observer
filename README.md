@@ -69,7 +69,7 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-Experimental. Version 0.4.4 refines the theme-aware header logo and native alignment. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
+Experimental. Version 0.4.4 refines the theme-aware header logo and native alignment. Planned: WAN traffic, router load and measurement context. Full details: [limitations](docs/TECHNICAL.md#limitations).
 
 > Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and adaptive follow-ups are limited by test count, not by a byte budget.
 
@@ -77,7 +77,6 @@ Experimental. Version 0.4.4 refines the theme-aware header logo and native align
 
 - [Technical guide](docs/TECHNICAL.md) — building IPKs, CLI, OpenWrt SDK, storage, privacy, development
 - [Collector setup and recovery](docs/COLLECTOR.md)
-- [Scope and limitations](docs/SCOPE.md) · [Upstream research](docs/RESEARCH.md)
 
 ## Contributing
 
