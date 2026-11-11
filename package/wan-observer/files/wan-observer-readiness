@@ -13,6 +13,8 @@ fi
 scheduler=missing
 if [ -f "$cron" ] && awk '
   /^[[:space:]]*#/ { next }
+  # A new word beginning # starts a shell comment; attached/escaped # does not.
+  { for (i=8; i<=NF; i++) if (substr($i,1,1) == "#") { NF=i-1; break } }
   # Verify only the documented minute tick, not arbitrary cron expressions.
   (NF == 7 || (NF == 9 && $8 == ">/dev/null" && $9 == "2>&1")) &&
     $1 == "*" && $2 == "*" && $3 == "*" && $4 == "*" && $5 == "*" &&
