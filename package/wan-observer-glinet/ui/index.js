@@ -87,7 +87,7 @@ module.exports = {
         this.refreshTimer=setInterval(this.backgroundRefresh,30000);
         this.refresh();
     },
-    beforeDestroy(){clearInterval(this.refreshTimer);document.removeEventListener('visibilitychange',this.visibility);clearInterval(this.timer);this.disposed=true;this.abort.abort();document.removeEventListener('keydown',this.keys);},
+    beforeDestroy(){clearTimeout(this.busyRetry);clearInterval(this.refreshTimer);document.removeEventListener('visibilitychange',this.visibility);clearInterval(this.timer);this.disposed=true;this.abort.abort();document.removeEventListener('keydown',this.keys);},
     methods:{
         native(name){return !!(this.$options.components&&this.$options.components[name]);},
         backgroundRefresh(){
@@ -98,17 +98,26 @@ module.exports = {
             if(this.disposed)return Promise.resolve();
             if(this.refreshRequest)return this.refreshRequest;
             if(this.running)return Promise.resolve();
+            clearTimeout(this.busyRetry);this.busyRetry=null;
+            let retryBusy=false;
             this.loading=true;
             this.refreshRequest=(async()=>{
                 try{
                     const payload=await api(this.abort.signal);
                     if(this.disposed)return;
                     this.payload=payload;this.version++;
+                    this.busyRefreshCount=payload.collector&&payload.collector.busy?(this.busyRefreshCount||0)+1:0;
+                    retryBusy=!!(payload.collector&&payload.collector.busy);
                     this.error=payload.collector?'':'WAN Observer setup required: configuration is missing or invalid. See the installation guide.';
                     if(payload.collector&&payload.collector.manual_started&&!this.running)this.follow(null);
                 }
                 catch(error){if(!this.disposed)this.error=error.message;}
-                finally{this.loading=false;this.refreshRequest=null;}
+                finally{
+                    this.loading=false;this.refreshRequest=null;
+                    if(retryBusy&&!this.disposed&&!this.running&&!document.hidden&&this.busyRefreshCount<pollLimit){
+                        this.busyRetry=setTimeout(()=>{clearTimeout(this.busyRetry);this.busyRetry=null;this.backgroundRefresh();},pollMs);
+                    }
+                }
             })();
             return this.refreshRequest;
         },
@@ -205,7 +214,7 @@ module.exports = {
         const elapsed=Math.max(0,Math.round((vm.tick-vm.startedAt)/1000));
         const status=vm.running
             ? h('div',{class:'wo-status is-info',attrs:{role:'status'}},[h('span',{class:'wo-spinner',attrs:{'aria-hidden':'true'}}),`Running speed test · ${elapsed} s · uses the full connection for about a minute`])
-            : vm.busy?h('div',{class:'wo-status is-info',attrs:{role:'status'}},'A speed test is running. Results refresh automatically.'):vm.notice?h('div',{class:['wo-status',`is-${vm.notice.kind}`],attrs:{role:'status'}},vm.notice.text):null;
+            : vm.busy?h('div',{class:'wo-status is-info',attrs:{role:'status'}},'Please wait. Results refresh automatically.'):vm.notice?h('div',{class:['wo-status',`is-${vm.notice.kind}`],attrs:{role:'status'}},vm.notice.text):null;
         const current=card('Latest test',[
             done?h('div',{class:'wo-readings'},[
                 reading(mbps(done.down),'Mbps','Download'),
