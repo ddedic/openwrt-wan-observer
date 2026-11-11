@@ -17,7 +17,7 @@ The goal is to help people understand recurring connection problems and share us
 
 Download the matching **wan-observer** and **wan-observer-glinet** IPKs from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases). Install both on compatible GL.iNet SDK4 firmware with `opkg install /path/to/core.ipk /path/to/glinet.ipk`. The packages start no tests on installation. Follow the [collector setup](docs/COLLECTOR.md) to configure a permitted test binary and schedule.
 
-After signing into the router, open **Flow Control → WAN Observer**. Use **Settings** to pause or resume collection, change testing hours and frequency, or toggle adaptive follow-ups. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix. **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins.
+After signing into the router, open **Flow Control → WAN Observer**. Use **Run Speedtest** for one immediate test (also while scheduling is paused). Use **Settings** to pause or resume collection, change testing hours and frequency, toggle adaptive follow-ups, or edit the plan download/upload speeds used for comparisons. The history period controls the charts, test list and exports. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix. **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins.
 
 To build both OpenWrt 21.02-style IPKs on your computer:
 

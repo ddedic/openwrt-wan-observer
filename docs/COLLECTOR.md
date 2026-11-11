@@ -57,10 +57,16 @@ Measurements remain bounded by the importer’s retention count. Sanitized colle
 
 A hard interruption can leave `.lock`. Confirm no collector or its speed-test child is running before removing the empty runtime lock directory. Failed imports preserve the original measurement history. Writes use atomic replacement, not guaranteed power-loss durability. Flash wear, storage-full conditions and firmware package lifecycle still need broader validation.
 
+## Manual tests and plan speeds
+
+`wan-observer-collect run` performs one attempt in the foreground; `start` takes the collector lock and finishes the attempt in a detached child (used by the GL.iNet **Run Speedtest** button). Both use the configured binary, server, interface and timeout, work while scheduled testing is paused or outside the testing window, and record the reason `manual`. They do not change the next scheduled test, follow-up bursts or the daily follow-up allowance; a degraded or failed manual result starts no follow-ups. While any test holds the lock, other runs, ticks and settings changes are rejected; a scheduled test that falls due meanwhile runs on the next tick. `status` reports `busy` and `manual_started`.
+
+The `schedule` command accepts the five schedule fields, optionally with both `download_mbps` and `upload_mbps` (whole numbers 1–100000). Plan-only changes keep the next scheduled time; the collector uses the saved plan for adaptive detection, and the dashboard and reports use it for comparisons.
+
 Pause through the SSH preview or configure `enabled: false`. A running test is allowed to finish; changes during a running test are rejected so the user can retry. To uninstall manual scheduling, remove only the WAN Observer cron entry, then remove the package. Keep/export history first. No other cron entries or network settings need to change.
 
 ## Preview
 
-The dashboard’s schedule controls modify the real collector only in explicit SSH mode. Demo/local-history mode cannot schedule tests. Plan/threshold comparisons are under advanced report settings; changing them locally does not change the collector’s detection threshold. The collector configuration is the authority for automatic detection.
+The dashboard’s schedule controls modify the real collector only in explicit SSH mode. Demo/local-history mode cannot schedule tests. The collector configuration is the authority for automatic detection; the GL.iNet dashboard edits the plan speeds there.
 
-The report summarizes recorded tests, not continuous availability. Slow-result groups and later healthy tests do not prove a continuous outage or sustained recovery. Its print view is a diagnostic report, not regulatory certification.
+The report summarizes recorded tests, not continuous availability. Slow-result groups and later healthy tests do not prove a continuous outage or sustained recovery. The dedicated PDF provides diagnostic records and does not provide regulatory certification.
