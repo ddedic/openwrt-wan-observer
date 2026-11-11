@@ -1,0 +1,14 @@
+{
+  "name": "wan-observer-glinet-ui",
+  "private": true,
+  "scripts": {
+    "build": "esbuild index.js --bundle --minify --legal-comments=external --platform=browser --format=cjs --loader:.css=text --outfile=dist/view.js",
+    "test": "node --test report.test.js"
+  },
+  "dependencies": {
+    "jspdf": "4.2.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}
