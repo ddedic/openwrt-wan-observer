@@ -13,6 +13,7 @@
 </p>
 
 <p align="center">
+  <a href="https://ddedic.github.io/openwrt-wan-observer/"><strong>Website</strong></a> ·
   <a href="https://github.com/ddedic/openwrt-wan-observer/releases"><strong>Download</strong></a> ·
   <a href="#install-on-a-glinet-flint-2">Install</a> ·
   <a href="docs/TECHNICAL.md">Technical guide</a> ·
