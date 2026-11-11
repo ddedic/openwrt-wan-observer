@@ -158,7 +158,10 @@ module.exports = {
             ? h('gl-button',{props:{type,plain,loading,disabled},on:{click}},label)
             : h('button',{class:['wo-btn',`is-${type}`,{'is-plain':plain}],attrs:{type:'button',disabled:disabled||loading},on:{click}},label);
         const chip=(state,text)=>h('span',{class:['wo-chip',`is-${state}`]},[h('i',{attrs:{'aria-hidden':'true'}}),text||names[state]]);
-        const title=vm.native('gl-title')?h('gl-title',{props:{title:'WAN Observer'}}):h('h1',{class:'wo-h1'},'WAN Observer');
+        const mark=h('svg',{class:'wo-mark',attrs:{viewBox:'0 0 64 64',width:28,height:28,'aria-hidden':'true',focusable:'false'}},[
+            h('path',{attrs:{d:'M8 18 20 46 32 24 44 46 52 28',fill:'none',stroke:'currentColor','stroke-width':6,'stroke-linecap':'round','stroke-linejoin':'round'}}),
+            h('circle',{attrs:{cx:57,cy:17,r:4.5,fill:'var(--wo-primary)'}})]);
+        const title=h('div',{class:'wo-brand'},[mark,vm.native('gl-title')?h('gl-title',{props:{title:'WAN Observer'}}):h('h1',{class:'wo-h1'},'WAN Observer')]);
         const head=h('div',{class:'wo-head'},[title,h('div',{class:'wo-head-actions'},c?[
             h('label',{class:'wo-switch-label'},[h('span','Scheduled tests'),vm.native('gl-switch')
                 ? h('gl-switch',{props:{value:c.enabled,disabled:vm.saving},on:{input:vm.toggleSchedule,change:vm.toggleSchedule}})

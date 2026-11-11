@@ -1,8 +1,6 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
-    <img src="docs/assets/logo.svg" alt="WAN Observer" width="363" height="64">
-  </picture>
+  <img src="docs/assets/logo.svg#gh-light-mode-only" alt="WAN Observer" width="363" height="64">
+  <img src="docs/assets/logo-dark.svg#gh-dark-mode-only" alt="WAN Observer" width="363" height="64">
 </p>
 
 <p align="center"><strong>Local speed-test history for your router — so “the internet is slow again” becomes a record you can inspect, export and share with your provider.</strong></p>
@@ -68,12 +66,12 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 
 | Component | Status |
 | --- | --- |
-| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.1) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.2) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
 | Core collector/CLI (`wan-observer`) | Synthetic offline tests; hardware smoke test on Flint 2 |
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-Experimental. Version 0.4.1 includes the native dashboard spacing fix. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
+Experimental. Version 0.4.2 adds the theme-aware application logo and fixes README logo contrast. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
 
 > Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and adaptive follow-ups are limited by test count, not by a byte budget.
 

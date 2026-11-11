@@ -9,6 +9,9 @@
   display:grid;grid-template-columns:minmax(0,1fr);gap:20px;padding-top:20px;color:var(--wo-text);font-size:14px;line-height:1.5
 }
 .wo *{box-sizing:border-box}
+.wo-brand{display:flex;align-items:center;gap:12px;min-width:0;color:var(--wo-title)}
+.wo-brand>:last-child{min-width:0}
+.wo-mark{flex:none;display:block}
 .wo h1,.wo h2,.wo h3,.wo p,.wo ul{margin:0}
 .wo button,.wo input,.wo select{font:inherit}
 .wo :focus-visible{outline:2px solid var(--wo-primary);outline-offset:2px}
