@@ -12,6 +12,9 @@
 .wo-brand{display:flex;align-items:center;gap:12px;min-width:0;color:var(--wo-title)}
 .wo-brand>:last-child{min-width:0}
 .wo-mark{flex:none;display:block}
+/* native gl-title root carries margin:0 16px 14px (scoped #view-title-wrapper); zero it beside the mark, keep the 14px as brand padding so outer geometry is unchanged (h1 fallback untouched) */
+.wo-brand:has(>#view-title-wrapper){padding-bottom:14px}
+.wo-brand>#view-title-wrapper[id]{margin:0}
 .wo h1,.wo h2,.wo h3,.wo p,.wo ul{margin:0}
 .wo button,.wo input,.wo select{font:inherit}
 .wo :focus-visible{outline:2px solid var(--wo-primary);outline-offset:2px}
