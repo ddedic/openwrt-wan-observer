@@ -5,6 +5,7 @@ Notable changes to WAN Observer. Router package versions follow the tags below; 
 ## Unreleased
 
 - Project website at <https://ddedic.github.io/openwrt-wan-observer/>, built from `site/` and published by the `Website` workflow. Router packages are unchanged.
+- Social metadata now describes OpenWrt speed-test history with a native GL.iNet dashboard, and uses a designed 1200×630 preview instead of the raw dashboard capture.
 
 ## 0.5.0 — 2026-11-11
 

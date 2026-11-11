@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir -p _site/assets
           cp site/index.html site/styles.css _site/
-          cp site/assets/manrope-latin-wght.woff2 _site/assets/
+          cp site/assets/manrope-latin-wght.woff2 site/assets/social-preview.png _site/assets/
           cp docs/assets/dashboard.png docs/assets/settings.png \
              docs/assets/logo-dark.svg docs/assets/icon.svg \
              docs/assets/MANROPE-OFL.txt _site/assets/
@@ -39,6 +39,11 @@ jobs:
           missing=0
           for ref in $(grep -oE '(href|src)="(assets/[^"#]+|styles\.css)"' _site/index.html | sed -E 's/^(href|src)="//; s/"$//' | sort -u); do
             [ -f "_site/$ref" ] || { echo "missing: $ref" >&2; missing=1; }
+          done
+          # Social preview URLs are absolute Pages addresses; they must land in _site/assets.
+          for url in $(grep -oE 'https://ddedic.github.io/openwrt-wan-observer/assets/[^"]+' _site/index.html | sort -u); do
+            ref="assets/${url##*/}"
+            [ -f "_site/$ref" ] || { echo "missing: $ref (from $url)" >&2; missing=1; }
           done
           exit $missing
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
