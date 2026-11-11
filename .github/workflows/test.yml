@@ -13,3 +13,11 @@ jobs:
           sh -n package/wan-observer/files/wan-observer-collect
       - name: Synthetic privacy and behavior tests
         run: python3 -m unittest discover -s tests -v
+      - name: Router dashboard and PDF tests
+        working-directory: package/wan-observer-glinet/ui
+        run: |
+          npm ci
+          npm test
+          npm run build
+      - name: Build router IPKs
+        run: python3 tools/build-ipk.py

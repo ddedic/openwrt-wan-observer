@@ -7,11 +7,28 @@ Internet slow again? Keep a history you can inspect, export and discuss with you
 
 WAN Observer is a lightweight, local-first internet-performance history tool for OpenWrt routers. Built for small devices, with portable exports and no cloud account.
 
-> **Status: experimental.** The router package imports results, exports CSV and includes an opt-in adaptive collector. A temporary desktop dashboard shows reports and can control a connected router’s schedule. A native router dashboard is on the roadmap. There are no stable or prebuilt releases yet.
+> **Status: experimental.** The OpenWrt collector records scheduled tests and adaptive follow-ups. The optional GL.iNet SDK4 plugin adds a native dashboard, schedule controls, CSV and a dedicated A4 PDF report. Installed and checked on a GL-MT6000 running 4.11.0.
 
 [Try the preview](#dashboard-preview) · [Use the CLI](#try-locally) · [Roadmap](#roadmap) · [Contribute](CONTRIBUTING.md)
 
 The goal is to help people understand recurring connection problems and share useful measurements with their provider. Results are diagnostic records, not certified evidence or proof that a provider breached a contract.
+
+## GL.iNet Flint 2
+
+Download the matching **wan-observer** and **wan-observer-glinet** IPKs from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases). Install both on compatible GL.iNet SDK4 firmware with `opkg install /path/to/core.ipk /path/to/glinet.ipk`. The packages start no tests on installation. Follow the [collector setup](docs/COLLECTOR.md) to configure a permitted test binary and schedule.
+
+After signing into the router, open **Flow Control → WAN Observer**. Use **Settings** to pause or resume collection, change testing hours and frequency, or toggle adaptive follow-ups. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix. **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins.
+
+To build both OpenWrt 21.02-style IPKs on your computer:
+
+```sh
+npm --prefix package/wan-observer-glinet/ui ci
+npm --prefix package/wan-observer-glinet/ui run build
+npm --prefix package/wan-observer-glinet/ui test
+python3 tools/build-ipk.py
+```
+
+The browser bundle runs inside the GL.iNet admin panel. Generic OpenWrt users can install the collector alone.
 
 ## Available now
 
@@ -37,7 +54,7 @@ Open **http://127.0.0.1:8765**. The default view is prominently labelled **synth
 
 To inspect your already imported history instead, add `--store /path/to/history`. This reads a local snapshot; Refresh reloads that snapshot. It does not fetch new results from a router. Imported history additionally requires jq.
 
-This temporary developer UI is separate from the OpenWrt package. It listens only on loopback, serves fixed routes, and is read-only unless explicitly connected through SSH. In SSH mode its schedule API requires a same-origin request and a per-session token. Do not deploy it as a production server or expose it through a proxy or tunnel. The final router interface is a later milestone.
+This temporary developer UI is separate from the OpenWrt package. It listens only on loopback, serves fixed routes, and is read-only unless explicitly connected through SSH. In SSH mode its schedule API requires a same-origin request and a per-session token. Do not deploy it as a production server or expose it through a proxy or tunnel. The native GL.iNet interface is available separately.
 
 ## Try locally
 
@@ -98,7 +115,7 @@ See [scope](docs/SCOPE.md), [upstream research](docs/RESEARCH.md) and [contribut
 | Opt-in collection with adaptive follow-ups | Available; count caps, no enforced byte budget |
 | WAN traffic, router load and measurement context | Planned |
 | Temporary desktop report and browser printing | Available; final UI pending |
-| Native router dashboard | Planned |
+| GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 |
 
 See [scope and limitations](docs/SCOPE.md) for the delivery boundaries. Feature requests and small, focused contributions are welcome. Start with [contributing](CONTRIBUTING.md); report vulnerabilities through [private security reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new).
 
