@@ -22,3 +22,14 @@ Reuse Python's [HTTP server API](https://docs.python.org/3/library/http.server.h
 ## Foundation verification
 
 2026-11-11: nine offline development tests pass. Synthetic normalize/import/list/CSV smoke test passed on a GL-MT6000 with BusyBox1.33.2 and jq1.6. Its jq lacks the optional regex library; timestamp validation uses parsing and round-trip comparison instead. Test files were temporary and removed; no throughput test, daemon or firmware package was installed. SDK compilation and package lifecycle testing remain unverified.
+
+## Report-focused preview revision — 2026-11-11
+
+Reviewed [Speedtest Tracker features](https://docs.speedtest-tracker.dev/features): charts, filtering, export and thresholds are established patterns. Reuse the existing local preview and native browser APIs instead of adding its server runtime to this disposable prototype. [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) persists only comparison preferences in the browser; failures must be handled. [Print CSS](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Printing) supports a printable report without a PDF service. No upstream source copied. Keep synthetic data visibly identified in print; report counts of observed slow tests, never infer outage duration from sparse samples. Router configuration and scheduling remain outside this temporary report UI.
+
+## Adaptive collector — 2026-11-11
+
+Reviewed [OpenWrt cron service source](https://github.com/openwrt/openwrt/blob/main/package/utils/busybox/files/cron) and [Speedtest Tracker scheduler configuration](https://docs.speedtest-tracker.dev/getting-started/environment-variables). Reuse OpenWrt cron as a once-per-minute trigger with a small serial POSIX-shell collector; a fixed cron expression alone cannot express bounded degradation follow-ups. Installed Ookla 1.2.0.84 supports JSON and interface/server selection; timeout is available on the target. No binary redistribution or terms acceptance. Defaults remain disabled in the public package. Keep persistent bounded history, ephemeral scheduler state, and sanitized execution outcomes. A reboot resets burst/day accounting; document that limitation. Hourly/half-hourly baselines reserve their own runs; extra tests are capped separately. Until WAN context is implemented, low speed is an observation, not attribution to the ISP.
+
+
+Collector dependency checked against [OpenWrt coreutils package source](https://github.com/openwrt/packages/blob/master/utils/coreutils/Makefile): `coreutils-timeout` provides the required timeout/kill-after behavior. No upstream source copied. Verification: 24 offline tests, a real router collection/import smoke test, and browser verification of live history and idempotent schedule save. Degradation/recovery bursts were tested with synthetic backend responses, not by disrupting the real connection. SDK build/install remains unverified.

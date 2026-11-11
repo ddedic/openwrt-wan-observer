@@ -74,3 +74,37 @@ class PreviewTests(unittest.TestCase):
             status, _, body = self.request('/api/measurements')
             self.assertEqual(status, 503)
             self.assertNotIn(b'PRIVATE_BROKEN_HISTORY', body)
+
+
+class ScheduleSecurityTests(unittest.TestCase):
+    def test_remote_config_rejects_executable_fields(self):
+        router = preview.Router('router.example')
+        with self.assertRaises(ValueError):
+            router.configure({'binary': '/tmp/evil'})
+
+    def test_schedule_requires_origin_and_token(self):
+        class FakeRouter:
+            saved = None
+            def load(self):
+                return {'source': 'synthetic', 'measurements': []}
+            def configure(self, patch):
+                self.saved = patch
+        router = FakeRouter()
+        server = preview.make_server(0, None, router)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            host = f'127.0.0.1:{server.server_port}'
+            for token, origin, expected in [('', f'http://{host}', 403),
+                                            (server.token, 'https://evil.example', 403),
+                                            (server.token, f'http://{host}', 200)]:
+                conn = http.client.HTTPConnection(host)
+                conn.request('POST', '/api/schedule', body='{}', headers={
+                    'Content-Type': 'application/json', 'Origin': origin,
+                    'X-Schedule-Token': token})
+                response = conn.getresponse()
+                self.assertEqual(response.status, expected)
+                response.read(); conn.close()
+            self.assertEqual(router.saved, {})
+        finally:
+            server.shutdown(); server.server_close(); thread.join()

@@ -28,3 +28,7 @@ Tests must distinguish direct-WAN, VPN and unknown paths. A low result under con
 ## Public/private boundary
 
 The public project contains generic code, documentation and synthetic examples. Local history and operator configuration are private by default. Exports deliberately trade some diagnostic detail for safer sharing; they are not a guarantee of anonymity. No telemetry or cloud account requirement.
+
+## Current experimental increment — 2026-11-11
+
+The opt-in collector and temporary desktop preview now implement fixed intervals, UTC windows, bounded degradation follow-ups, sanitized failed-attempt events, a report, print view and SSH-backed schedule controls. Public installation still starts no tests automatically. WAN load/context collection, strict byte budgets, native router UI and firmware package lifecycle validation remain outstanding. See [collector operation](COLLECTOR.md).
