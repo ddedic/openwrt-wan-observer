@@ -49,14 +49,23 @@ class ReadinessContracts(unittest.TestCase):
                      '  # * * * * * /usr/bin/wan-observer-collect tick',
                      '* * * * * /usr/bin/wan-observer-collect tick unexpected',
                      '*/1 * * * * /usr/bin/wan-observer-collect tick',
-                     '0 * * * * /usr/bin/wan-observer-collect tick'):
+                     '0 * * * * /usr/bin/wan-observer-collect tick',
+                     '61 * * * * /usr/bin/wan-observer-collect tick # label',
+                     '* * * * * /usr/bin/wan-observer-collect tick unexpected # label',
+                     '* * * * * /usr/bin/wan-observer-collect tick#label',
+                     '* * * * * /usr/bin/wan-observer-collect tick \\#label'):
             with self.subTest(line=line):
                 self.cron.write_text(line+'\n')
                 self.assertEqual(self.status()['status'],'scheduler_missing')
                 self.assertEqual(self.status()['checks']['scheduler'],'missing')
-        self.cron.write_text('  * * * * * /usr/bin/wan-observer-collect tick >/dev/null 2>&1\n')
-        self.assertEqual(self.status()['status'],'ready')
-        self.assertEqual(self.status()['checks']['scheduler'],'installed')
+        for line in ('  * * * * * /usr/bin/wan-observer-collect tick >/dev/null 2>&1',
+                     '* * * * * /usr/bin/wan-observer-collect tick # label',
+                     '* * * * * /usr/bin/wan-observer-collect tick >/dev/null 2>&1 # label',
+                     '* * * * * /usr/bin/wan-observer-collect tick #label command ignored'):
+            with self.subTest(line=line):
+                self.cron.write_text(line+'\n')
+                self.assertEqual(self.status()['status'],'ready')
+                self.assertEqual(self.status()['checks']['scheduler'],'installed')
 
     def test_enabled_requires_binary_and_active_cron(self):
         self.config.write_text(json.dumps(self.value))
