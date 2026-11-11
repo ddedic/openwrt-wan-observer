@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '0.4.4-1'
+VERSION = '0.4.5-1'
 OUT = ROOT / 'dist'
 
 
@@ -29,7 +29,7 @@ def archive(files):
     return gzip.compress(stream.getvalue(), mtime=0)
 
 
-def build(name, description, depends, files):
+def build(name, description, depends, files, conffiles=()):
     data = archive(files)
     control = f'''Package: {name}
 Version: {VERSION}
@@ -41,11 +41,14 @@ License: MIT
 Installed-Size: {sum(len(content) for content, _ in files.values())}
 Description: {description}
 '''.encode()
+    controls = {'control': (control, 0o644)}
+    if conffiles:
+        controls['conffiles'] = ((''.join(path + '\n' for path in conffiles)).encode(), 0o644)
     output = OUT / f'{name}_{VERSION}_all.ipk'
     output.write_bytes(archive({'debian-binary': (b'2.0\n', 0o644),
-                                'control.tar.gz': (archive({'control': (control, 0o644)}), 0o644),
+                                'control.tar.gz': (archive(controls), 0o644),
                                 'data.tar.gz': (data, 0o644)}))
-    print(f'{output.relative_to(ROOT)} ({output.stat().st_size:,} bytes)')
+    print(f'{output.name} ({output.stat().st_size:,} bytes)')
 
 
 def read(path, mode=0o644):
@@ -61,10 +64,14 @@ if __name__ == '__main__':
           'jq, coreutils-timeout', {
               'usr/bin/wan-observer': read(core + 'wan-observer', 0o755),
               'usr/bin/wan-observer-collect': read(core + 'wan-observer-collect', 0o755),
+              'usr/bin/wan-observer-readiness': read(core + 'wan-observer-readiness', 0o755),
+              'usr/bin/wan-observer-quality': read(core + 'wan-observer-quality', 0o755),
+              'usr/share/wan-observer/quality.jq': read(core + 'quality.jq'),
+              'lib/upgrade/keep.d/wan-observer': read(core + 'wan-observer.keep'),
               'usr/share/wan-observer/record.jq': read(core + 'record.jq'),
               'usr/share/wan-observer/collector.jq': read(core + 'collector.jq'),
               'usr/share/licenses/wan-observer/LICENSE': read('LICENSE'),
-          })
+          }, conffiles=['/etc/wan-observer/collector.json'])
     build('wan-observer-glinet', 'GL.iNet dashboard, schedule controls and direct PDF export.',
           'wan-observer, gl-sdk4-ui-core, gl-oui-rpc, lua, lua-cjson, libubus-lua', {
               'www/cgi-bin/wan-observer': read(gl + 'files/wan-observer.cgi', 0o755),

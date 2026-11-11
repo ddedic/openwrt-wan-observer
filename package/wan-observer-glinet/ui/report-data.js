@@ -19,18 +19,34 @@ function reportData(payload, days, now = Date.now()) {
     const config = payload.collector.config;
     const start = now - days * dayMs;
     const events = payload.collector.events || [];
+    // Only a validated durable attempt ID establishes identity; legacy observations stay separate.
+    const stopped = events.filter(e => (e.pending && !payload.collector.busy) || (e.outcome === 'failed' && e.failure_code === 'storage_error'));
+    const storageIssue = stopped.some(e => e.failure_code === 'storage_error');
+    const associated = new Map();
+    const validId = value => typeof value === 'string' && /^[a-f0-9]{32}$/.test(value);
+    const sameAttempt = (record,event) => validId(record.attempt_id) && record.attempt_id === event.attempt_id;
+    for (const event of stopped) {
+        if(event.outcome !== 'failed' || !((event.pending && event.failure_code === 'interrupted') || event.failure_code === 'storage_error'))continue;
+        const records = payload.measurements.filter(record => sameAttempt(record,event));
+        if(records.length === 1 && events.filter(e => sameAttempt(records[0],e)).length === 1)associated.set(event,records[0]);
+    }
+    const integrityWarning = stopped.length > 0;
     const tests = payload.measurements.map(record => {
         const time = Date.parse(record.timestamp);
         const slow = record.download_mbps < config.download_mbps * config.threshold_percent / 100 ||
             record.upload_mbps < config.upload_mbps * config.threshold_percent / 100;
-        const candidates = events.filter(event => event.outcome !== 'failed' &&
-            time >= event.epoch * 1000 && time <= event.epoch * 1000 + 130000);
+        const candidates = events.filter(event => associated.get(event) === record || (event.outcome !== 'failed' &&
+            (validId(record.attempt_id) ? sameAttempt(record,event) : !validId(event.attempt_id) && time >= event.epoch*1000 && time <= event.epoch*1000+130000)));
         return { time, state: slow ? 'sp' : 'ok', down: record.download_mbps,
-            up: record.upload_mbps, latency: record.idle_latency_ms, server: record.server_id,
-            reason: candidates.length === 1 ? candidates[0].reason : '' };
+            up: record.upload_mbps, latency: record.idle_latency_ms ?? null, server: record.server_id ?? null,
+            jitter: record.idle_jitter_ms ?? null, loadedDown: record.download_loaded_latency_ms ?? null,
+            loadedUp: record.upload_loaded_latency_ms ?? null, loss: record.packet_loss_percent ?? null,
+            downloadBytes: record.download_bytes ?? null, uploadBytes: record.upload_bytes ?? null,
+            failureCode: [...associated.entries()].some(([event,value]) => value === record && event.failure_code === 'storage_error') ? 'storage_error' : null,
+            reason: candidates.length === 1 ? candidates[0].reason : '', attemptFinalized: ![...associated.values()].includes(record) };
     });
     for (const event of events) {
-        if (event.outcome === 'failed') tests.push({ time: event.epoch * 1000, state: 'cn', reason: event.reason });
+        if (event.outcome === 'failed' && !associated.has(event) && !(event.pending && payload.collector.busy)) tests.push({ time: event.epoch * 1000, state: 'cn', reason: event.reason, failureCode: ['interrupted','backend_exit','timeout','execution_terminated','invalid_result','storage_error'].includes(event.failure_code) ? event.failure_code : null });
     }
     tests.sort((a, b) => a.time - b.time);
     // Latest readings are current status, independent of the selected period.
@@ -51,9 +67,12 @@ function reportData(payload, days, now = Date.now()) {
         const cells = [];
         for (let time = day; time < day + dayMs; time += slot) {
             const samples = buckets.get(time) || [];
-            const state = samples.reduce((worst,test) => severity[test.state] > severity[worst] ? test.state : worst, 'na');
+            let state = samples.reduce((worst,test) => severity[test.state] > severity[worst] ? test.state : worst, 'na');
             if (state === 'na' && time <= now && time + slot > start) counts.na++;
-            cells.push({time, end: time + slot, state, samples,
+            if (time > now) state = 'fu';
+            const hour = new Date(time).getUTCHours();
+            const scheduled = !!config.enabled && hour >= config.start_hour && hour < config.end_hour;
+            cells.push({time, end: time + slot, state, samples, scheduled,
                 followup: samples.some(sample => sample.reason === 'degradation_followup' || sample.reason === 'manual'),
                 future: time > now, outside: time + slot <= start});
         }
@@ -76,7 +95,10 @@ function reportData(payload, days, now = Date.now()) {
     const completed = selected.filter(test => test.state !== 'cn');
     const headline = !selected.length ? 'No tests recorded in this period' :
         counts.sp || counts.cn ? [counts.sp ? `${counts.sp} slow` : '', counts.cn ? `${counts.cn} failed` : ''].filter(Boolean).join(' and ') + ' tests observed' : 'All recorded tests passed';
-    return { start, now, days, config, latest, latestDone, selected, counts, rows, incidents:incidents.reverse(), completed, headline };
+    const source = payload.collector.coverage;
+    const since = source && Number.isFinite(source.complete_since_epoch) && source.complete_since_epoch > 0 ? Math.max(source.complete_since_epoch, source.retained_from_epoch || 0) * 1000 : null;
+    const coverage = { ...source, since, complete: !!source && !integrityWarning && !source.persistence_error && since > 0 && since <= start };
+    return { storageIssue, integrityWarning, coverage, start, now, days, config, latest, latestDone, selected, counts, rows, incidents:incidents.reverse(), completed, headline };
 }
 // Chart series on a fixed time grid: one value per slot (median of completed tests),
 // null where no completed test exists, so the native line breaks instead of bridging gaps.
@@ -95,7 +117,7 @@ function speedSeries(report, key) {
         times.push(at);
         values.push(done.length ? +quantile(done.map(test => test[key]), .5).toFixed(1) : null);
         states.push(tests.reduce((worst, test) => severity[test.state] > severity[worst] ? test.state : worst, 'na'));
-        counts.push(tests.length);
+        counts.push(done.length);
     }
     // A value with no neighbour cannot form a line segment in a chart without point markers.
     const isolated = values.filter((v, i) => v != null && values[i - 1] == null && values[i + 1] == null).length;
@@ -110,4 +132,10 @@ function usageEstimate({enabled, interval_minutes, start_hour, end_hour, adaptiv
     const gb = n => +(n * exampleMbPerTest / 1000).toFixed(1);
     return { tests, gbDay: gb(tests), gbMonth: Math.round(gb(tests) * 30), extras: adaptive && enabled ? 24 : 0, extrasGb: adaptive && enabled ? gb(24) : 0 };
 }
-module.exports = {usageEstimate, exampleMbPerTest, speedSeries, reportData, quantile, labels, names, reasons, stamp, clock, day, mbps, dayMs};
+function csvContent(report) {
+    const columns = ['timestamp_utc','result','reason','download_mbps','upload_mbps','idle_latency_ms','idle_jitter_ms','download_loaded_latency_ms','upload_loaded_latency_ms','packet_loss_percent','server_id','download_bytes','upload_bytes','failure_code','attempt_finalized','comparison_basis','comparison_download_mbps','comparison_upload_mbps','comparison_threshold_percent','history_complete_for_period','history_complete_since_utc'];
+    const rows = [columns];
+    for (const t of report.selected) rows.push([new Date(t.time).toISOString(),labels[t.state],t.reason,t.down,t.up,t.latency,t.jitter,t.loadedDown,t.loadedUp,t.loss,t.server,t.downloadBytes,t.uploadBytes,t.failureCode,t.attemptFinalized ?? null,'current_settings',report.config.download_mbps,report.config.upload_mbps,report.config.threshold_percent,report.coverage.complete,report.coverage.since ? new Date(report.coverage.since).toISOString() : null]);
+    return rows.map(row => row.map(value => '"' + String(value ?? 'null').replaceAll('"','""') + '"').join(',')).join('\r\n');
+}
+module.exports = {csvContent,usageEstimate, exampleMbPerTest, speedSeries, reportData, quantile, labels, names, reasons, stamp, clock, day, mbps, dayMs};

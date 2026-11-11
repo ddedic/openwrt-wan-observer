@@ -17,11 +17,11 @@ The browser bundle runs inside the GL.iNet admin panel. Generic OpenWrt users ca
 
 ## Using the router page
 
-After signing in, open **Flow Control → WAN Observer**. **Run Speedtest** runs one immediate test (also while scheduling is paused). **Settings** pauses/resumes collection, changes testing hours and frequency, toggles adaptive follow-ups and edits the plan download/upload speeds used for comparisons. The history period controls the charts, test list and exports. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix; **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins.
+After signing in, open **Flow Control → WAN Observer**. **Run Speedtest** runs one immediate test (also while scheduling is paused). **Settings** pauses/resumes collection, changes testing hours and frequency, toggles adaptive follow-ups and edits the plan download/upload speeds used for comparisons. The history period controls the charts, test list and exports. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix; **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins. The visible page refreshes every 30 seconds and when returning to the tab, preserving unsaved settings and manual-test polling. Exports include available jitter, loaded latency, packet loss, actual download/upload bytes and attempt coverage; missing metrics remain unknown.
 
 ## Opt-in adaptive collection
 
-See [collector setup and recovery](COLLECTOR.md). The collector uses an existing operator-installed Ookla CLI and `timeout`; it never installs a binary or accepts its terms for you. A cron tick checks the configured schedule. Low results or failed tests can trigger three five-minute follow-ups, bounded by 24 extras per UTC day. Healthy results stop the burst early. Limits are test counts; there is no enforced byte budget.
+See [collector setup and recovery](COLLECTOR.md). The collector uses an existing operator-installed Ookla CLI and `timeout`; it never installs a binary or accepts its terms for you. A cron tick checks the configured schedule. Low results or failed tests can trigger three five-minute follow-ups, bounded by 24 extras per UTC day. Healthy results stop the burst early. Adaptive limits cap test counts. Optional actual-byte accounting and `monthly_budget_bytes` add a CLI-configured start guard; one allowed test can overshoot it. See [accounting limits](COLLECTOR.md#actual-test-bytes-and-optional-budget).
 
 ## Core behaviour
 
@@ -29,9 +29,10 @@ See [collector setup and recovery](COLLECTOR.md). The collector uses an existing
 - Correct bytes-per-second to Mbps conversion for completed Ookla results.
 - Optional values stay unknown instead of becoming zero.
 - Private local JSONL history, serialized writes and atomic replacement.
-- Retention by imported-record count (default 1,000, maximum 10,000).
-- Allowlisted numeric fields and UTC timestamps; IP/MAC addresses, hostnames, ISP labels, result links and arbitrary backend fields are discarded.
-- CSV export with stable columns.
+- Independent count-based retention for valid measurements and collector attempts (default 1,000 each, maximum 10,000), with explicit incomplete legacy coverage.
+- Allowlisted numeric fields, UTC timestamps, sanitized failure codes and optional opaque collector-generated attempt IDs; IP/MAC addresses, hostnames, ISP labels, result links and arbitrary backend fields are discarded.
+- CSV export includes actual test bytes when available; absent or invalid byte totals remain unknown.
+- Optional native-quality CLI reads an already-enabled GL.iNet 4.11 service without starting probes; [commands and retention](COLLECTOR.md#optional-native-quality-history).
 
 ## CLI (try locally)
 
@@ -58,13 +59,23 @@ Place `package/wan-observer` inside a matching OpenWrt SDK's `package/` director
 make package/wan-observer/compile V=s
 ```
 
-The package installs `/usr/bin/wan-observer` and its jq module. Installation does not run network tests, bundle Ookla software, accept third-party terms, change DNS/firewall/VPN settings, or enable a daemon. The optional collector invokes an operator-provided binary only after explicit configuration and scheduling. The SDK recipe has not yet been validated across firmware releases.
+The package installs the history, collector, readiness and optional native-quality CLIs with their jq modules. Installation does not run network tests, bundle Ookla software, accept third-party terms, change DNS/firewall/VPN settings, or enable a daemon. The optional collector invokes an operator-provided binary only after explicit configuration and scheduling. The SDK recipe has not yet been validated across firmware releases.
 
 ## Storage
 
-Default history location: `/etc/wan-observer/history`. It survives normal restarts on typical writable OpenWrt installations. Firmware upgrade preservation is not implemented yet. Set `WAN_OBSERVER_STORE` to a private directory on persistent external storage if desired. Each import rewrites bounded history; frequent collection increases flash writes. Prefer suitable external storage for long-running deployments.
+Default history location: `/etc/wan-observer/history`. It survives normal restarts on typical writable OpenWrt installations. The package provides native sysupgrade preservation for the default `/etc/wan-observer/` directory; verify the backup contract below on the actual firmware before upgrading. Set `WAN_OBSERVER_STORE` to a private directory on persistent external storage if desired. Each import rewrites bounded history; frequent collection increases flash writes. Prefer suitable external storage for long-running deployments.
 
 Files are mode 0600 and the store directory is mode 0700. Do not point the store at an untrusted directory. A hard interruption can leave `.lock`; after confirming no importer is running, remove that empty directory to recover. Atomic rename reduces partial-file risks but does not guarantee durability during sudden power loss. Package removal intentionally leaves history for the owner to export or remove.
+
+## Backup and restore
+
+The package installs `/lib/upgrade/keep.d/wan-observer`, listing `/etc/wan-observer/`. Standard OpenWrt 21.02 sysupgrade recursively includes existing files there: `collector.json`, measurements, persisted attempt/usage history, native-quality daily files, and future state files in that directory. The package also declares `collector.json` as a conffile but ships no operational configuration, so installing/upgrading the IPK supplies no replacement settings. Runtime locks, in-progress tests and timing state under `/tmp/wan-observer-collector` are excluded.
+
+Before upgrading, stop scheduling and allow any running test to finish. Run `sysupgrade -l` and confirm every desired file under `/etc/wan-observer/` appears. Create a private backup using the firmware's standard `sysupgrade -b /path/to/private-backup.tar.gz`, inspect its file list with `tar -tzf /path/to/private-backup.tar.gz`, and copy it off the router. Keep a separate known-good backup before any restore. A system backup may contain router secrets; store it privately.
+
+Restore a trusted, inspected backup through the matching firmware's supported restore flow (`sysupgrade -r /path/to/private-backup.tar.gz` on standard OpenWrt). This restores system configuration as well as WAN Observer files; it is not a WAN Observer-only importer. Verify configuration and history before explicitly resuming scheduling. Package installation performs no restore and overwrites no operator state.
+
+This keep list follows the [OpenWrt 21.02 sysupgrade implementation](https://github.com/openwrt/openwrt/blob/openwrt-21.02/package/base-files/files/sbin/sysupgrade); it is not proof that every GL.iNet firmware preserves state. Reset/no-keep upgrades discard it. External storage paths selected through environment variables require a separate backup. Packages, the operator's licensed measurement binary, and root cron policy require their own preservation/reinstallation checks. No firmware flash, reboot, or hardware restore has been validated by the offline lifecycle tests.
 
 ## Privacy
 
@@ -92,10 +103,15 @@ Use that exact address for schedule saves. Credentials remain with SSH; no key i
 
 ## Development
 
+Install a POSIX shell, jq, Python 3, Node/npm, Lua 5.1 and its matching lua-cjson module. On Debian/Ubuntu, `sudo apt-get install jq lua5.1 lua-cjson` supplies the CGI test dependencies. CGI tests execute the actual Lua entry point with real cjson and synthetic ubus/process boundaries; they do not need a router.
+
 ```sh
 python3 -m unittest discover -s tests -v
 sh -n package/wan-observer/files/wan-observer
 sh -n package/wan-observer/files/wan-observer-collect
+sh -n package/wan-observer/files/wan-observer-readiness
+sh -n package/wan-observer/files/wan-observer-quality
+luac5.1 -p package/wan-observer-glinet/files/wan-observer.cgi
 npm --prefix package/wan-observer-glinet/ui test
 ```
 
@@ -104,8 +120,9 @@ Tests are synthetic and offline. Python is only a development dependency.
 ## Limitations
 
 - Speed tests are samples. Gaps are unmeasured time; failed tests do not establish an outage or its cause.
-- Concurrent traffic, VPN routing, server choice and router load can affect results. WAN traffic and router-load context are not recorded yet.
-- Adaptive limits cap test counts, not bytes. The displayed data-use estimate is illustrative.
+- Concurrent traffic, VPN routing, server choice and router load can affect results. Whole-router traffic and router-load context are not recorded.
+- Actual test-byte accounting is partial; unknown attempts block a configured budget. A start guard permits one-test overshoot and does not cap whole-router data use. The displayed data-use estimate is illustrative.
+- Optional native-quality snapshots have unknown source freshness and do not prove throughput or outage duration. Monitoring and byte-budget dashboard controls are not implemented.
 - Reports support troubleshooting; they are not certified measurements or findings of a contract breach.
 - Native integration was checked on Flint 2 firmware 4.11.0. Other firmware releases, mobile behavior and firmware-upgrade preservation need further validation.
 
@@ -115,7 +132,8 @@ Tests are synthetic and offline. Python is only a development dependency.
 | --- | --- |
 | Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
 | GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 (0.4.4) |
-| Opt-in collection with adaptive follow-ups | Available; count caps, no enforced byte budget |
+| Opt-in collection with adaptive follow-ups | Count caps and optional CLI byte start guard; partial accounting |
 | Disposable local dashboard and browser printing | Developer-only |
 | OpenWrt SDK build and package lifecycle | Not yet verified |
-| WAN traffic, router load and measurement context | Planned |
+| Native-quality history | Optional GL.iNet 4.11 CLI; no probes or automatic scheduling |
+| Whole-router traffic and router load | Planned |

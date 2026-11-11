@@ -36,8 +36,9 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 - **Schedules you control** — pause/resume, testing hours and frequency. An illustrative daily/monthly data estimate is shown *before* you enable unattended tests.
 - **Your plan as the baseline** — editable plan download/upload speeds; charts and results compare against them.
 - **Optional adaptive follow-ups** — opt in to up to 3 extra tests, 5 minutes apart, after a slow or failed test; capped at 24 extras per UTC day.
-- **Exports** — direct A4 PDF report (optional detailed appendix) and CSV for the selected period.
-- **Bounded history** — count-based retention (default 1,000, max 10,000 records); private files, atomic writes.
+- **Current history and exports** — the visible dashboard refreshes automatically; PDF and CSV include available latency, jitter, packet loss, loaded latency and actual test bytes.
+- **Bounded history** — retain valid measurements and successful/failed attempts independently (default 1,000 each, max 10,000), with explicit incomplete legacy coverage.
+- **Optional CLI tools** — native-quality history and actual test-byte accounting, with an optional monthly start guard. Neither is enabled during installation; [setup and limits](docs/COLLECTOR.md).
 - **Small footprint** — POSIX shell + jq on the router. No Python, database or container.
 - **Privacy by allowlist** — IP/MAC addresses, hostnames, ISP labels and result links are discarded on import.
 
@@ -64,14 +65,14 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 
 | Component | Status |
 | --- | --- |
-| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.4) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.5) | Reliability changes verified offline; earlier 0.4.4 installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
 | Core collector/CLI (`wan-observer`) | Synthetic offline tests; hardware smoke test on Flint 2 |
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-Experimental. Version 0.4.4 refines the theme-aware header logo and native alignment. Planned: WAN traffic, router load and measurement context. Full details: [limitations](docs/TECHNICAL.md#limitations).
+Experimental. Version 0.4.5 improves attempt history, automatic refresh and exports, with optional CLI quality history and byte accounting. Monitoring/budget dashboard controls and further visual changes are pending. Full details: [limitations](docs/TECHNICAL.md#limitations).
 
-> Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and adaptive follow-ups are limited by test count, not by a byte budget.
+> Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and the optional byte budget checks whether another test may start. One test can exceed it; accounting covers recorded test bytes, not all router traffic.
 
 ## Documentation
 

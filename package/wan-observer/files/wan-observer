@@ -28,7 +28,10 @@ normalize() {
   head -c 1048577 > "$work/input"
   [ "$(wc -c < "$work/input")" -le 1048576 ] || die 'input exceeds 1 MiB'
   jq -L "$lib" -sce 'import "record" as r;
-    if length == 1 then .[0] | r::ookla else error("expected one result") end' \
+    if length == 1 then .[0] | r::ookla |
+      .attempt_id=(if (env|has("WAN_OBSERVER_ATTEMPT_ID"))
+        then env.WAN_OBSERVER_ATTEMPT_ID | r::attempt_id else null end)
+    else error("expected one result") end' \
     "$work/input" > "$work/record" 2>/dev/null || die 'invalid or incomplete measurement'
 }
 

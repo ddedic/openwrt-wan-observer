@@ -4,13 +4,32 @@ permissions:
   contents: read
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Offline tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install offline test dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq lua5.1 lua-cjson
+      - name: Verify jq runtime compatibility
+        run: |
+          jq --version
+          if [ '${{ matrix.os }}' = 'ubuntu-22.04' ]; then
+            case "$(jq --version)" in
+              jq-1.6|jq-1.6-*) ;;
+              *) echo 'Ubuntu 22.04 must exercise jq 1.6 compatibility' >&2; exit 1 ;;
+            esac
+          fi
       - name: Shell syntax
         run: |
           sh -n package/wan-observer/files/wan-observer
           sh -n package/wan-observer/files/wan-observer-collect
+          sh -n package/wan-observer/files/wan-observer-readiness
+          sh -n package/wan-observer/files/wan-observer-quality
+          luac5.1 -p package/wan-observer-glinet/files/wan-observer.cgi
       - name: Synthetic privacy and behavior tests
         run: python3 -m unittest discover -s tests -v
       - name: Router dashboard and PDF tests

@@ -1,5 +1,5 @@
 const css = require('./view.css');
-const {reportData,quantile,labels,names,reasons,stamp,clock,day,mbps,usageEstimate,exampleMbPerTest,speedSeries} = require('./report-data');
+const {csvContent,reportData,quantile,labels,names,reasons,stamp,clock,day,mbps,usageEstimate,exampleMbPerTest,speedSeries} = require('./report-data');
 const {createPDF} = require('./pdf');
 const endpoint = '/cgi-bin/wan-observer';
 const pollMs = 4000, pollLimit = 45; // bounded wait: 3 minutes covers the 130 s collector cap
@@ -25,9 +25,7 @@ function wait(ms, signal) {
     return new Promise(resolve => { const id=setTimeout(resolve,ms); signal.addEventListener('abort',()=>{clearTimeout(id);resolve();},{once:true}); });
 }
 function downloadCsv(report) {
-    const rows = [['timestamp_utc','result','reason','download_mbps','upload_mbps','idle_latency_ms','server_id']];
-    for(const t of report.selected) rows.push([new Date(t.time).toISOString(),labels[t.state],t.reason,t.down,t.up,t.latency,t.server]);
-    const content = rows.map(row=>row.map(value=>'"'+String(value??'').replaceAll('"','""')+'"').join(',')).join('\r\n');
+    const content = csvContent(report);
     const url = URL.createObjectURL(new Blob([content],{type:'text/csv;charset=utf-8'}));
     const link = document.createElement('a');link.href=url;link.download='wan-observer-measurements.csv';link.click();
     setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -73,9 +71,9 @@ module.exports = {
     data:()=>({payload:null,error:'',days:7,loading:false,running:false,notice:null,version:0,
         showAll:false,issuesOnly:false,startedAt:0,tick:0,sheet:'',form:null,saveError:'',saving:false,appendix:false,exportError:'',accent:''}),
     computed:{
-        report(){return this.payload?reportData(this.payload,this.days):null;},
-        config(){return this.payload&&this.payload.collector.config;},
-        busy(){return !!(this.payload&&this.payload.collector.busy);},
+        report(){return this.payload&&this.payload.collector?reportData(this.payload,this.days):null;},
+        config(){return this.payload&&this.payload.collector&&this.payload.collector.config;},
+        busy(){return !!(this.payload&&this.payload.collector&&this.payload.collector.busy);},
         usage(){return this.form&&usageEstimate({...this.form,interval_minutes:Number(this.form.interval_minutes),start_hour:Number(this.form.start_hour),end_hour:Number(this.form.end_hour)});},
     },
     created(){this.abort=new AbortController();},
@@ -84,20 +82,40 @@ module.exports = {
         this.accent=getComputedStyle(this.$el).getPropertyValue('--primary').trim()||'#3b6cf0';
         this.keys=event=>{if(event.key==='Escape'&&this.sheet)this.close();};
         document.addEventListener('keydown',this.keys);
+        this.visibility=()=>{if(!document.hidden)this.backgroundRefresh();};
+        document.addEventListener('visibilitychange',this.visibility);
+        this.refreshTimer=setInterval(this.backgroundRefresh,30000);
         this.refresh();
     },
-    beforeDestroy(){clearInterval(this.timer);this.disposed=true;this.abort.abort();document.removeEventListener('keydown',this.keys);},
+    beforeDestroy(){clearInterval(this.refreshTimer);document.removeEventListener('visibilitychange',this.visibility);clearInterval(this.timer);this.disposed=true;this.abort.abort();document.removeEventListener('keydown',this.keys);},
     methods:{
         native(name){return !!(this.$options.components&&this.$options.components[name]);},
-        async refresh(){
-            if(this.loading)return;
+        backgroundRefresh(){
+            if(this.disposed||document.hidden||this.running||this.saving)return;
+            return this.refresh();
+        },
+        refresh(){
+            if(this.disposed)return Promise.resolve();
+            if(this.refreshRequest)return this.refreshRequest;
+            if(this.running)return Promise.resolve();
             this.loading=true;
-            try{this.payload=await api(this.abort.signal);this.version++;this.error='';if(this.payload.collector.manual_started&&!this.running)this.follow(null);}
-            catch(error){if(!this.disposed)this.error=error.message;}
-            finally{this.loading=false;}
+            this.refreshRequest=(async()=>{
+                try{
+                    const payload=await api(this.abort.signal);
+                    if(this.disposed)return;
+                    this.payload=payload;this.version++;
+                    this.error=payload.collector?'':'WAN Observer setup required: configuration is missing or invalid. See the installation guide.';
+                    if(payload.collector&&payload.collector.manual_started&&!this.running)this.follow(null);
+                }
+                catch(error){if(!this.disposed)this.error=error.message;}
+                finally{this.loading=false;this.refreshRequest=null;}
+            })();
+            return this.refreshRequest;
         },
         async runSpeedtest(){
-            if(this.running||!this.payload||this.busy)return;
+            if(this.running||!this.payload||!this.payload.collector||this.busy)return;
+            if(this.refreshRequest)await this.refreshRequest;
+            if(this.disposed||this.running||!this.payload||!this.payload.collector||this.busy)return;
             const known=new Set(this.payload.collector.events.filter(e=>e.reason==='manual').map(e=>e.epoch));
             this.running=true;this.notice={kind:'info',text:'Starting speed test…'};
             try{await api(this.abort.signal,{action:'run_speedtest'});}
@@ -105,13 +123,15 @@ module.exports = {
             this.follow(known);
         },
         async follow(known){
+            if(this.refreshRequest)await this.refreshRequest;
+            if(this.disposed)return;
             this.running=true;this.notice=null;this.startedAt=Date.now();this.tick=this.startedAt;
             clearInterval(this.timer);this.timer=setInterval(()=>{this.tick=Date.now();},1000);
             let event, data=this.payload;
             for(let i=0;i<pollLimit&&!this.disposed;i++){
                 await wait(pollMs,this.abort.signal);
                 if(this.disposed)return;
-                try{data=await api(this.abort.signal);}catch(error){continue;}
+                try{const next=await api(this.abort.signal);if(this.disposed)return;if(!next.collector)continue;data=next;}catch(error){continue;}
                 if(data.collector.busy)continue;
                 event=data.collector.events.filter(e=>e.reason==='manual'&&!(known||new Set()).has(e.epoch)).at(-1);
                 break;
@@ -141,7 +161,7 @@ module.exports = {
             if(patch.start_hour>=patch.end_hour){this.saveError='End hour must be later than start hour.';return;}
             if(![patch.download_mbps,patch.upload_mbps].every(v=>Number.isInteger(v)&&v>=1&&v<=100000)){this.saveError='Plan speeds must be whole numbers from 1 to 100000 Mbps.';return;}
             this.saving=true;
-            try{await api(this.abort.signal,patch);await this.refresh();if(!values)this.sheet='';
+            try{if(this.refreshRequest)await this.refreshRequest;if(this.disposed)return;await api(this.abort.signal,patch);await this.refresh();if(!values)this.sheet='';
                 this.notice={kind:'ok',text:patch.enabled?`Settings saved · full test every ${every(patch.interval_minutes)}`:'Scheduled tests paused · Run Speedtest still works'};}
             catch(error){if(values)this.notice={kind:'error',text:error.message};else this.saveError=error.message;}
             finally{this.saving=false;}
@@ -169,15 +189,23 @@ module.exports = {
             button('Settings',{plain:true,click:()=>vm.openSettings()}),
             button(vm.running?'Testing…':'Run Speedtest',{type:'primary',loading:vm.running,disabled:vm.busy&&!vm.running,click:vm.runSpeedtest}),
         ]:[])]);
-        if(!r)return h('div',{class:'wo'},[head,card('',[h('div',{class:'wo-state'},vm.error?[h('p',{class:'wo-error'},vm.error),button('Try again',{plain:true,loading:vm.loading,click:vm.refresh})]:[h('p',{class:'wo-muted'},'Loading measurement history…')])])]);
+        if(!r)return h('div',{class:'wo'},[head,card('',[h('div',{class:'wo-state'},vm.error?[h('p',{class:'wo-error'},vm.error),vm.payload&&!vm.payload.collector?h('a',{attrs:{href:'https://github.com/ddedic/openwrt-wan-observer#install-on-a-glinet-flint-2',target:'_blank',rel:'noopener noreferrer'}},'Installation guide'):null,button('Try again',{plain:true,loading:vm.loading,click:vm.refresh})]:[h('p',{class:'wo-muted'},'Loading measurement history…')])])]);
 
         // 1. Current status: the latest test regardless of period, with inline Run/Save feedback.
         const done=r.latestDone, latest=r.latest, u=usageEstimate(c);
+        const prerequisite = {
+            scheduler_stopped:'Scheduled testing is unavailable: the scheduler is not running. Start the scheduler using the installation guide.',
+            scheduler_missing:'Scheduled testing is unavailable: the scheduler entry is not installed. Repair setup using the installation guide.',
+            binary_missing:'Speed testing is unavailable: the Speedtest binary is not installed. Complete setup using the installation guide.',
+            collector_unavailable:'Testing status is unavailable. Repair the collector using the installation guide.',
+        }[vm.payload.readiness && vm.payload.readiness.status];
+        const warnings = [vm.error ? 'Could not refresh. Displayed history may be stale; retry when the router is reachable.' : '', prerequisite,
+            r.integrityWarning ? (r.storageIssue ? 'A storage issue prevented attempt finalization. Saved readings are retained; attempt coverage is incomplete.' : 'Attempt history was not finalized. Saved readings are retained; attempt coverage is incomplete.') : ''].filter(Boolean);
         const reading=(value,unit,label)=>h('div',{class:'wo-reading'},[h('div',{class:'wo-value'},[String(value),h('small',` ${unit}`)]),h('div',{class:'wo-label'},label)]);
         const elapsed=Math.max(0,Math.round((vm.tick-vm.startedAt)/1000));
         const status=vm.running
             ? h('div',{class:'wo-status is-info',attrs:{role:'status'}},[h('span',{class:'wo-spinner',attrs:{'aria-hidden':'true'}}),`Running speed test · ${elapsed} s · uses the full connection for about a minute`])
-            : vm.notice?h('div',{class:['wo-status',`is-${vm.notice.kind}`],attrs:{role:'status'}},vm.notice.text):null;
+            : vm.busy?h('div',{class:'wo-status is-info',attrs:{role:'status'}},'A speed test is running. Results refresh automatically.'):vm.notice?h('div',{class:['wo-status',`is-${vm.notice.kind}`],attrs:{role:'status'}},vm.notice.text):null;
         const current=card('Latest test',[
             done?h('div',{class:'wo-readings'},[
                 reading(mbps(done.down),'Mbps','Download'),
@@ -187,8 +215,9 @@ module.exports = {
                     latest.state==='cn'&&done!==latest?h('div',{class:'wo-label'},`Readings from ${day(done.time)}, ${clock(done.time)}`):null]),
             ]):h('div',{class:'wo-state'},[h('p',latest?'The latest test failed, so there is no speed reading yet.':'No speed test recorded yet.'),h('p',{class:'wo-muted'},'Press Run Speedtest for a first reading.')]),
             status,
-            h('div',{class:'wo-schedule'},[h('span',c.enabled?`Full test every ${every(c.interval_minutes)}, ${hours(c)}${c.adaptive?', with follow-ups':''}`:'Scheduled tests paused'),
-                h('span',{class:'wo-muted'},c.enabled?`About ${u.gbDay} GB/day, assuming an example ${exampleMbPerTest} MB per test`:'No scheduled data use')]),
+            warnings.length?h('div',{class:'wo-status is-warn',attrs:{role:'status'}},warnings.join(' ')):null,
+            h('div',{class:'wo-schedule'},[h('span',prerequisite?'Scheduled testing needs attention':c.enabled?`Full test every ${every(c.interval_minutes)}, ${hours(c)}${c.adaptive?', with follow-ups':''}`:'Scheduled tests paused'),
+                h('span',{class:'wo-muted'},prerequisite?'See the installation guide':c.enabled?`About ${u.gbDay} GB/day, assuming an example ${exampleMbPerTest} MB per test`:'No scheduled data use')]),
         ],'wo-current');
 
         // 2. History: one period selector governs the summary, both charts, the test list and Export.
@@ -220,7 +249,7 @@ module.exports = {
                     h('div',{class:'wo-label'},median==null?`Plan ${s.plan} Mbps`:`${Math.round(median/s.plan*100)}% of ${s.plan} Mbps plan`)]),
                 h('div',{class:['wo-chart',{'is-chart':drawn}]},[body]),
                 drawn&&h('div',{class:'wo-chart-foot'},[h('span',{class:'wo-key'},[h('i',{style:{background:vm.accent}}),'Measured']),h('span',{class:'wo-key'},[h('i',{class:'is-plan'}),'Plan']),
-                    h('span',{class:'wo-muted'},s.isolated&&s.measured-s.isolated>=2?`${s.isolated} single ${s.isolated===1?'test':'tests'} not drawn · see list`:'Gaps mean no test')]),
+                    h('span',{class:'wo-muted'},s.isolated&&s.measured-s.isolated>=2?`${s.isolated} single ${s.isolated===1?'test':'tests'} not drawn · see list`:'Gaps mean no completed measurement')]),
             ],'wo-chart-card');
         };
 
@@ -237,7 +266,7 @@ module.exports = {
 
         const about=h('details',{class:'wo-about'},[h('summary','How to read these results'),h('ul',[
             h('li',`Good means download and upload reached at least ${c.threshold_percent}% of the ${c.download_mbps}/${c.upload_mbps} Mbps plan. Slow means either did not. Failed means no result was recorded; the cause is unknown.`),
-            h('li','Charts connect consecutive tests only. Speed between tests is not measured, and gaps mean no test ran.'),
+            h('li','Charts connect consecutive measured slots only. Speed between tests is not measured. Empty slots can include failed attempts.'),
             h('li','Full tests use real bandwidth, so an occasional schedule is enough to show patterns. Times are UTC.'),
         ])]);
 
