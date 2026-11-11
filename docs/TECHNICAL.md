@@ -101,12 +101,20 @@ npm --prefix package/wan-observer-glinet/ui test
 
 Tests are synthetic and offline. Python is only a development dependency.
 
+## Limitations
+
+- Speed tests are samples. Gaps are unmeasured time; failed tests do not establish an outage or its cause.
+- Concurrent traffic, VPN routing, server choice and router load can affect results. WAN traffic and router-load context are not recorded yet.
+- Adaptive limits cap test counts, not bytes. The displayed data-use estimate is illustrative.
+- Reports support troubleshooting; they are not certified measurements or findings of a contract breach.
+- Native integration was checked on Flint 2 firmware 4.11.0. Other firmware releases, mobile behavior and firmware-upgrade preservation need further validation.
+
 ## Roadmap
 
 | Stage | Status |
 | --- | --- |
 | Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
-| GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 (0.4.1) |
+| GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 (0.4.4) |
 | Opt-in collection with adaptive follow-ups | Available; count caps, no enforced byte budget |
 | Disposable local dashboard and browser printing | Developer-only |
 | OpenWrt SDK build and package lifecycle | Not yet verified |
