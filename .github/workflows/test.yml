@@ -13,7 +13,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install offline test dependencies
-        run: sudo apt-get update && sudo apt-get install -y jq lua5.1 lua-cjson
+        timeout-minutes: 15
+        # Runner DNS to Ubuntu mirrors fails transiently; retry the whole install.
+        run: |
+          apt_opts='-o Acquire::Retries=5 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30'
+          for attempt in 1 2 3 4; do
+            if sudo apt-get $apt_opts update && sudo apt-get $apt_opts install -y jq lua5.1 lua-cjson; then
+              exit 0
+            fi
+            echo "apt attempt $attempt failed; retrying in $((attempt * 30))s" >&2
+            sleep $((attempt * 30))
+          done
+          exit 1
       - name: Verify jq runtime compatibility
         run: |
           jq --version
