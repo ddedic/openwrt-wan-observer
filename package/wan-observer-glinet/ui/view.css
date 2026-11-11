@@ -9,7 +9,7 @@
   display:grid;grid-template-columns:minmax(0,1fr);gap:20px;padding-top:20px;color:var(--wo-text);font-size:14px;line-height:1.5
 }
 .wo *{box-sizing:border-box}
-.wo-brand{display:flex;align-items:center;gap:12px;min-width:0;color:var(--wo-title)}
+.wo-brand{display:flex;align-items:center;gap:10px;min-width:0;color:var(--wo-title)}
 .wo-brand>:last-child{min-width:0}
 .wo-mark{flex:none;display:block}
 /* native gl-title root carries margin:0 16px 14px (scoped #view-title-wrapper); zero it beside the mark, keep the 14px as brand padding so outer geometry is unchanged (h1 fallback untouched) */

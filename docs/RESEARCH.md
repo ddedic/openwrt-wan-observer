@@ -87,3 +87,7 @@ Reuse the existing original SVG mark in the native title, with host theme colour
 - Source (read-only, installed Flint firmware `/www/js/app.ab987315.js.gz`): `gl-title` renders `div#view-title-wrapper > div.title + div(slot)`; scoped CSS `#view-title-wrapper[data-v-0d29ad7a]{min-height:36px;display:flex;align-items:center;…;margin:0 16px 14px}`, `.title{font-size:22px;font-weight:700;margin-right:10px}`.
 - Cause: in `.wo-brand` (flex, centred, gap 12px) the wrapper's 16px left margin widened the gap to ~28px, and its 14px bottom margin made the centred margin box sit the title 7px above the 28px mark.
 - Decision: reuse native `gl-title` unchanged; adapt only container CSS — `.wo-brand>#view-title-wrapper[id]{margin:0}` (specificity beats the scoped rule) and move the 14px to `.wo-brand:has(>#view-title-wrapper){padding-bottom:14px}` (h1 fallback untouched) so header height/spacing are unchanged. No JS change.
+
+## 2026-11-11 — Approved larger header mark
+
+Reuse the existing SVG path and native GL title integration documented above. Owner approved Opus’s 45×30px treatment: crop viewBox to the drawing (4 10.5 60 40), stroke 5.5 units, dot radius 5, title gap 10px. This corrects excessive internal SVG whitespace without a new component, font or runtime dependency. Existing native title margin fix is retained.
