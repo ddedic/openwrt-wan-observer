@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '0.4.5-3'
+VERSION = '0.5.0-1'
 OUT = ROOT / 'dist'
 
 
@@ -78,4 +78,7 @@ if __name__ == '__main__':
               'usr/share/oui/menu.d/wan-observer.json': read(gl + 'files/menu.json'),
               'www/views/gl-sdk4-ui-wan-observer.common.js.gz': (gzip.compress(bundle, mtime=0), 0o644),
               'usr/share/licenses/wan-observer-glinet/browser-bundle.txt': read(gl + 'ui/dist/view.js.LEGAL.txt'),
+              'usr/share/licenses/wan-observer-glinet/octicons.txt': read(gl + 'files/OCTICONS-LICENSE.txt'),
+              'usr/share/licenses/wan-observer-glinet/THIRD_PARTY_NOTICES.md': read('THIRD_PARTY_NOTICES.md'),
+              'usr/share/licenses/wan-observer-glinet/LICENSE': read('LICENSE'),
           })

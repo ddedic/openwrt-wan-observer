@@ -5,6 +5,7 @@ import subprocess
 import shutil
 import tempfile
 import time
+from datetime import datetime, timezone
 import unittest
 from test_cli import fixture
 
@@ -202,6 +203,133 @@ class CollectorTests(unittest.TestCase):
             self.assertNotEqual(r.returncode,0)
             self.assertNotIn('PRIVATE_UUID',r.stdout+r.stderr)
             self.assertEqual(len(self.status()['events']),1)
+
+    def test_optional_defaults_do_not_rewrite_or_retime_legacy_configuration(self):
+        self.configure();self.run_cli('tick')
+        raw=dict(self.config);raw.pop('monthly_budget_bytes',None)
+        path=self.path/'config.json';path.write_text(json.dumps(raw))
+        original=path.read_bytes();before=self.status()['next_epoch'];normal=self.status()['next_normal']
+        status=self.status()
+        self.assertFalse(status['config'].get('quality_history_enabled',True))
+        self.assertEqual(status['config'].get('window_timezone'),'UTC')
+        self.assertEqual(path.read_bytes(),original)
+        r=self.run_cli('configure',value=self.config)
+        self.assertEqual(r.returncode,0,r.stderr)
+        self.assertEqual(path.read_bytes(),original)
+        self.assertEqual(self.status()['next_epoch'],before)
+        self.assertEqual(self.status()['next_normal'],normal)
+
+    def test_extended_schedule_patch_validation_and_old_clients_preserve_options(self):
+        initial=fixture();initial['download']['bytes']=120;initial['upload']['bytes']=30
+        (self.path/'result').write_text(json.dumps(initial))
+        self.configure();self.run_cli('tick');before=self.status()['next_epoch']
+        patch=dict(enabled=True,adaptive=True,interval_minutes=30,start_hour=0,end_hour=24)
+        expanded=dict(patch,threshold_percent=90,monthly_budget_bytes=123456,
+                      quality_history_enabled=True,window_timezone='router')
+        r=self.run_cli('schedule',value=expanded)
+        self.assertEqual(r.returncode,0,r.stderr)
+        self.assertEqual(self.status()['next_epoch'],before)  # all-day timezone edits do not retime
+        self.run_cli('tick')
+        before=self.status()['next_epoch']
+        for bad in [dict(expanded,quality_history_enabled=1),dict(expanded,window_timezone='Europe/Vienna'),
+                    dict(expanded,threshold_percent=0),dict(expanded,monthly_budget_bytes=-1),
+                    dict(expanded,binary='/tmp/no'),dict(expanded,download_mbps=250),
+                    dict(expanded,start_hour=5,end_hour=5)]:
+            self.assertNotEqual(self.run_cli('schedule',value=bad).returncode,0)
+        self.assertEqual(self.run_cli('configure',value=self.config).returncode,0)
+        config=self.status()['config']
+        self.assertTrue(config['quality_history_enabled'])
+        self.assertEqual(config['window_timezone'],'router')
+        self.assertEqual(config['monthly_budget_bytes'],123456)
+        self.assertEqual(self.status()['next_epoch'],before)
+        self.assertEqual(self.run_cli('schedule',value=dict(expanded,threshold_percent=70)).returncode,0)
+        self.assertEqual(self.status()['next_epoch'],before)
+        bad=fixture();bad['download']['bandwidth']=10000000
+        bad['download']['bytes']=120;bad['upload']['bytes']=30
+        (self.path/'result').write_text(json.dumps(bad))
+        self.assertEqual(self.run_cli('run').returncode,0)
+        self.assertEqual(self.status()['events'][-1]['outcome'],'healthy')
+        self.assertEqual(self.run_cli('schedule',value=expanded).returncode,0)
+        self.assertEqual(self.run_cli('run').returncode,0)
+        self.assertEqual(self.status()['events'][-1]['outcome'],'degraded')
+
+    def test_long_intervals_and_overnight_window_keep_utc_epoch_grid(self):
+        self.config.update(adaptive=False,start_hour=22,end_hour=6)
+        for interval in [180,240,360,720]:
+            self.config['interval_minutes']=interval
+            self.configure()
+        self.config['interval_minutes']=180;self.configure()
+        base=1767225600
+        self.assertEqual(self.run_cli('tick',base+21*3600).returncode,0)
+        self.assertEqual(self.status()['events'],[])
+        self.run_cli('tick',base+22*3600)
+        self.assertEqual(self.status()['next_epoch'],base+24*3600)
+        self.run_cli('tick',base+26*3600)
+        self.assertEqual(len(self.status()['events']),2)
+        self.run_cli('tick',base+30*3600)
+        self.assertEqual(len(self.status()['events']),2)
+
+    def test_router_timezone_dst_eligibility_and_legacy_utc_independence(self):
+        epoch=lambda text:int(datetime.fromisoformat(text).replace(tzinfo=timezone.utc).timestamp())
+        self.env['TZ']='CET-1CEST,M3.5.0,M10.5.0/3'
+        self.config.update(adaptive=False,interval_minutes=60,start_hour=1,end_hour=3,window_timezone='router')
+        self.configure()
+        for date,count in [('2026-03-29T00:30:00',1),('2026-03-29T01:30:00',1),
+                           ('2026-10-25T00:30:00',2),('2026-10-25T01:30:00',3)]:
+            self.assertEqual(self.run_cli('tick',epoch(date)).returncode,0)
+            self.assertEqual(len(self.status()['events']),count,date)
+        s=json.loads(self.run_cli('status',epoch('2026-07-01T00:00:00')).stdout)
+        native=subprocess.run(['date','+%z'],env=self.env,text=True,capture_output=True).stdout.strip()
+        self.assertEqual(s['router_timezone']['utc_offset'],native)
+        self.config.update(start_hour=0,end_hour=1,window_timezone='UTC');self.configure()
+        self.run_cli('tick',epoch('2026-10-26T00:30:00'))
+        self.assertEqual(len(self.status()['events']),4)
+
+    def test_quality_history_is_opt_in_once_per_minute_independent_of_full_schedule_and_budget(self):
+        script=self.path/'quality'
+        script.write_text('#!/bin/sh\nprintf "%s %s %s\\n" "$1" "$WAN_OBSERVER_QUALITY_NOW" "$WAN_OBSERVER_QUALITY_STORE" >> "$QUALITY_LOG"\nexit 1\n')
+        self.env.update(WAN_OBSERVER_QUALITY_CLI=str(script),WAN_OBSERVER_QUALITY_STORE=str(self.path/'quality-store'),
+                        QUALITY_LOG=str(self.path/'quality-calls'))
+        self.config.update(enabled=False,quality_history_enabled=False);self.configure()
+        self.run_cli('tick')
+        log=self.path/'quality-calls';self.assertFalse(log.exists())
+        self.config.update(quality_history_enabled=True);self.configure()
+        for offset in [0,1,60]:
+            self.assertEqual(self.run_cli('tick',1767225600+offset).returncode,0)
+        self.assertEqual(len(log.read_text().splitlines()),2)
+        self.assertIn('tick 1767225600 '+str(self.path/'quality-store'),log.read_text())
+        self.run_cli('run',1767225661);self.status()
+        self.assertEqual(len(log.read_text().splitlines()),2)
+        self.assertEqual(self.run_cli('start',1767225662).returncode,0)
+        deadline=time.time()+5
+        while self.status()['busy'] and time.time()<deadline: time.sleep(0.05)
+        self.assertEqual(len(log.read_text().splitlines()),2)
+        self.config.update(enabled=True,monthly_budget_bytes=1);self.configure()
+        self.assertEqual(self.run_cli('tick',1767225720).returncode,0)  # unknown bytes block full test only
+        self.assertEqual(len(log.read_text().splitlines()),3)
+        self.assertEqual(len(self.status()['events']),2)
+
+    def test_missing_quality_cli_does_not_block_due_full_test(self):
+        self.env['WAN_OBSERVER_QUALITY_CLI']=str(self.path/'absent-quality')
+        self.config.update(quality_history_enabled=True)
+        self.configure()
+        r=self.run_cli('tick')
+        self.assertEqual(r.returncode,0,r.stderr)
+        self.assertEqual(self.status()['events'][-1]['outcome'],'healthy')
+        failed=self.path/'failed-quality';failed.write_text('#!/bin/sh\nexit 1\n')
+        self.env['WAN_OBSERVER_QUALITY_CLI']=str(failed)
+        self.assertEqual(self.run_cli('tick',self.status()['next_epoch']).returncode,0)
+        self.assertEqual(len(self.status()['events']),2)
+
+    def test_trusted_router_timezone_file_is_data_and_overrides_ambient_tz(self):
+        self.env['TZ']='UTC'
+        tz_file=self.path/'router-TZ';tz_file.write_text('CET-1CEST,M3.5.0,M10.5.0/3\n')
+        self.env['WAN_OBSERVER_TZ_FILE']=str(tz_file)
+        self.config.update(adaptive=False,start_hour=1,end_hour=2,window_timezone='router')
+        self.configure();self.run_cli('tick',1767225600)  # UTC00:00 is router01:00
+        self.assertEqual(len(self.status()['events']),1)
+        native=subprocess.run(['date','+%z'],env=dict(self.env,TZ=tz_file.read_text().strip()),text=True,capture_output=True).stdout.strip()
+        self.assertEqual(self.status()['router_timezone']['utc_offset'],native)
 
     def test_normal_schedule_no_duplicate(self):
         self.configure()

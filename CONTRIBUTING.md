@@ -1,13 +1,21 @@
 # Contributing
 
-Use a focused issue or pull request. Explain the problem, supported firmware and verification performed. Never attach private operational data; reproduce with synthetic records using documentation-only addresses/domains.
+Start with a focused [bug report or feature request](https://github.com/ddedic/openwrt-wan-observer/issues). Explain the problem, installed package version/source commit, router model and exact firmware. For a vulnerability, use [private security reporting](SECURITY.md), not a public issue.
 
-- Run the offline tests and shell syntax check before submitting.
+Never attach passwords, tokens, SSH keys, router backups, private addresses, raw test results, real measurement history or private configuration. Use minimal synthetic fixtures and sanitized error codes. Readiness status/check names are useful; inspect and redact all output before posting. Screenshots are optional and must contain only authorized, sanitized information.
+
+## Development and validation
+
+See the [technical guide](docs/TECHNICAL.md#development) for prerequisites and exact offline test commands. Run the Python/Lua contracts, shell syntax checks and UI tests; build the UI and IPKs when package content changes. These checks do not require a live speed test. State which tests you ran and mark untested assumptions explicitly.
+
 - Add regression coverage for parsing, units, privacy and persistence changes.
-- Keep runtime dependencies suitable for routers; no automatic external tests on install.
-- Do not redistribute third-party speed-test binaries or accept terms on a user's behalf.
-- Keep device addresses, interface names, plan speeds and schedules configurable.
-- For dashboard changes, include screenshots with synthetic data and check the native GL.iNet layout, keyboard controls and small-screen behavior.
-- State which SDK and real firmware were actually tested. Do not imply that a package recipe proves universal compatibility.
+- Keep changes focused and preserve existing operator configuration and history.
+- Keep runtime dependencies suitable for routers; no external tests on install.
+- Do not redistribute speed-test binaries or accept third-party terms for users.
+- Keep server, interface, plan and schedule operator-configurable.
+- For UI changes, explain keyboard and small-screen verification; distinguish local synthetic previews from actual router captures.
+- Name the SDK and real firmware actually tested. A package recipe or fixture does not establish universal compatibility.
 
-Code contributions are licensed under this repository's MIT license. Do not copy incompatible upstream code without explicitly addressing its license.
+Before adding a dependency or adapter, check maintained upstream solutions, compatibility, license and router footprint. Explain why reuse or a small adaptation does or does not cover the change. Keep private deployment notes and operational data out of the public tree.
+
+Code contributions use the repository's MIT license. Preserve upstream copyright/license notices and explain new third-party licensing in the pull request.
