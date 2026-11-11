@@ -2,7 +2,7 @@
 
 ## Primer Octicons — `mark-github` (16 px)
 
-Used for the "Source on GitHub" link in the WAN Observer page footer. The SVG path data is embedded unmodified in `package/wan-observer-glinet/ui/octicon.js`; nothing is loaded at runtime.
+Used for the "Source on GitHub" link in the WAN Observer page footer and for the GitHub links on the project website. The SVG path data is embedded unmodified in `package/wan-observer-glinet/ui/octicon.js` and `site/index.html`; nothing is loaded at runtime.
 
 - Project: https://github.com/primer/octicons
 - File: `icons/mark-github-16.svg` at commit `68ec2de8d0ddfcbb7497da01d0b7d98eb5593020`
@@ -33,5 +33,9 @@ SOFTWARE.
 ```
 
 The GitHub mark identifies the project's GitHub repository only; it does not imply endorsement by GitHub.
+
+## Manrope — website font
+
+The project website self-hosts Manrope as `site/assets/manrope-latin-wght.woff2`: the unmodified Latin variable-weight file from Fontsource `@fontsource-variable/manrope` 5.3.0. Manrope is licensed under the SIL Open Font License 1.1; the full text is in [`docs/assets/MANROPE-OFL.txt`](docs/assets/MANROPE-OFL.txt) and is published beside the font on the site.
 
 Other bundled npm packages (for example jsPDF) are listed with their licenses in the `view.js.LEGAL.txt` file produced by the UI build.

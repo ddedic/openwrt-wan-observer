@@ -1,0 +1,67 @@
+# Changelog
+
+Notable changes to WAN Observer. Router package versions follow the tags below; download builds and checksums from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
+
+## Unreleased
+
+- Project website at <https://ddedic.github.io/openwrt-wan-observer/>, built from `site/` and published by the `Website` workflow. Router packages are unchanged.
+
+## 0.5.0 — 2026-11-11
+
+Local quality history and clearer test records.
+
+- Latest-attempt status kept apart from the last successful reading; time-proportional charts; failed tests handled safely.
+- Optional local history from the existing GL Network Quality service. No additional WAN probes; off by default.
+- Settings for overnight windows, UTC or router time, longer intervals, editable plan and threshold, and a monthly test-data limit.
+- Data-use estimates from measured bytes when available, with unknown or partial accounting shown as such.
+- Accessible settings and export dialogs, improved loading state, theme-aware controls and a source link.
+- Screenshots refreshed from the real Flint 2 dashboard; installation, upgrade, contribution and security guidance.
+
+## 0.4.5 — 2026-11-11
+
+Reliability and diagnostics.
+
+- Attempt coverage preserved explicitly, more failures retained, legacy originals kept during migration.
+- Failures classified safely; new attempts linked to measurements with opaque IDs.
+- Visible dashboards refresh automatically and explain stale or readiness states.
+- CSV and PDF include jitter, loaded latency, packet loss, actual test bytes and coverage limits.
+- Read-only setup checks and OpenWrt backup preservation entries.
+- CLI-only passive quality history and a test-byte start guard. Installation still enables no collection.
+
+## 0.4.4 — 2026-11-11
+
+- Larger, better balanced application logo with tighter title spacing.
+- Refreshed README screenshots.
+
+## 0.4.3 — 2026-11-11
+
+- Fixed the native GL.iNet header logo alignment and vertical centring.
+
+## 0.4.2 — 2026-11-11
+
+- WAN Observer mark beside the native router title, in the host theme colours.
+- README logo now follows the light or dark GitHub theme.
+
+## 0.4.1 — 2026-11-11
+
+- More space above the native header.
+- Original artwork, a shorter README and a separate technical guide.
+
+## 0.4.0 — 2026-11-11
+
+Native Flint interface.
+
+- Uses the router's own title, cards, controls and charts.
+- Latest test separated from period history and exports.
+- Authenticated **Run Speedtest** with overlap protection and completion feedback.
+- Editable, persistent plan download and upload speeds.
+- Illustrative data-use estimate before enabling scheduled tests.
+- Better settings, error and empty states, and mobile layout.
+
+## 0.3.0 — 2026-11-11
+
+First GL.iNet SDK4 release.
+
+- Native dashboard under **Flow Control → WAN Observer**; core package alone for headless OpenWrt collection.
+- Opt-in collection with schedule controls and adaptive follow-up history.
+- CSV export and a dedicated vector A4 PDF with optional appendix.
