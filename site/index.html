@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAN Observer: speed-test history that lives on your router</title>
+<meta name="description" content="Open-source speed-test history for GL.iNet routers running OpenWrt-based firmware. Scheduled and manual tests on the router, compared with your plan, exported as PDF or CSV.">
+<meta name="color-scheme" content="dark">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self'; img-src 'self'; font-src 'self'; base-uri 'none'; form-action 'none'">
+<link rel="canonical" href="https://ddedic.github.io/openwrt-wan-observer/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WAN Observer">
+<meta property="og:description" content="Speed-test history that lives on your router. Open source, for GL.iNet routers on OpenWrt-based firmware.">
+<meta property="og:url" content="https://ddedic.github.io/openwrt-wan-observer/">
+<meta property="og:image" content="https://ddedic.github.io/openwrt-wan-observer/assets/dashboard.png">
+<meta property="og:image:alt" content="WAN Observer dashboard inside the GL.iNet admin panel">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/manrope-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap top__inner">
+    <a class="brand" href="./" aria-label="WAN Observer home">
+      <!-- Inlined verbatim from assets/logo-dark.svg so CSS can reach the dot. -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="363" height="64" viewBox="0 0 363 64" role="img" aria-labelledby="title desc">
+<title id="title">WAN Observer</title>
+<desc id="desc">WAN Observer, with a W-shaped measurement trace and sampled point.</desc>
+<!-- Original mark: Copyright (c) 2026 Danijel Dedic, MIT. Lettering: Manrope, SIL OFL 1.1. -->
+<path d="M8 18 20 46 32 24 44 46 52 28" fill="none" stroke="#DDF3F7" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="57" cy="17" r="4.5" fill="#52D9C7"/>
+<g fill="#DDF3F7"><path d="M94.445 46 86.475 18.64H90.959L96.564 38.865L102.16 18.669L106.653 18.64L112.258 38.865L117.853 18.64H122.347L114.376 46H110.139L104.406 26.041L98.683 46Z"/><path d="M123.582 46 132.341 18.64H138.554L147.313 46H142.895L134.887 21.243H135.913L127.999 46ZM128.294 39.949V35.949H142.62V39.949Z"/><path d="M150.733 46V18.64H155.065L168.147 38.447V18.64H172.478V46H168.147L155.065 26.183V46Z"/><path d="M196.903 46.57Q192.804 46.57 189.892 44.775Q186.98 42.979 185.434 39.768Q183.888 36.557 183.888 32.32Q183.888 28.083 185.434 24.872Q186.98 21.661 189.892 19.866Q192.804 18.07 196.903 18.07Q201.002 18.07 203.914 19.866Q206.826 21.661 208.372 24.872Q209.918 28.083 209.918 32.32Q209.918 36.557 208.372 39.768Q206.826 42.979 203.914 44.775Q201.002 46.57 196.903 46.57ZM196.903 42.523Q199.734 42.551 201.617 41.276Q203.501 40.001 204.444 37.692Q205.386 35.384 205.386 32.32Q205.386 29.256 204.444 26.974Q203.501 24.692 201.617 23.419Q199.734 22.146 196.903 22.117Q194.072 22.088 192.193 23.361Q190.315 24.634 189.372 26.945Q188.429 29.256 188.419 32.32Q188.41 35.384 189.353 37.664Q190.296 39.944 192.184 41.219Q194.072 42.495 196.903 42.523Z"/><path d="M223.465 46.57Q220.492 46.57 218.477 45.14Q216.463 43.711 215.438 41.257Q214.411 38.804 214.411 35.73Q214.411 32.643 215.433 30.194Q216.454 27.746 218.442 26.328Q220.43 24.91 223.341 24.91Q226.239 24.91 228.36 26.323Q230.481 27.736 231.637 30.18Q232.794 32.624 232.794 35.73Q232.794 38.809 231.647 41.262Q230.5 43.715 228.407 45.143Q226.315 46.57 223.465 46.57ZM213.689 46V18.64H217.993V31.418H217.48V46ZM222.838 42.722Q224.686 42.722 225.885 41.791Q227.084 40.861 227.673 39.274Q228.262 37.688 228.262 35.73Q228.262 33.793 227.666 32.211Q227.07 30.629 225.838 29.693Q224.605 28.758 222.695 28.758Q220.886 28.758 219.731 29.636Q218.577 30.515 218.029 32.09Q217.48 33.664 217.48 35.73Q217.48 37.787 218.026 39.367Q218.572 40.946 219.755 41.834Q220.938 42.722 222.838 42.722Z"/><path d="M244.859 46.56Q241.083 46.56 238.72 44.879Q236.356 43.197 235.834 40.148L240.204 39.474Q240.575 41.032 241.881 41.929Q243.187 42.827 245.153 42.827Q246.906 42.827 247.887 42.122Q248.868 41.416 248.868 40.176Q248.868 39.44 248.517 38.984Q248.165 38.528 247.015 38.11Q245.866 37.692 243.5 37.061Q240.888 36.377 239.356 35.59Q237.824 34.804 237.162 33.736Q236.499 32.667 236.499 31.142Q236.499 29.252 237.496 27.848Q238.494 26.444 240.297 25.677Q242.099 24.91 244.526 24.91Q246.901 24.91 248.752 25.653Q250.602 26.397 251.742 27.758Q252.882 29.119 253.124 30.952L248.754 31.741Q248.564 30.349 247.464 29.539Q246.365 28.729 244.583 28.643Q242.873 28.563 241.819 29.19Q240.764 29.817 240.764 30.924Q240.764 31.565 241.18 32.009Q241.596 32.453 242.814 32.88Q244.032 33.308 246.436 33.916Q248.958 34.567 250.45 35.372Q251.941 36.177 252.599 37.291Q253.257 38.405 253.257 39.996Q253.257 43.06 251.024 44.81Q248.792 46.56 244.859 46.56Z"/><path d="M266.671 46.57Q263.579 46.57 261.251 45.223Q258.924 43.877 257.62 41.48Q256.316 39.084 256.316 35.94Q256.316 32.577 257.596 30.102Q258.876 27.627 261.154 26.268Q263.431 24.91 266.443 24.91Q269.602 24.91 271.82 26.383Q274.038 27.855 275.128 30.553Q276.219 33.251 275.976 36.937H271.716V35.379Q271.687 31.921 270.447 30.297Q269.207 28.672 266.614 28.672Q263.721 28.672 262.284 30.482Q260.847 32.291 260.847 35.74Q260.847 38.989 262.284 40.77Q263.721 42.551 266.443 42.551Q268.219 42.551 269.511 41.754Q270.803 40.956 271.516 39.455L275.724 40.756Q274.542 43.52 272.093 45.045Q269.644 46.57 266.671 46.57ZM259.479 36.937V33.66H273.863V36.937Z"/><path d="M280.237 46V25.48H284.027V30.468L283.534 29.822Q283.913 28.814 284.536 27.979Q285.158 27.143 286.003 26.601Q286.768 26.055 287.711 25.756Q288.654 25.456 289.642 25.39Q290.63 25.323 291.551 25.48V29.48Q290.592 29.209 289.388 29.318Q288.184 29.427 287.191 30.04Q286.236 30.605 285.654 31.453Q285.072 32.301 284.807 33.355Q284.541 34.41 284.541 35.607V46Z"/><path d="M300.719 46 293.271 25.48H297.565L302.876 40.69L308.177 25.48H312.48L305.032 46Z"/><path d="M325.115 46.57Q322.023 46.57 319.695 45.223Q317.368 43.877 316.064 41.48Q314.76 39.084 314.76 35.94Q314.76 32.577 316.04 30.102Q317.32 27.627 319.598 26.268Q321.875 24.91 324.887 24.91Q328.046 24.91 330.264 26.383Q332.482 27.855 333.572 30.553Q334.663 33.251 334.42 36.937H330.159V35.379Q330.131 31.921 328.891 30.297Q327.651 28.672 325.058 28.672Q322.165 28.672 320.728 30.482Q319.291 32.291 319.291 35.74Q319.291 38.989 320.728 40.77Q322.165 42.551 324.887 42.551Q326.663 42.551 327.956 41.754Q329.248 40.956 329.96 39.455L334.168 40.756Q332.986 43.52 330.537 45.045Q328.089 46.57 325.115 46.57ZM317.923 36.937V33.66H332.307V36.937Z"/><path d="M338.681 46V25.48H342.471V30.468L341.978 29.822Q342.358 28.814 342.98 27.979Q343.602 27.143 344.447 26.601Q345.212 26.055 346.155 25.756Q347.098 25.456 348.086 25.39Q349.074 25.323 349.995 25.48V29.48Q349.036 29.209 347.832 29.318Q346.628 29.427 345.635 30.04Q344.68 30.605 344.098 31.453Q343.517 32.301 343.25 33.355Q342.985 34.41 342.985 35.607V46Z"/></g>
+</svg>
+    </a>
+    <nav class="nav" aria-label="Page">
+      <a class="nav__link nav__link--wide" href="#inside">Product</a>
+      <a class="nav__link nav__link--wide" href="#trust">Privacy</a>
+      <a class="nav__link" href="#install">Install</a>
+      <a class="repo" href="https://github.com/ddedic/openwrt-wan-observer" aria-label="GitHub repository ddedic/openwrt-wan-observer">
+        <svg class="gh" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>
+        <span class="repo__long">ddedic/openwrt-wan-observer</span><span class="repo__short">GitHub</span>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section class="hero" aria-labelledby="hero-title">
+    <!-- Decorative: the logo's W trace stretched along the hero's foot, ending in its sampled point. Not data. -->
+    <div class="signal" aria-hidden="true">
+      <svg class="signal__svg" viewBox="0 0 1440 200" preserveAspectRatio="none" focusable="false">
+        <path class="signal__line" pathLength="1" d="M-20 70 L300 175 L600 50 L940 175 L1340 40"/>
+      </svg>
+      <span class="signal__dot"></span>
+    </div>
+
+    <div class="wrap hero__grid">
+      <div class="hero__copy">
+        <a class="pill" href="https://github.com/ddedic/openwrt-wan-observer/releases/tag/v0.5.0">
+          <span class="pill__tag">v0.5.0</span> Quality history and a monthly data limit
+        </a>
+        <h1 id="hero-title">Speed-test history that lives on your router</h1>
+        <p class="lead">Scheduled and on-demand tests, run by the router itself and checked against the plan you pay for. When it is slow again, you have the record.</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="https://github.com/ddedic/openwrt-wan-observer/releases/tag/v0.5.0">Download v0.5.0</a>
+          <a class="btn btn--ghost" href="https://github.com/ddedic/openwrt-wan-observer">
+            <svg class="gh" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>
+            View on GitHub
+          </a>
+        </div>
+        <p class="fine">MIT licensed. Experimental: tested on a GL.iNet Flint&nbsp;2, firmware&nbsp;4.11.0.</p>
+      </div>
+
+      <figure class="stack">
+        <div class="stack__back crop crop--charts" aria-hidden="true">
+          <img src="assets/dashboard.png" width="1170" height="980" alt="">
+        </div>
+        <div class="stack__front crop crop--status">
+          <img src="assets/dashboard.png" width="1170" height="980" fetchpriority="high"
+            alt="WAN Observer status: latest test good, 420 Mbps download, 41.7 Mbps upload, 7.8 ms idle latency, 25 ms under load; 12 tests in 7 days, 11 good and 1 failed.">
+        </div>
+        <figcaption>Real capture from a Flint&nbsp;2. Values unaltered.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="quote" aria-labelledby="quote-title">
+    <div class="wrap">
+      <h2 id="quote-title" class="quote__line">“The internet is slow again.”</h2>
+      <p class="quote__text">By the time you run a test, it is usually fine. WAN Observer keeps testing on the router at times you choose, so you can see when it happened and by how much.</p>
+      <ol class="flow4">
+        <li><span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3 4 7v10l8 4 8-4V7z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg></span><span><strong>Install</strong> two opkg packages</span></li>
+        <li><span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="m12 16 4.5-5"/><path d="M3 20h18"/></svg></span><span><strong>Set</strong> your plan and schedule</span></li>
+        <li><span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M3 16 8 9l4 5 4-7 5 6"/><circle cx="21" cy="13" r="1.4" class="ico-fill"/></svg></span><span><strong>Collect</strong> a history on the router</span></li>
+        <li><span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6m-3-3 3 3 3-3"/></svg></span><span><strong>Export</strong> a PDF or CSV for support</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="inside" id="inside" aria-labelledby="inside-title">
+    <div class="wrap">
+      <div class="head">
+        <h2 id="inside-title">Inside the router page</h2>
+        <p>A native page in the GL.iNet admin panel, under Flow Control.</p>
+      </div>
+
+      <div class="tabs">
+        <input class="tabs__input" type="radio" name="view" id="view-history" checked>
+        <label class="tabs__label" for="view-history">History</label>
+        <input class="tabs__input" type="radio" name="view" id="view-settings">
+        <label class="tabs__label" for="view-settings">Settings</label>
+        <input class="tabs__input" type="radio" name="view" id="view-export">
+        <label class="tabs__label" for="view-export">Export</label>
+
+        <div class="panel panel--history">
+          <figure class="panel__media">
+            <div class="crop crop--charts frame">
+              <img src="assets/dashboard.png" width="1170" height="980" loading="lazy" alt="Download and upload charts for 7 days: readings sit just above the dashed plan lines of 400 and 40 Mbps, with one failed attempt marked in red below each chart.">
+              <span class="mark mark--plan" aria-hidden="true"><span class="mark__label mark__label--below">Plan: 400 Mbps</span></span>
+              <span class="mark mark--fail" aria-hidden="true"><span class="mark__label mark__label--left">Failed attempt</span></span>
+            </div>
+          </figure>
+          <ul class="points">
+            <li><strong>Your plan as the baseline.</strong> Results under your threshold are marked slow.</li>
+            <li><strong>Failures apart.</strong> Never charted as zero.</li>
+            <li><strong>Real times.</strong> Gaps between tests are not measured.</li>
+            <li><strong>24 hours, 7 or 30 days.</strong> Latency, jitter and loss when reported.</li>
+          </ul>
+        </div>
+
+        <div class="panel panel--settings">
+          <figure class="panel__media panel__media--narrow">
+            <div class="crop crop--settings frame">
+              <img src="assets/settings.png" width="1300" height="1047" loading="lazy" alt="Testing settings dialog: scheduled tests on, test every 2 hours, all day; 388 MB measured per test, estimated at 12 tests a day, 4.7 GB a day and 141 GB a month; monthly data limit empty; follow-up tests off.">
+            </div>
+          </figure>
+          <ul class="points">
+            <li><strong>Every 15 minutes to 12 hours.</strong> All day or overnight, in UTC or router time.</li>
+            <li><strong>Follow-ups.</strong> Up to 3 extra tests after a slow or failed result.</li>
+            <li><strong>Data use up front.</strong> An optional monthly limit stops new tests; one can go over.</li>
+            <li><strong>Quality history.</strong> GL Network Quality every minute, kept 30 days, no extra WAN tests.</li>
+          </ul>
+        </div>
+
+        <div class="panel panel--export">
+          <div class="panel__media files">
+            <div class="file">
+              <span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg></span>
+              <div><h3>PDF report</h3><p>A4, for the selected period, with an optional appendix of every test.</p></div>
+            </div>
+            <div class="file">
+              <span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 5v14"/></svg></span>
+              <div><h3>CSV data</h3><p>Every row behind it, for your own analysis or a ticket.</p></div>
+            </div>
+          </div>
+          <ul class="points">
+            <li><strong>Built in your browser.</strong> From the router’s history; nothing is uploaded.</li>
+            <li><strong>Complete.</strong> Failed attempts and coverage included, timestamps in UTC.</li>
+            <li><strong>Honest gaps.</strong> Unknown values stay unknown. Quality history is not in the PDF yet.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust" id="trust" aria-labelledby="trust-title">
+    <div class="wrap">
+      <h2 id="trust-title" class="sr">Privacy, source and limits</h2>
+      <div class="trust__grid">
+        <article>
+          <span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 16.5h.01M11 16.5h.01M8 13l-2-6M16 13l2-6"/></svg></span>
+          <h3>Stays on your router</h3>
+          <p>History and settings live on the router; exports are built in your browser. Only the speed test reaches Ookla’s servers. IP and MAC addresses, hostnames and ISP labels are discarded on import.</p>
+          <a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/docs/TECHNICAL.md#privacy">Privacy details</a>
+        </article>
+        <article>
+          <span class="tile" aria-hidden="true"><svg class="ico ico--gh" viewBox="0 0 16 16"><use href="#gh-mark"/></svg></span>
+          <h3>Open source</h3>
+          <p>MIT licensed, no account and no telemetry. Two opkg packages on POSIX shell and jq, with no Python, database or container on the router.</p>
+          <a href="https://github.com/ddedic/openwrt-wan-observer">Read the source</a>
+        </article>
+        <article>
+          <span class="tile" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></span>
+          <h3>Honest about limits</h3>
+          <p>Tested on a Flint&nbsp;2 with firmware 4.11.0. Tests are samples, not outage monitoring, and reports are not certified proof. Frequent tests use real data.</p>
+          <a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/docs/TECHNICAL.md#limitations">Limitations</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="install" id="install" aria-labelledby="install-title">
+    <div class="wrap install__grid">
+      <div class="head">
+        <h2 id="install-title">Install in four steps</h2>
+        <p>Needs SSH/root access, opkg with jq and coreutils-timeout, and a permitted Ookla Speedtest CLI. Installing runs no tests.</p>
+        <div class="actions">
+          <a class="btn btn--primary" href="https://github.com/ddedic/openwrt-wan-observer/releases/tag/v0.5.0">Download v0.5.0</a>
+          <a class="btn btn--ghost" href="https://github.com/ddedic/openwrt-wan-observer/blob/main/docs/COLLECTOR.md">Setup guide</a>
+        </div>
+      </div>
+      <ol class="term">
+        <li>Download both packages and <code>SHA256SUMS</code>, then verify with <code>sha256sum -c</code></li>
+        <li>Install both on the router<pre><code><span class="term__p" aria-hidden="true">#</span> opkg install wan-observer_*.ipk wan-observer-glinet_*.ipk</code></pre></li>
+        <li>Configure the collector over SSH, then enable the schedule</li>
+        <li>Open <strong>Flow Control → WAN Observer</strong></li>
+      </ol>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot__grid">
+      <div class="foot__brand">
+        <img src="assets/logo-dark.svg" width="363" height="64" alt="WAN Observer" class="foot__logo">
+        <p>Speed-test history that lives on your router. Free and open source.</p>
+        <a class="repo" href="https://github.com/ddedic/openwrt-wan-observer">
+          <svg class="gh" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><use href="#gh-mark"/></svg>
+          ddedic/openwrt-wan-observer
+        </a>
+      </div>
+      <nav class="foot__col" aria-labelledby="f-project">
+        <h2 id="f-project">Project</h2>
+        <ul>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/releases">Releases</a></li>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/docs/COLLECTOR.md">Setup guide</a></li>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/docs/TECHNICAL.md">Technical guide</a></li>
+        </ul>
+      </nav>
+      <nav class="foot__col" aria-labelledby="f-community">
+        <h2 id="f-community">Community</h2>
+        <ul>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/issues">Issues</a></li>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/CONTRIBUTING.md">Contributing</a></li>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/security/advisories/new">Report a vulnerability</a></li>
+        </ul>
+      </nav>
+      <nav class="foot__col" aria-labelledby="f-legal">
+        <h2 id="f-legal">Legal</h2>
+        <ul>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/LICENSE">MIT license</a></li>
+          <li><a href="https://github.com/ddedic/openwrt-wan-observer/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a></li>
+          <li><a href="assets/MANROPE-OFL.txt">Manrope font (OFL)</a></li>
+        </ul>
+      </nav>
+    </div>
+    <div class="foot__bar">
+      <p>© 2026 Danijel Dedic, maintained by <a href="https://github.com/ddedic">@ddedic</a></p>
+      <p>Independent project, not affiliated with OpenWrt, GL.iNet or Ookla.</p>
+    </div>
+  </div>
+</footer>
+
+<svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false">
+  <symbol id="gh-mark" viewBox="0 0 16 16"><path fill="currentColor" d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"/></symbol>
+</svg>
+</body>
+</html>
