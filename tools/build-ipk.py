@@ -6,7 +6,7 @@ from pathlib import Path, PurePosixPath
 import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '0.3.0-3'
+VERSION = '0.4.0-1'
 OUT = ROOT / 'dist'
 
 

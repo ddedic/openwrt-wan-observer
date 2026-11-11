@@ -66,12 +66,30 @@ if not length or length < 1 or length > 1024 or length % 1 ~= 0 then
     return reply('413 Content Too Large', '{"error":"Invalid request size"}')
 end
 local data = json.decode(io.read(length) or '')
+if type(data) ~= 'table' then
+    return reply('400 Bad Request', '{"error":"Invalid request"}')
+end
+-- Fixed action: no request data reaches the shell. The collector lock rejects overlap.
+if data.action ~= nil then
+    if data.action ~= 'run_speedtest' or next(data, next(data)) ~= nil then
+        return reply('400 Bad Request', '{"error":"Invalid action"}')
+    end
+    if run('/usr/bin/wan-observer-collect start') ~= 'Manual test started.\n' then
+        return reply('409 Conflict', '{"error":"A speed test is already running or the collector is unavailable. Try again shortly."}')
+    end
+    return reply('202 Accepted', '{"started":true}')
+end
 local fields = { enabled = 'boolean', adaptive = 'boolean', interval_minutes = 'number',
     start_hour = 'number', end_hour = 'number' }
 local function invalid()
     return reply('400 Bad Request', '{"error":"Invalid schedule"}')
 end
-if type(data) ~= 'table' then return invalid() end
+-- Plan speeds are optional for older clients, but must be supplied together.
+local plan = data.download_mbps ~= nil or data.upload_mbps ~= nil
+if plan then
+    fields.download_mbps = 'number'
+    fields.upload_mbps = 'number'
+end
 for field in pairs(data) do
     if not fields[field] then return invalid() end
 end
@@ -83,10 +101,18 @@ if interval ~= 15 and interval ~= 30 and interval ~= 60 and interval ~= 120 then
 if data.start_hour % 1 ~= 0 or data.end_hour % 1 ~= 0 or data.start_hour < 0
     or data.end_hour > 24 or data.start_hour >= data.end_hour then return invalid() end
 -- Rebuild the shell input from validated booleans and bounded integers only.
-local body = string.format('{"enabled":%s,"adaptive":%s,"interval_minutes":%d,"start_hour":%d,"end_hour":%d}',
+local body = string.format('{"enabled":%s,"adaptive":%s,"interval_minutes":%d,"start_hour":%d,"end_hour":%d',
     tostring(data.enabled), tostring(data.adaptive), interval, data.start_hour, data.end_hour)
+if plan then
+    for _, field in ipairs({ 'download_mbps', 'upload_mbps' }) do
+        local value = data[field]
+        if value % 1 ~= 0 or value < 1 or value > 100000 then return invalid() end
+    end
+    body = body .. string.format(',"download_mbps":%d,"upload_mbps":%d', data.download_mbps, data.upload_mbps)
+end
+body = body .. '}'
 local result = run("printf '%s' '" .. body .. "' | /usr/bin/wan-observer-collect schedule")
 if result ~= 'Collector configuration saved.\n' and result ~= 'Collector configuration unchanged.\n' then
-    return reply('409 Conflict', '{"error":"Schedule unavailable. Retry after the current test finishes."}')
+    return reply('409 Conflict', '{"error":"Settings unavailable. Retry after the current test finishes."}')
 end
 return reply('200 OK', '{"saved":true}')
