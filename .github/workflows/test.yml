@@ -8,6 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Shell syntax
-        run: sh -n package/wan-observer/files/wan-observer
+        run: |
+          sh -n package/wan-observer/files/wan-observer
+          sh -n package/wan-observer/files/wan-observer-collect
       - name: Synthetic privacy and behavior tests
         run: python3 -m unittest discover -s tests -v

@@ -1,0 +1,119 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -eu
+umask 077
+lib=${WAN_OBSERVER_LIB:-/usr/share/wan-observer}
+cli=${WAN_OBSERVER_CLI:-/usr/bin/wan-observer}
+config=${WAN_OBSERVER_CONFIG:-/etc/wan-observer/collector.json}
+runtime=${WAN_OBSERVER_RUNTIME:-/tmp/wan-observer-collector}
+store=${WAN_OBSERVER_STORE:-/etc/wan-observer/history}
+export WAN_OBSERVER_STORE="$store" WAN_OBSERVER_LIB="$lib"
+fail() { printf '%s\n' "wan-observer: $1" >&2; exit 1; }
+[ "$#" = 1 ] || fail 'usage: wan-observer-collect configure|tick|status'
+[ ! -L "$runtime" ] && [ ! -L "$runtime/state.next" ] && [ ! -L "$config" ] || fail 'symlink refused'
+mkdir -p "$runtime"
+chmod 700 "$runtime"
+work=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer-collect.XXXXXX")
+locked=0
+cleanup() { rm -rf "$work"; if [ "$locked" = 1 ]; then rmdir "$runtime/.lock" 2>/dev/null || :; fi; }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+lock() { mkdir "$runtime/.lock" 2>/dev/null || fail 'collector busy or interrupted'; locked=1; }
+validate() { jq -L "$lib" -sce 'import "collector" as c; if length==1 then .[0]|c::valid_config else error("one object required") end' "$1" 2>/dev/null; }
+case "$1" in
+ configure)
+  lock
+  head -c 8193 > "$work/input"
+  [ "$(wc -c < "$work/input")" -le 8192 ] || fail 'configuration too large'
+  validate "$work/input" > "$work/config" || fail 'invalid configuration'
+  if [ -f "$config" ] && cmp -s "$work/config" "$config"; then
+    printf '%s\n' 'Collector configuration unchanged.'
+    exit 0
+  fi
+  mkdir -p "$(dirname "$config")"
+  [ ! -L "$config.next" ] || fail 'symlink refused'
+  cp "$work/config" "$config.next"
+  chmod 600 "$config.next"
+  mv "$config.next" "$config"
+  if [ -f "$runtime/state.json" ]; then
+    jq ' .next_epoch=0 | .next_normal=0 | .burst=0 ' "$runtime/state.json" > "$runtime/state.next"
+    mv "$runtime/state.next" "$runtime/state.json"
+  fi
+  printf '%s\n' 'Collector configuration saved.'
+  exit 0;;
+ tick|status) :;;
+ *) fail 'unknown command';;
+esac
+[ -f "$config" ] || fail 'collector is not configured'
+validate "$config" > "$work/config" || fail 'invalid configuration'
+if [ "$1" = tick ]; then lock; fi
+if [ -f "$runtime/state.json" ]; then
+  [ ! -L "$runtime/state.json" ] || fail 'symlink state refused'
+  cp "$runtime/state.json" "$work/state"
+else
+  jq -n -L "$lib" 'import "collector" as c; c::initial' > "$work/state"
+  if [ -f "$store/collector-events.json" ]; then
+    jq --slurpfile saved "$store/collector-events.json" ' .events=$saved[0].events ' "$work/state" > "$work/updated"
+    mv "$work/updated" "$work/state"
+  fi
+fi
+if [ "$1" = status ]; then
+ jq -n --slurpfile config "$work/config" --slurpfile state "$work/state" '$state[0] + {config:($config[0]|del(.binary,.interface))}'
+ exit 0
+fi
+[ "$(jq -r .enabled "$work/config")" = true ] || exit 0
+now=${WAN_OBSERVER_NOW:-$(date +%s)}
+case "$now" in ''|*[!0-9]*) fail 'invalid clock';; esac
+[ "$now" -ge 1704067200 ] || fail 'clock not initialized'
+next=$(jq -r .next_epoch "$work/state")
+[ "$now" -ge "$next" ] || exit 0
+# Window is UTC, independent of host DST. All-day default avoids DST ambiguity.
+hour=$(( (now / 3600) % 24 ))
+start=$(jq -r .start_hour "$work/config")
+end=$(jq -r .end_hour "$work/config")
+[ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ] || exit 0
+interval=$(jq -r .interval_minutes "$work/config")
+normal=$(jq -r .next_normal "$work/state")
+reason=degradation_followup
+if [ "$now" -ge "$normal" ]; then
+ reason=scheduled
+ normal=$(( (now / (interval * 60) + 1) * interval * 60 ))
+ jq '.burst=0' "$work/state" > "$work/updated"
+ mv "$work/updated" "$work/state"
+fi
+day=$((now / 86400))
+if [ "$(jq -r .day "$work/state")" != "$day" ]; then
+ jq --argjson day "$day" '.day=$day | .extras=0' "$work/state" > "$work/updated"
+ mv "$work/updated" "$work/state"
+fi
+# Persist a reservation before invoking the external tool, so a terminated test is not immediately retried.
+jq --argjson normal "$normal" '.next_epoch=$normal | .next_normal=$normal' "$work/state" > "$runtime/state.next"
+mv "$runtime/state.next" "$runtime/state.json"
+binary=$(jq -r .binary "$work/config")
+server=$(jq -r .server_id "$work/config")
+interface=$(jq -r .interface "$work/config")
+set -- "$binary" --format=json --progress=no "--server-id=$server"
+if [ -n "$interface" ]; then set -- "$@" "--interface=$interface"; fi
+outcome=failed
+# Do not accept terms or emit raw backend output; timeout caps a stalled execution.
+if timeout -k 10 120 "$@" > "$work/raw" 2>/dev/null && sh "$cli" normalize-ookla < "$work/raw" > "$work/record" 2>/dev/null; then
+ if sh "$cli" import-ookla < "$work/raw" >/dev/null 2>&1; then
+  outcome=healthy
+  if jq -e --slurpfile c "$work/config" '.download_mbps < ($c[0].download_mbps*$c[0].threshold_percent/100) or .upload_mbps < ($c[0].upload_mbps*$c[0].threshold_percent/100)' "$work/record" >/dev/null; then outcome=degraded; fi
+ fi
+fi
+jq --argjson now "$now" --argjson normal "$normal" --arg reason "$reason" --arg outcome "$outcome" --slurpfile c "$work/config" '
+  .next_normal=$normal | .next_epoch=$normal |
+  if $reason=="degradation_followup" then .burst+=1 | .extras+=1 else . end |
+  if $outcome!="healthy" and $c[0].adaptive and .burst<3 and .extras<24
+    then .next_epoch=([$now+300,$normal]|min) else . end |
+  .events = ((.events + [{epoch:$now,reason:$reason,outcome:$outcome}]) | .[-200:])
+' "$work/state" > "$runtime/state.next"
+mv "$runtime/state.next" "$runtime/state.json"
+# Sanitized execution history persists independently of volatile burst accounting.
+[ ! -L "$store" ] && [ ! -L "$store/collector-events.json" ] && [ ! -L "$store/collector-events.next" ] || fail 'symlink history refused'
+mkdir -p "$store"
+chmod 700 "$store"
+cp "$runtime/state.json" "$store/collector-events.next"
+mv "$store/collector-events.next" "$store/collector-events.json"

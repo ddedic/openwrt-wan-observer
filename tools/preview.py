@@ -4,6 +4,7 @@ import argparse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
+import secrets
 from pathlib import Path
 import subprocess
 
@@ -30,6 +31,42 @@ def measurements(store):
                 measurements=[json.loads(line) for line in result.stdout.splitlines()])
 
 
+class Router:
+    """Explicit SSH target; no addresses or credentials embedded in project files."""
+    def __init__(self, target, identity=None):
+        if target.startswith('-') or not target or any(c.isspace() for c in target):
+            raise ValueError('Invalid SSH target')
+        self.args = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8']
+        if identity:
+            self.args += ['-o', 'IdentitiesOnly=yes', '-i', str(identity.expanduser())]
+        self.args += [target]
+
+    def run(self, command, data=None):
+        return subprocess.run(self.args + [command], input=data, text=True,
+                              capture_output=True, check=True, timeout=20).stdout
+
+    def load(self):
+        command = "records=$(wan-observer list) || exit 1; status=$(wan-observer-collect status) || exit 1; printf '%s\\n' \"$records\" | jq -s --argjson status \"$status\" '{measurements:.,collector:$status}'"
+        data = json.loads(self.run(command))
+        data['source'] = 'router collection'
+        return data
+
+    def configure(self, patch):
+        # Only schedule fields can be changed by the preview, never executable or interface paths.
+        keys = {'enabled', 'adaptive', 'interval_minutes', 'start_hour', 'end_hour'}
+        if not isinstance(patch, dict) or set(patch) != keys:
+            raise ValueError('Invalid schedule fields')
+        if type(patch['enabled']) is not bool or type(patch['adaptive']) is not bool:
+            raise ValueError('Invalid switches')
+        if any(type(patch[k]) is not int for k in ['interval_minutes','start_hour','end_hour']):
+            raise ValueError('Invalid schedule')
+        if patch['interval_minutes'] not in [15,30,60,120] or not 0 <= patch['start_hour'] < patch['end_hour'] <= 24:
+            raise ValueError('Invalid schedule')
+        # Remote CLI validates again and serializes configuration updates against active tests.
+        command = "patch=$(cat); jq --argjson patch \"$patch\" '. + $patch' /etc/wan-observer/collector.json | wan-observer-collect configure"
+        self.run(command, json.dumps(patch))
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *args):
         pass
@@ -52,7 +89,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if self.path == '/api/measurements':
             try:
-                body = json.dumps(self.server.load(), allow_nan=False).encode()
+                data = self.server.load()
+                data['schedule_token'] = self.server.token if self.server.router else None
+                body = json.dumps(data, allow_nan=False).encode()
             except Exception:
                 self.reply(503, b'{"error":"History unavailable; inspect it locally"}')
                 return
@@ -68,12 +107,34 @@ class Handler(BaseHTTPRequestHandler):
         self.reply(200, (ASSETS / name).read_bytes(), kind)
 
     def do_POST(self):
-        self.reply(405, b'{"error":"Read only"}')
+        if self.path != '/api/schedule' or not self.server.router:
+            self.reply(405, b'{"error":"Read only"}')
+            return
+        host = f'127.0.0.1:{self.server.server_port}'
+        if (self.headers.get_all('Host', []) != [host]
+                or self.headers.get('Origin') != f'http://{host}'
+                or self.headers.get('X-Schedule-Token') != self.server.token
+                or self.headers.get('Content-Type') != 'application/json'):
+            self.reply(403, b'{"error":"Request refused"}')
+            return
+        try:
+            size = int(self.headers.get('Content-Length', '0'))
+            if not 0 < size <= 4096:
+                raise ValueError('Invalid size')
+            self.connection.settimeout(5)
+            patch = json.loads(self.rfile.read(size))
+            self.server.router.configure(patch)
+        except Exception:
+            self.reply(400, b'{"error":"Schedule not saved; collector may be busy. Try again shortly."}')
+            return
+        self.reply(200, b'{"saved":true}')
 
 
-def make_server(port, store):
+def make_server(port, store, router=None):
     server = ThreadingHTTPServer(('127.0.0.1', port), Handler)
-    server.load = lambda: measurements(store)
+    server.router = router
+    server.token = secrets.token_urlsafe(32)
+    server.load = router.load if router else lambda: measurements(store)
     return server
 
 
@@ -81,11 +142,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=8765)
     parser.add_argument('--store', type=Path, help='Existing imported history directory; default is synthetic')
+    parser.add_argument('--ssh-target', help='Explicit SSH target for live collection and schedule controls')
+    parser.add_argument('--identity', type=Path, help='Existing SSH private key path (never copied)')
     args = parser.parse_args()
+    if args.ssh_target and args.store:
+        parser.error('Choose either SSH target or local store')
     if args.store is not None and not args.store.is_dir():
         parser.error('History directory must already exist')
-    server = make_server(args.port, args.store)
-    print(f'WAN Observer preview: http://127.0.0.1:{server.server_port} (read only)', flush=True)
+    router = Router(args.ssh_target, args.identity) if args.ssh_target else None
+    server = make_server(args.port, args.store, router)
+    print(f'WAN Observer preview: http://127.0.0.1:{server.server_port} (loopback only)', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
