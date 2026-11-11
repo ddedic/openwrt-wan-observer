@@ -125,14 +125,15 @@ Use that exact address for schedule saves. Credentials remain with SSH; no key i
 
 The project site at <https://ddedic.github.io/openwrt-wan-observer/> is one static page in `site/`: HTML, CSS and the self-hosted Manrope font. It has no JavaScript, trackers or external requests; the product views switch with CSS only.
 
-The **Website** workflow (`.github/workflows/pages.yml`) runs on pushes to `main` that touch `site/`, `docs/assets/` or the workflow, and on manual dispatch. It assembles `_site/` from the page and the public screenshots and logos in `docs/assets/` (copied unchanged), checks that every local reference exists, and deploys with the official Pages actions pinned to commit SHAs. Replacing an approved capture in `docs/assets/` therefore updates the README and the site together.
+The **Website** workflow (`.github/workflows/pages.yml`) runs on pushes to `main` that touch `site/`, `docs/assets/` or the workflow, and on manual dispatch. It assembles `_site/` from the page, the self-hosted font and social-preview image in `site/assets/`, and the public screenshots and logos in `docs/assets/` (copied unchanged). It checks that every local `href`/`src` and every absolute `https://ddedic.github.io/openwrt-wan-observer/assets/` social-metadata URL exists in the artifact, then deploys with the official Pages actions pinned to commit SHAs. Replacing an approved capture in `docs/assets/` therefore updates the README and the site together.
 
 Preview the same artifact locally:
 
 ```sh
 mkdir -p /tmp/wan-observer-site/assets
 cp site/index.html site/styles.css /tmp/wan-observer-site/
-cp site/assets/manrope-latin-wght.woff2 docs/assets/dashboard.png docs/assets/settings.png \
+cp site/assets/manrope-latin-wght.woff2 site/assets/social-preview.png \
+   docs/assets/dashboard.png docs/assets/settings.png \
    docs/assets/logo-dark.svg docs/assets/icon.svg docs/assets/MANROPE-OFL.txt /tmp/wan-observer-site/assets/
 python3 -m http.server 8000 --bind 127.0.0.1 --directory /tmp/wan-observer-site
 ```
