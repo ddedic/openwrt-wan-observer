@@ -81,3 +81,9 @@ Installed 0.4.0-1 on GL-MT6000 4.11.0. Browser inspection confirmed native cards
 ## 2026-11-11 — Approved logo integration
 
 Reuse the existing original SVG mark in the native title, with host theme colours and no runtime dependency. Owner approved the Opus header preview. For the README, adapt GitHub’s theme-specific image fragments instead of OS-based picture selection: https://github.blog/changelog/2021-11-24-specify-theme-context-for-images-in-markdown/ . GitHub mobile behaviour remains unverified; non-GitHub renderers may show both variants. No new component or font is needed.
+
+## 2026-11-11 — App logo alignment beside native `gl-title`
+
+- Source (read-only, installed Flint firmware `/www/js/app.ab987315.js.gz`): `gl-title` renders `div#view-title-wrapper > div.title + div(slot)`; scoped CSS `#view-title-wrapper[data-v-0d29ad7a]{min-height:36px;display:flex;align-items:center;…;margin:0 16px 14px}`, `.title{font-size:22px;font-weight:700;margin-right:10px}`.
+- Cause: in `.wo-brand` (flex, centred, gap 12px) the wrapper's 16px left margin widened the gap to ~28px, and its 14px bottom margin made the centred margin box sit the title 7px above the 28px mark.
+- Decision: reuse native `gl-title` unchanged; adapt only container CSS — `.wo-brand>#view-title-wrapper[id]{margin:0}` (specificity beats the scoped rule) and move the 14px to `.wo-brand:has(>#view-title-wrapper){padding-bottom:14px}` (h1 fallback untouched) so header height/spacing are unchanged. No JS change.
