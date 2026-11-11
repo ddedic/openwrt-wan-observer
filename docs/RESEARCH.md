@@ -77,3 +77,7 @@ Untested on 4.11: exact rendering and spacing of each native component; whether 
 ## Approved polish deployment — 2026-11-11
 
 Installed 0.4.0-1 on GL-MT6000 4.11.0. Browser inspection confirmed native cards, title, buttons, switch and both charts render in the real admin layout. Settings expose editable stored plan speeds and an unchanged save round trip succeeded. The real schedule remains 120 minutes with adaptive follow-ups off. Manual execution was verified through the actual authenticated CGI using an isolated synthetic backend: 202 accepted, 409 overlap, completed event, unchanged schedule and operation while paused. No full bandwidth test was started for this verification. Theme switching and physical mobile-device behavior remain unverified. The plain-HTTP Chrome download restriction still applies. Offline verification: 28 Python and 4 browser-data/PDF tests pass; dependency audit reports no production advisories.
+
+## 2026-11-11 — Approved logo integration
+
+Reuse the existing original SVG mark in the native title, with host theme colours and no runtime dependency. Owner approved the Opus header preview. For the README, adapt GitHub’s theme-specific image fragments instead of OS-based picture selection: https://github.blog/changelog/2021-11-24-specify-theme-context-for-images-in-markdown/ . GitHub mobile behaviour remains unverified; non-GitHub renderers may show both variants. No new component or font is needed.
