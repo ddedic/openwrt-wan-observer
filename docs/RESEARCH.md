@@ -33,3 +33,15 @@ Reviewed [OpenWrt cron service source](https://github.com/openwrt/openwrt/blob/m
 
 
 Collector dependency checked against [OpenWrt coreutils package source](https://github.com/openwrt/packages/blob/master/utils/coreutils/Makefile): `coreutils-timeout` provides the required timeout/kill-after behavior. No upstream source copied. Verification: 24 offline tests, a real router collection/import smoke test, and browser verification of live history and idempotent schedule save. Degradation/recovery bursts were tested with synthetic backend responses, not by disrupting the real connection. SDK build/install remains unverified.
+
+## Native GL.iNet integration — 2026-11-11
+
+Inspected [gl-sdk4-plugin-kit](https://github.com/go-wombat/gl-sdk4-plugin-kit) (MIT, last upstream push 2026-08-18), especially [custom backend authentication](https://github.com/go-wombat/gl-sdk4-plugin-kit/blob/main/docs/backend-auth.md) and [menu registration](https://github.com/go-wombat/gl-sdk4-plugin-kit/blob/main/docs/menu.md). Its verified matrix includes MT6000 4.9.1 but does not establish compatibility with the target vendor 4.11 build. The target's installed package layout confirms menu.d, dynamically loaded Vue views, nginx CGI and gl-session APIs; LuCI is not installed. Reuse the native menu/view/session contract rather than introducing another router web server or bypassing login. Validate the exact target contract locally before deployment; do not assert general firmware compatibility.
+
+Backend implementation decision: use installed Lua/cjson/libubus-lua to validate the current root session in process, avoiding session tokens in process arguments. Keep plugin commands fixed and request fields allowlisted. Authenticated API reads and writes must fail closed for absent/invalid/non-root sessions; no cookie-only write authorization or permissive CORS. No third-party code copied at this point. Proposed UI package should preserve the standalone OpenWrt collector rather than making generic collection depend on GL-specific packages.
+
+Live backend verification on GL-MT6000 4.11: direct libubus returns session fields at the top level. The CGI accepted an existing root session and an idempotent schedule save, rejected absent or invalid sessions, and blocked cross-origin writes and unknown configuration fields. Scheduling updates merge only the five schedule fields under the collector lock. No web server configuration was needed. The native view and installable UI package still require separate verification.
+
+## Dedicated PDF export — 2026-11-11
+
+Reviewed [jsPDF upstream](https://github.com/parallax/jsPDF) and [pdf-lib documentation](https://pdf-lib.js.org/). Both support direct document generation and vector drawing in the browser. Use a pinned, locally bundled PDF library for the approved page layout, with pagination driven by the selected report data. The router should serve the bundle without running a PDF process. No HTML print, screenshot export or external service is needed. Final library version, compressed bundle footprint, rendering and text extraction remain to be checked during implementation.

@@ -9,7 +9,7 @@ runtime=${WAN_OBSERVER_RUNTIME:-/tmp/wan-observer-collector}
 store=${WAN_OBSERVER_STORE:-/etc/wan-observer/history}
 export WAN_OBSERVER_STORE="$store" WAN_OBSERVER_LIB="$lib"
 fail() { printf '%s\n' "wan-observer: $1" >&2; exit 1; }
-[ "$#" = 1 ] || fail 'usage: wan-observer-collect configure|tick|status'
+[ "$#" = 1 ] || fail 'usage: wan-observer-collect configure|schedule|tick|status'
 [ ! -L "$runtime" ] && [ ! -L "$runtime/state.next" ] && [ ! -L "$config" ] || fail 'symlink refused'
 mkdir -p "$runtime"
 chmod 700 "$runtime"
@@ -22,11 +22,22 @@ trap 'exit 143' TERM HUP
 lock() { mkdir "$runtime/.lock" 2>/dev/null || fail 'collector busy or interrupted'; locked=1; }
 validate() { jq -L "$lib" -sce 'import "collector" as c; if length==1 then .[0]|c::valid_config else error("one object required") end' "$1" 2>/dev/null; }
 case "$1" in
- configure)
+ configure|schedule)
   lock
   head -c 8193 > "$work/input"
   [ "$(wc -c < "$work/input")" -le 8192 ] || fail 'configuration too large'
-  validate "$work/input" > "$work/config" || fail 'invalid configuration'
+  if [ "$1" = schedule ]; then
+    [ -f "$config" ] || fail 'collector is not configured'
+    jq -L "$lib" -sce --slurpfile current "$config" '
+      import "collector" as c;
+      if length == 1 and (.[0] | type == "object" and
+         keys == ["adaptive", "enabled", "end_hour", "interval_minutes", "start_hour"])
+      then ($current[0] + .[0]) | c::valid_config
+      else error("invalid schedule") end
+    ' "$work/input" > "$work/config" 2>/dev/null || fail 'invalid schedule'
+  else
+    validate "$work/input" > "$work/config" || fail 'invalid configuration'
+  fi
   if [ -f "$config" ] && cmp -s "$work/config" "$config"; then
     printf '%s\n' 'Collector configuration unchanged.'
     exit 0
@@ -46,8 +57,8 @@ case "$1" in
  *) fail 'unknown command';;
 esac
 [ -f "$config" ] || fail 'collector is not configured'
-validate "$config" > "$work/config" || fail 'invalid configuration'
 if [ "$1" = tick ]; then lock; fi
+validate "$config" > "$work/config" || fail 'invalid configuration'
 if [ -f "$runtime/state.json" ]; then
   [ ! -L "$runtime/state.json" ] || fail 'symlink state refused'
   cp "$runtime/state.json" "$work/state"

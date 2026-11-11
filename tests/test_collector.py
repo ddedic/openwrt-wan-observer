@@ -93,3 +93,14 @@ class CollectorTests(unittest.TestCase):
         self.configure();self.run_cli('tick')
         (self.path/'runtime/state.json').unlink()
         self.assertEqual(len(self.status()['events']),1)
+
+    def test_schedule_updates_only_schedule_fields(self):
+        self.configure()
+        patch = dict(enabled=False, adaptive=True, interval_minutes=60, start_hour=0, end_hour=24)
+        self.assertNotEqual(self.run_cli('schedule', value=dict(patch, binary='/tmp/other')).returncode, 0)
+        self.assertEqual(self.run_cli('schedule', value=patch).returncode, 0)
+        saved = json.loads((self.path/'config.json').read_text())
+        self.assertFalse(saved['enabled'])
+        self.assertEqual(saved['interval_minutes'], 60)
+        self.assertEqual(saved['binary'], self.config['binary'])
+        self.assertEqual(saved['download_mbps'], self.config['download_mbps'])
