@@ -1,136 +1,92 @@
-# WAN Observer
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.svg">
+    <img src="docs/assets/logo.svg" alt="WAN Observer" width="363" height="64">
+  </picture>
+</p>
 
-Internet slow again? Keep a history you can inspect, export and discuss with your provider.
+<p align="center"><strong>Local speed-test history for your router — so “the internet is slow again” becomes a record you can inspect, export and share with your provider.</strong></p>
 
-[![Offline tests](https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml/badge.svg)](https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <a href="https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml"><img src="https://github.com/ddedic/openwrt-wan-observer/actions/workflows/test.yml/badge.svg" alt="Offline tests"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/status-experimental-orange.svg" alt="Status: experimental">
+  <img src="https://img.shields.io/badge/GL.iNet-SDK4%20plugin-2c2a5a.svg" alt="GL.iNet SDK4 plugin">
+</p>
 
-WAN Observer is a lightweight, local-first internet-performance history tool for OpenWrt routers. Built for small devices, with portable exports and no cloud account.
+<p align="center">
+  <a href="https://github.com/ddedic/openwrt-wan-observer/releases"><strong>Download</strong></a> ·
+  <a href="#install-on-a-glinet-flint-2">Install</a> ·
+  <a href="docs/TECHNICAL.md">Technical guide</a> ·
+  <a href="CONTRIBUTING.md">Contribute</a>
+</p>
 
-> **Status: experimental.** The OpenWrt collector records scheduled tests and adaptive follow-ups. The optional GL.iNet SDK4 plugin adds a native dashboard, schedule controls, CSV and a dedicated A4 PDF report. Installed and checked on a GL-MT6000 running 4.11.0.
+<p align="center">
+  <img src="docs/assets/dashboard.png" alt="WAN Observer dashboard inside a router admin page, showing latest test, download and upload history against plan speeds, and a test list" width="900">
+</p>
 
-[Try the preview](#dashboard-preview) · [Use the CLI](#try-locally) · [Roadmap](#roadmap) · [Contribute](CONTRIBUTING.md)
+<p align="center"><sub><b>Synthetic demo.</b> Rendered locally from the production UI bundle with invented data (fictional 250/50 Mbps plan). The router admin shell and GL.iNet components are local approximations, not an on-device screenshot.</sub></p>
 
-The goal is to help people understand recurring connection problems and share useful measurements with their provider. Results are diagnostic records, not certified evidence or proof that a provider breached a contract.
+## Why
 
-## GL.iNet Flint 2
+Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bounded, private history of speed tests on the router itself and turns it into charts, a plain-language summary and exports you can hand to support. No cloud account, no telemetry.
 
-Download the matching **wan-observer** and **wan-observer-glinet** IPKs from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases). Install both on compatible GL.iNet SDK4 firmware with `opkg install /path/to/core.ipk /path/to/glinet.ipk`. The packages start no tests on installation. Follow the [collector setup](docs/COLLECTOR.md) to configure a permitted test binary and schedule.
+## Features
 
-After signing into the router, open **Flow Control → WAN Observer**. Use **Run Speedtest** for one immediate test (also while scheduling is paused). Use **Settings** to pause or resume collection, change testing hours and frequency, toggle adaptive follow-ups, or edit the plan download/upload speeds used for comparisons. The history period controls the charts, test list and exports. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix. **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins.
+- **Native router page** — GL.iNet SDK4 plugin under **Flow Control → WAN Observer**, using the admin panel's own components and theme.
+- **Run Speedtest** — one immediate test on demand, also while scheduling is paused.
+- **Schedules you control** — pause/resume, testing hours and frequency. An illustrative daily/monthly data estimate is shown *before* you enable unattended tests.
+- **Your plan as the baseline** — editable plan download/upload speeds; charts and results compare against them.
+- **Optional adaptive follow-ups** — opt in to up to 3 extra tests, 5 minutes apart, after a slow or failed test; capped at 24 extras per UTC day.
+- **Exports** — direct A4 PDF report (optional detailed appendix) and CSV for the selected period.
+- **Bounded history** — count-based retention (default 1,000, max 10,000 records); private files, atomic writes.
+- **Small footprint** — POSIX shell + jq on the router. No Python, database or container.
+- **Privacy by allowlist** — IP/MAC addresses, hostnames, ISP labels and result links are discarded on import.
 
-To build both OpenWrt 21.02-style IPKs on your computer:
+<details>
+<summary>More screenshots — settings and mobile</summary>
 
-```sh
-npm --prefix package/wan-observer-glinet/ui ci
-npm --prefix package/wan-observer-glinet/ui run build
-npm --prefix package/wan-observer-glinet/ui test
-python3 tools/build-ipk.py
-```
+![Settings and editable plan speeds — synthetic demo](docs/assets/settings.png)
 
-The browser bundle runs inside the GL.iNet admin panel. Generic OpenWrt users can install the collector alone.
+[Open the full mobile screenshot](docs/assets/mobile.png)
 
-## Available now
+</details>
 
-- POSIX shell + jq; no Python, PHP, database server or container runtime on the router.
-- Correct bytes-per-second to Mbps conversion for completed Ookla results.
-- Optional values stay unknown instead of becoming zero.
-- Private local JSONL history, serialized writes and atomic replacement.
-- Retention by imported-record count (default 1,000, maximum 10,000).
-- Allowlisted numeric fields and UTC timestamps; IP/MAC addresses, hostnames, ISP labels, result links and arbitrary backend fields are discarded.
-- CSV export with stable columns.
+## Install on a GL.iNet Flint 2
 
-## Dashboard preview
+1. Download the matching **`wan-observer`** and **`wan-observer-glinet`** IPKs from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
+2. Copy them to the router and install both:
+   ```sh
+   opkg install /path/to/wan-observer_*.ipk /path/to/wan-observer-glinet_*.ipk
+   ```
+3. Configure a permitted speed-test binary and schedule — see [collector setup](docs/COLLECTOR.md).
+4. Sign in to the admin panel and open **Flow Control → WAN Observer**.
 
-Requires Python 3.9+ on your development computer. No router connection or speed test is needed:
+**Installation runs no tests.** Nothing is measured until you press **Run Speedtest** or enable a schedule. WAN Observer does not bundle Ookla software or accept third-party terms for you.
 
-```sh
-git clone https://github.com/ddedic/openwrt-wan-observer.git
-cd openwrt-wan-observer
-python3 tools/preview.py
-```
+## Compatibility and status
 
-Open **http://127.0.0.1:8765**. The default view is prominently labelled **synthetic demo**, with separate download/upload charts, a plain-language report, event sequence, print view and CSV export. Stop with Ctrl+C.
-
-To inspect your already imported history instead, add `--store /path/to/history`. This reads a local snapshot; Refresh reloads that snapshot. It does not fetch new results from a router. Imported history additionally requires jq.
-
-This temporary developer UI is separate from the OpenWrt package. It listens only on loopback, serves fixed routes, and is read-only unless explicitly connected through SSH. In SSH mode its schedule API requires a same-origin request and a per-session token. Do not deploy it as a production server or expose it through a proxy or tunnel. The native GL.iNet interface is available separately.
-
-## Try locally
-
-Requirements: jq 1.6+ and a POSIX shell with BusyBox-compatible `head -c`, `mktemp` and `tail -n` utilities.
-
-```sh
-export WAN_OBSERVER_LIB="$PWD/package/wan-observer/files"
-export WAN_OBSERVER_STORE="$PWD/.local/history"
-sh package/wan-observer/files/wan-observer normalize-ookla < /path/to/result.json
-sh package/wan-observer/files/wan-observer import-ookla < /path/to/result.json
-sh package/wan-observer/files/wan-observer list
-sh package/wan-observer/files/wan-observer export-csv > /path/to/private-report.csv
-```
-
-Input must be a single completed JSON object with `type: result`, a UTC whole-second timestamp, and numeric download/upload bandwidth. Input is limited to 1 MiB. Unsupported timestamps or partial/progress records are rejected rather than guessed. This is not a raw JSONL progress-stream importer.
-
-Set `WAN_OBSERVER_MAX_RECORDS` to a count from 1 to 10,000. Retention keeps the most recently **imported** records, not the newest timestamps; duplicates are not yet deduplicated.
-
-## OpenWrt package
-
-Place `package/wan-observer` inside a matching OpenWrt SDK's `package/` directory, make the packages feed containing jq available, select `wan-observer`, then build:
-
-```sh
-make package/wan-observer/compile V=s
-```
-
-The package installs `/usr/bin/wan-observer` and its jq module. Installation does not run network tests, bundle Ookla software, accept third-party terms, change DNS/firewall/VPN settings, or enable a daemon. The optional collector invokes an operator-provided binary only after explicit configuration and scheduling. The SDK recipe has not yet been validated across firmware releases; no prebuilt release is published.
-
-Default history location: `/etc/wan-observer/history`. It survives normal restarts on typical writable OpenWrt installations. Firmware upgrade preservation is not implemented yet. Set `WAN_OBSERVER_STORE` to a private directory on persistent external storage if desired. Each manual import rewrites bounded history; frequent collection increases flash writes. Prefer suitable external storage for long-running deployments.
-
-Files are mode 0600 and the store directory is mode 0700. Do not point the store at an untrusted directory. A hard interruption can leave `.lock`; after confirming no importer is running, remove that empty directory to recover. Atomic rename reduces partial-file risks but does not guarantee durability during sudden power loss. Package removal intentionally leaves history for the owner to export or remove.
-
-## Privacy
-
-No telemetry, cloud account, real network fixtures or stored credentials. Existing measurement tools may contact external services under their own terms. The importer makes no network requests. Opt-in collection runs the configured external tool; SSH preview mode connects only to the explicitly configured router.
-
-Normalized data still reveals times, performance and a public test-server ID. Review exports before sharing. Raw source files remain your responsibility; WAN Observer does not delete them. Never put real results, screenshots, router backups or configuration exports in an issue or pull request.
-
-## Development
-
-```sh
-python3 -m unittest discover -s tests -v
-sh -n package/wan-observer/files/wan-observer
-sh -n package/wan-observer/files/wan-observer-collect
-```
-
-Tests are synthetic and offline. Python is only a development dependency.
-
-See [scope](docs/SCOPE.md), [upstream research](docs/RESEARCH.md) and [contributing](CONTRIBUTING.md). Not affiliated with OpenWrt, GL.iNet, Ookla or any ISP. License: MIT; external tools retain their own licenses.
-
-## Roadmap
-
-| Stage | Status |
+| Component | Status |
 | --- | --- |
-| Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
-| Disposable local dashboard | Available for development; synthetic demo and local history |
-| OpenWrt SDK build and package lifecycle | Not yet verified |
-| Opt-in collection with adaptive follow-ups | Available; count caps, no enforced byte budget |
-| WAN traffic, router load and measurement context | Planned |
-| Temporary desktop report and browser printing | Available; final UI pending |
-| GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.1) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
+| Core collector/CLI (`wan-observer`) | Synthetic offline tests; hardware smoke test on Flint 2 |
+| Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
+| Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-See [scope and limitations](docs/SCOPE.md) for the delivery boundaries. Feature requests and small, focused contributions are welcome. Start with [contributing](CONTRIBUTING.md); report vulnerabilities through [private security reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new).
+Experimental. Version 0.4.1 includes the native dashboard spacing fix. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
 
-## Maintainer and license
+> Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and adaptive follow-ups are limited by test count, not by a byte budget.
 
-Created and maintained by [Danijel Dedic (@ddedic)](https://github.com/ddedic). Copyright © 2026 Danijel Dedic. Released under the [MIT License](LICENSE).
+## Documentation
 
-## Opt-in adaptive collection
+- [Technical guide](docs/TECHNICAL.md) — building IPKs, CLI, OpenWrt SDK, storage, privacy, development
+- [Collector setup and recovery](docs/COLLECTOR.md)
+- [Scope and limitations](docs/SCOPE.md) · [Upstream research](docs/RESEARCH.md)
 
-See [collector setup and recovery](docs/COLLECTOR.md). The collector uses an existing operator-installed Ookla CLI and `timeout`; it never installs a binary or accepts its terms for you. A cron tick checks the configured schedule. Low results or failed tests can trigger three five-minute follow-ups, bounded by 24 extras per UTC day. Healthy results stop the burst early.
+## Contributing
 
-To view a configured router and change its schedule through your existing SSH access:
+Bug reports, feature requests and small, focused pull requests are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Please never attach real results, screenshots, router backups or configuration exports. Report vulnerabilities via [private security reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new).
 
-```sh
-python3 tools/preview.py --ssh-target root@router.example --identity ~/.ssh/router_key
-```
+## License
 
-Open `http://127.0.0.1:8765` using that exact address for schedule saves. Credentials remain with SSH; no key is uploaded to the browser or router. This is a temporary local development bridge with the privileges of your SSH account. Do not expose it publicly. The collector continues when the preview is closed.
+[MIT](LICENSE) © 2026 Danijel Dedic. Created and maintained by [@ddedic](https://github.com/ddedic). External tools keep their own licenses. Not affiliated with OpenWrt, GL.iNet, Ookla or any ISP.
