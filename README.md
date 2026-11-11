@@ -70,7 +70,7 @@ Keep a private backup before upgrading or removing packages; see [preservation a
 
 | Component | Status |
 | --- | --- |
-| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.5.0) | New interface verified offline; earlier 0.4.5-3 installed on GL-MT6000 (Flint 2), firmware 4.11.0. Current screenshots show the earlier interface. |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.5.0) | 0.5.0-1 installed and checked on GL-MT6000 (Flint 2), firmware 4.11.0; screenshots show the current native dashboard and settings. |
 | Core collector/CLI (`wan-observer`) | Synthetic offline tests and Flint 2 smoke checks; not universal firmware validation |
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
