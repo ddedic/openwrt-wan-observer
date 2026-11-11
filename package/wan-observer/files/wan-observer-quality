@@ -1,0 +1,154 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# Opt-in local invocation only. Reads an already-enabled native daemon; never starts probes.
+set -eu
+umask 077
+lib=${WAN_OBSERVER_LIB:-/usr/share/wan-observer}
+store=${WAN_OBSERVER_QUALITY_STORE:-/etc/wan-observer/quality}
+ubus=${WAN_OBSERVER_QUALITY_UBUS:-ubus}
+uci=${WAN_OBSERVER_QUALITY_UCI:-uci}
+days=${WAN_OBSERVER_QUALITY_RETENTION_DAYS:-30}
+now=${WAN_OBSERVER_QUALITY_NOW:-$(date -u +%s)}
+die() { printf '%s\n' "wan-observer-quality: $1" >&2; exit 1; }
+case "$days" in ''|*[!0-9]*) die 'invalid retention days';; esac
+[ "${#days}" -le 2 ] && [ "$days" -ge 1 ] && [ "$days" -le 30 ] || die 'retention must be 1..30 days'
+case "$now" in ''|*[!0-9]*) die 'invalid observation time';; esac
+[ "${#now}" -le 10 ] || die 'invalid observation time'
+command -v jq >/dev/null 2>&1 || die 'jq is required'
+jq -en --argjson n "$now" '$n >= 1704067200 and $n <= 4102444799' >/dev/null || die 'invalid observation time'
+[ "$#" -ge 1 ] && [ "$#" -le 2 ] || die 'usage: tick|status|list [limit]|series days'
+cmd=$1
+limit=1440
+case "$cmd" in
+  tick|status) [ "$#" -eq 1 ] || die 'unexpected argument';;
+  series)
+    [ "$#" -eq 2 ] || die 'series requires days: 1|7|30'
+    case "$2" in 1|7|30) series_days=$2;; *) die 'series days must be 1|7|30';; esac;;
+  list)
+    limit=${2:-1440}
+    case "$limit" in ''|*[!0-9]*) die 'invalid list limit';; esac
+    [ "${#limit}" -le 5 ] && [ "$limit" -ge 1 ] && [ "$limit" -le 43200 ] || die 'list limit must be 1..43200';;
+  *) die 'unknown command';;
+esac
+work=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer-quality.XXXXXX")
+locked=0
+cleanup() {
+  rm -rf "$work"
+  if [ "$locked" = 1 ]; then rmdir "$store/.lock" 2>/dev/null || :; fi
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM HUP
+day=$(jq -nr --argjson n "$now" '$n|strftime("%Y%m%d")')
+cutoff=$(jq -nr --argjson n "$now" --argjson d "$days" '((($n/86400)|floor)-$d+1)*86400|strftime("%Y%m%d")')
+check_store() { [ ! -L "$store" ] || die 'symlink store refused'; }
+# One small day is validated at a time; tick never rewrites prior observations.
+read_day() {
+  file=$1
+  [ ! -L "$file" ] && [ -f "$file" ] || die 'invalid day file'
+  [ "$(wc -c < "$file")" -le 2097152 ] || die 'day exceeds 2 MiB'
+  filename=${file##*/}
+  fileday=${filename%.jsonl}
+  jq -L "$lib" -sce --arg day "$fileday" 'import "quality" as q; q::day_records($day)[]' \
+    "$file" > "$work/day" 2>/dev/null || {
+      # jq -e returns 4 for an empty stream; an empty file is valid before first append.
+      [ ! -s "$file" ] || die 'invalid quality history; original preserved'
+      : > "$work/day"
+    }
+}
+read_history() {
+  check_store
+  : > "$work/history"
+  for file in "$store"/*.jsonl; do
+    [ -e "$file" ] || [ -L "$file" ] || continue
+    name=${file##*/}
+    case "$name" in [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].jsonl) :;; *) continue;; esac
+    fd=${name%.jsonl}
+    [ "$fd" -ge "$cutoff" ] && [ "$fd" -le "$day" ] || continue
+    read_day "$file"
+    cat "$work/day" >> "$work/history"
+  done
+}
+observe() {
+  state=unsupported
+  category=source_unavailable
+  if command -v "$ubus" >/dev/null 2>&1 && command -v "$uci" >/dev/null 2>&1; then
+    if "$ubus" -t 5 list network-quality > "$work/support" 2>/dev/null &&
+        [ "$(cat "$work/support")" = network-quality ]; then
+      enabled=$("$uci" -q get network-quality.global.enabled 2>/dev/null) || enabled=unknown
+      case "$enabled" in
+        0) state=disabled; category=native_disabled;;
+        1)
+          state=error; category=snapshot_failed
+          # ubus bounds execution time; raw data exists only in private temporary storage.
+          if "$ubus" -t 5 call network-quality snapshot > "$work/raw" 2>/dev/null; then
+            category=invalid_snapshot
+            if [ "$(wc -c < "$work/raw")" -le 65536 ] &&
+              jq -L "$lib" -sce --argjson now "$now" 'import "quality" as q;
+                if length == 1 then .[0]|q::snapshot($now) else error("expected snapshot") end' \
+                "$work/raw" > "$work/observation" 2>/dev/null; then
+              state=available
+              rm -f "$work/raw"
+              return
+            fi
+          fi;;
+        *) state=error; category=enable_state_unknown;;
+      esac
+    fi
+  fi
+  rm -f "$work/raw"
+  jq -L "$lib" -nc --argjson now "$now" --arg state "$state" --arg category "$category" \
+    'import "quality" as q; q::observation($now; $state; $category)' > "$work/observation"
+}
+case "$cmd" in
+  tick)
+    check_store
+    mkdir -p "$store"
+    chmod 700 "$store"
+    mkdir "$store/.lock" 2>/dev/null || die 'quality history locked; another writer or interrupted tick'
+    locked=1
+    today="$store/$day.jsonl"
+    [ ! -L "$today" ] || die 'symlink day refused'
+    : > "$work/day"
+    if [ -e "$today" ]; then read_day "$today"; fi
+    observe
+    stored=false
+    if ! jq -se --argjson now "$now" 'any(.[]; ((.sampled_at/60)|floor) == (($now/60)|floor))' "$work/day" >/dev/null; then
+      [ "$(wc -l < "$work/day")" -lt 1440 ] || die 'daily observation limit reached'
+      # Serialized single-line append; interrupted/torn records are detected and preserved on next read.
+      record=$(cat "$work/observation")
+      printf '%s\n' "$record" >> "$today" || die 'quality append failed'
+      chmod 600 "$today"
+      stored=true
+    fi
+    # Only delete expired daily files, never rewrite retained days or remove arbitrary paths.
+    for file in "$store"/*.jsonl; do
+      name=${file##*/}
+      case "$name" in [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9].jsonl)
+        fd=${name%.jsonl}
+        if [ "$fd" -lt "$cutoff" ]; then
+          [ ! -L "$file" ] || die 'symlink day refused'
+          rm -f "$file"
+        fi;;
+      esac
+    done
+    jq -c --argjson stored "$stored" '{state,stored:$stored,observation:.}' "$work/observation"
+    ;;
+  series)
+    read_history
+    jq -L "$lib" -sc --argjson now "$now" --argjson days "$series_days" \
+      'import "quality" as q; q::series($now; $days)' "$work/history"
+    ;;
+  list)
+    read_history
+    tail -n "$limit" "$work/history"
+    ;;
+  status)
+    observe
+    read_history
+    jq -sc --slurpfile current "$work/observation" --argjson days "$days" '
+      {state:$current[0].state,source:"gl-inet-network-quality",source_freshness:"unknown",
+       current_observation:$current[0],latest_observation:(max_by(.sampled_at)//null),
+       sample_count:length,retention_days:$days,max_samples_per_day:1440}' "$work/history"
+    ;;
+esac

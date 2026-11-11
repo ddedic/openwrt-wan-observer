@@ -1,0 +1,3 @@
+# Operator-created config and complete persistent measurement/attempt history.
+# Runtime locks, collector timing and in-progress tests under /tmp are excluded.
+/etc/wan-observer/

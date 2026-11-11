@@ -1,0 +1,42 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+# Read-only setup checks. Never runs a measurement, enables cron, or accepts a license.
+set -eu
+config=${WAN_OBSERVER_CONFIG:-/etc/wan-observer/collector.json}
+cron=${WAN_OBSERVER_CRONTAB:-/etc/crontabs/root}
+lib=${WAN_OBSERVER_LIB:-/usr/share/wan-observer}
+scheduler_service=unknown
+if command -v pidof >/dev/null 2>&1; then
+  scheduler_service=stopped
+  if pidof crond >/dev/null 2>&1; then scheduler_service=running; fi
+fi
+scheduler=missing
+if [ -f "$cron" ] && awk '
+  /^[[:space:]]*#/ { next }
+  # Verify only the documented minute tick, not arbitrary cron expressions.
+  (NF == 7 || (NF == 9 && $8 == ">/dev/null" && $9 == "2>&1")) &&
+    $1 == "*" && $2 == "*" && $3 == "*" && $4 == "*" && $5 == "*" &&
+    $6 == "/usr/bin/wan-observer-collect" && $7 == "tick" { found=1 }
+  END { exit !found }
+' "$cron"; then scheduler=installed; fi
+config_status=missing
+binary_status=unknown
+status=config_missing
+if [ -L "$config" ] || [ -e "$config" ]; then
+  config_status=invalid
+  status=config_invalid
+  # Reuse the collector schema, including its one-object framing requirement.
+  if [ ! -L "$config" ] && [ -f "$config" ] && validated=$(jq -L "$lib" -sce 'import "collector" as c; if length == 1 then .[0]|c::valid_config else error("one object required") end' "$config" 2>/dev/null); then
+    config_status=valid
+    binary=$(printf '%s' "$validated" | jq -r '.binary')
+    binary_status=unavailable
+    if [ -f "$binary" ] && [ -x "$binary" ]; then binary_status=available; fi
+    status=ready
+    if [ "$scheduler_service" = stopped ]; then status=scheduler_stopped; fi
+    if [ "$scheduler" = missing ]; then status=scheduler_missing; fi
+    if [ "$binary_status" = unavailable ]; then status=binary_missing; fi
+    if [ "$(printf '%s' "$validated" | jq -r '.enabled')" = false ]; then status=disabled; fi
+  fi
+fi
+# Only fixed enum strings reach stdout; configuration/path/interface stay private.
+printf '{"status":"%s","checks":{"config":"%s","binary":"%s","scheduler":"%s","scheduler_service":"%s"}}\n' "$status" "$config_status" "$binary_status" "$scheduler" "$scheduler_service"

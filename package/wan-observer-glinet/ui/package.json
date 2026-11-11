@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "esbuild index.js --bundle --minify --legal-comments=external --platform=browser --format=cjs --loader:.css=text --outfile=dist/view.js",
-    "test": "node --test report.test.js"
+    "test": "node --test *.test.js"
   },
   "dependencies": {
     "jspdf": "4.2.1"

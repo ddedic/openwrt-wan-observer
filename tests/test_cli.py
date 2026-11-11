@@ -93,6 +93,51 @@ class CLITests(unittest.TestCase):
         self.assertEqual(records[0]['download_mbps'], '100')
         self.assertNotIn('PRIVATE_MARKER', exported.stdout)
 
+    def test_actual_transfer_bytes_are_optional_validated_and_exportable(self):
+        value = fixture()
+        value['download']['bytes'] = 123456
+        value['upload']['bytes'] = 23456
+        r = self.run_cli('import-ookla', value)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        row = json.loads(self.run_cli('list').stdout)
+        self.assertEqual((row['download_bytes'], row['upload_bytes']), (123456, 23456))
+        self.assertEqual(list(csv.DictReader(io.StringIO(self.run_cli('export-csv').stdout)))[0]['download_bytes'], '123456')
+        for bad in [-1, 'PRIVATE_VALUE', 1.5, 9007199254740992]:
+            value['download']['bytes'] = bad
+            row = json.loads(self.run_cli('normalize-ookla', value).stdout)
+            self.assertIsNone(row['download_bytes'])
+
+    def test_attempt_id_is_local_validated_and_provider_ids_are_stripped(self):
+        value=fixture()
+        value['attempt_id']='fedcba9876543210fedcba9876543210'
+        value['result']['id']='PRIVATE_PROVIDER_ID'
+        self.assertIsNone(json.loads(self.run_cli('normalize-ookla',value).stdout).get('attempt_id'))
+        local_id='0123456789abcdef0123456789abcdef'
+        self.env['WAN_OBSERVER_ATTEMPT_ID']=local_id
+        self.assertEqual(self.run_cli('import-ookla',value).returncode,0)
+        row=json.loads(self.run_cli('list').stdout)
+        self.assertEqual(row.get('attempt_id'),local_id)
+        csv_row=list(csv.DictReader(io.StringIO(self.run_cli('export-csv').stdout)))[0]
+        self.assertEqual(csv_row.get('attempt_id'),local_id)
+        self.assertNotIn('PRIVATE_PROVIDER_ID',json.dumps(row))
+        for invalid in ['', 'a'*31, 'a'*33, 'A'*32, 'g'*32, 'PRIVATE_BAD_ID', 'é'*32]:
+            self.env['WAN_OBSERVER_ATTEMPT_ID']=invalid
+            result=self.run_cli('import-ookla',value)
+            self.assertNotEqual(result.returncode,0)
+            self.assertNotIn('PRIVATE_BAD_ID',result.stderr)
+        self.env.pop('WAN_OBSERVER_ATTEMPT_ID')
+        path=Path(self.env['WAN_OBSERVER_STORE'])/'measurements.jsonl'
+        old=dict(row);old.pop('attempt_id')
+        path.write_text(json.dumps(old)+'\n')
+        legacy=json.loads(self.run_cli('list').stdout)
+        self.assertIsNone(legacy.get('attempt_id'))
+        old['attempt_id']='PRIVATE_BAD_ID'
+        original=json.dumps(old)+'\n';path.write_text(original)
+        result=self.run_cli('list')
+        self.assertNotEqual(result.returncode,0)
+        self.assertNotIn('PRIVATE_BAD_ID',result.stderr)
+        self.assertEqual(path.read_text(),original)
+
     def test_failed_import_preserves_history(self):
         r = self.run_cli('import-ookla', fixture())
         self.assertEqual(r.returncode, 0, r.stderr)
