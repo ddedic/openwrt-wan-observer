@@ -27,18 +27,19 @@
 
 ## Why
 
-Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bounded, private history of speed tests on the router itself and turns it into charts, a plain-language summary and exports you can hand to support. No cloud account, no telemetry.
+Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bounded, private history of speed tests on the router itself and turns it into charts, a plain-language summary and exports you can hand to support. No cloud account or WAN Observer telemetry. The operator-installed speed-test tool contacts its own external services.
 
 ## Features
 
 - **Native router page** — GL.iNet SDK4 plugin under **Flow Control → WAN Observer**, using the admin panel's own components and theme.
 - **Run Speedtest** — one immediate test on demand, also while scheduling is paused.
-- **Schedules you control** — pause/resume, testing hours and frequency. An illustrative daily/monthly data estimate is shown *before* you enable unattended tests.
-- **Your plan as the baseline** — editable plan download/upload speeds; charts and results compare against them.
+- **Schedules you control** — pause/resume, 15-minute to 12-hour intervals, all-day or overnight windows in UTC or router time. Data-use estimates use measured bytes when available and a clearly labelled example otherwise.
+- **Your plan as the baseline** — editable plan speeds and slow-result threshold; time-proportional charts keep failed attempts separate from the latest successful reading.
 - **Optional adaptive follow-ups** — opt in to up to 3 extra tests, 5 minutes apart, after a slow or failed test; capped at 24 extras per UTC day.
-- **Current history and exports** — the visible dashboard refreshes automatically; PDF and CSV include available latency, jitter, packet loss, loaded latency and actual test bytes.
+- **Current history and exports** — the visible dashboard refreshes every 30 seconds; PDF and CSV include available latency, jitter, packet loss, loaded latency and actual test bytes.
 - **Bounded history** — retain valid measurements and successful/failed attempts independently (default 1,000 each, max 10,000), with explicit incomplete legacy coverage.
-- **Optional CLI tools** — native-quality history and actual test-byte accounting, with an optional monthly start guard. Neither is enabled during installation; [setup and limits](docs/COLLECTOR.md).
+- **Optional quality history** — record existing GL Network Quality snapshots locally, with latency, jitter, loss and DNS timing; no extra WAN probes. Requires the GL.iNet 4.11 service.
+- **Optional data start guard** — set a monthly allowance in Settings; recorded test bytes count toward it, unknown accounting blocks new starts, and one allowed test can go over. [Setup and limits](docs/COLLECTOR.md).
 - **Small footprint** — POSIX shell + jq on the router. No Python, database or container.
 - **Privacy by allowlist** — IP/MAC addresses, hostnames, ISP labels and result links are discarded on import.
 
@@ -51,26 +52,30 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 
 ## Install on a GL.iNet Flint 2
 
-1. Download the matching **`wan-observer`** and **`wan-observer-glinet`** IPKs from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
+Requires SSH/root access, an `opkg`-based firmware with jq and `coreutils-timeout`, and a separately installed, permitted Ookla Speedtest CLI. Check the [compatibility table](#compatibility-and-status) before installing. The router page requires both packages; installing the core alone provides CLI tools, not a generic LuCI page.
+
+1. Download **`wan-observer`** and **`wan-observer-glinet`** IPKs with the same version/revision, plus their `SHA256SUMS` file, from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases). Keep that release's files in a directory of their own. Verify the downloads on your computer with `sha256sum -c SHA256SUMS-*.txt` (macOS: `shasum -a 256 -c SHA256SUMS-*.txt`).
 2. Copy them to the router and install both:
    ```sh
    opkg install /path/to/wan-observer_*.ipk /path/to/wan-observer-glinet_*.ipk
    ```
-3. Configure a permitted speed-test binary and schedule — see [collector setup](docs/COLLECTOR.md).
+3. Follow [collector setup](docs/COLLECTOR.md): configure the binary, permitted server and plan while collection is disabled, check readiness, then explicitly enable the schedule and add its cron entry when wanted. Setup still requires operator CLI work.
 4. Sign in to the admin panel and open **Flow Control → WAN Observer**.
 
-**Installation runs no tests.** Nothing is measured until you press **Run Speedtest** or enable a schedule. WAN Observer does not bundle Ookla software or accept third-party terms for you.
+Keep a private backup before upgrading or removing packages; see [preservation and rollback](docs/TECHNICAL.md#backup-and-restore).
+
+**Installation runs no tests.** Scheduled speed tests and quality history stay off until you opt in. Quality history reads an already-enabled GL service; it does not enable that service. Existing settings are preserved on upgrade. WAN Observer does not bundle Ookla software or accept third-party terms for you.
 
 ## Compatibility and status
 
 | Component | Status |
 | --- | --- |
-| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.5) | Reliability changes verified offline; earlier 0.4.4 installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
-| Core collector/CLI (`wan-observer`) | Synthetic offline tests; hardware smoke test on Flint 2 |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.5.0) | New interface verified offline; earlier 0.4.5-3 installed on GL-MT6000 (Flint 2), firmware 4.11.0. Current screenshots show the earlier interface. |
+| Core collector/CLI (`wan-observer`) | Synthetic offline tests and Flint 2 smoke checks; not universal firmware validation |
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-Experimental. Version 0.4.5 improves attempt history, automatic refresh and exports, with optional CLI quality history and byte accounting. Monitoring/budget dashboard controls and further visual changes are pending. Full details: [limitations](docs/TECHNICAL.md#limitations).
+Experimental. Version 0.5.0 adds quality-history and byte-budget controls, clearer setup/attempt states and time-proportional charts. Existing two-hour, adaptive-off, all-day settings remain unchanged; quality history defaults off, the budget stays unset and existing UTC windows stay UTC. Full details: [limitations](docs/TECHNICAL.md#limitations).
 
 > Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and the optional byte budget checks whether another test may start. One test can exceed it; accounting covers recorded test bytes, not all router traffic.
 
@@ -84,5 +89,7 @@ Experimental. Version 0.4.5 improves attempt history, automatic refresh and expo
 Bug reports, feature requests and small, focused pull requests are welcome — start with [CONTRIBUTING.md](CONTRIBUTING.md). Please never attach real results, screenshots, router backups or configuration exports. Report vulnerabilities via [private security reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new).
 
 ## License
+
+The outlined logo uses Manrope under the [SIL Open Font License](docs/assets/MANROPE-OFL.txt). See [third-party notices](docs/TECHNICAL.md#third-party-notices) for bundled UI components.
 
 [MIT](LICENSE) © 2026 Danijel Dedic. Created and maintained by [@ddedic](https://github.com/ddedic). External tools keep their own licenses. Not affiliated with OpenWrt, GL.iNet, Ookla or any ISP.

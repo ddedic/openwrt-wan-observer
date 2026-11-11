@@ -13,15 +13,23 @@ npm --prefix package/wan-observer-glinet/ui test
 python3 tools/build-ipk.py
 ```
 
-The browser bundle runs inside the GL.iNet admin panel. Generic OpenWrt users can install the collector alone.
+The browser bundle runs inside the GL.iNet admin panel; it is not a generic LuCI app. Generic OpenWrt users can install the collector alone. The SDK recipe and IPK format do not establish compatibility with every firmware or package manager. The supported test target is GL-MT6000 (Flint 2), firmware 4.11.0; native-quality access is limited to the GL.iNet 4.11 interface.
 
 ## Using the router page
 
-After signing in, open **Flow Control → WAN Observer**. **Run Speedtest** runs one immediate test (also while scheduling is paused). **Settings** pauses/resumes collection, changes testing hours and frequency, toggles adaptive follow-ups and edits the plan download/upload speeds used for comparisons. The history period controls the charts, test list and exports. **Export → Download PDF** generates a dedicated A4 report with an optional detailed appendix; **Download CSV** exports the selected period. Browser download policies can block exports on untrusted HTTP admin origins. The visible page refreshes every 30 seconds and when returning to the tab, preserving unsaved settings and manual-test polling. Exports include available jitter, loaded latency, packet loss, actual download/upload bytes and attempt coverage; missing metrics remain unknown.
+After signing in, open **Flow Control → WAN Observer**. **Run Speedtest** starts one immediate test, including while scheduled testing is paused; a reached or unknown configured budget blocks manual starts too. Status separates the latest attempt from the latest successful reading. Failures describe observed errors, without inferring their cause.
+
+**Settings** controls scheduled testing; 15, 30, 60, 120, 180, 240, 360 or 720-minute intervals; all-day or overnight windows in UTC/router time; adaptive follow-ups; plan speeds and slow-below percentage; the optional monthly start guard; and independent passive-quality history. Existing configurations keep their interval, adaptive flag, hours and UTC window semantics. The new quality-history flag defaults false and the budget defaults zero (unset). No binary installation, server setup or license acceptance takes place in the GUI.
+
+The history selector shows 24 hours, 7 days or 30 days. Charts use actual test times and distinguish failures from throughput readings; lines between tests do not measure the intervening time. Optional quality history shows latency, jitter, loss and DNS timing from retained GL Network Quality snapshots, with sample counts rather than uptime or outage claims.
+
+**Export → Download PDF** produces an A4 report with an optional test appendix; **Download CSV** exports the selected period. PDF and CSV timestamps stay in UTC. Dashboard dates use the router's configured IANA timezone when the browser supports it, otherwise explicitly fall back to UTC; a current UTC offset is not enough to infer historical daylight-saving rules. Schedule-window timezone selection is independent of that display fallback. Browser download policies can block exports on untrusted HTTP admin origins.
+
+The visible page refreshes every 30 seconds and when returning to the tab, preserving unsaved settings and bounded manual-test polling. Exports include available jitter, loaded latency, packet loss, actual test bytes and attempt coverage; missing metrics remain unknown. The PDF remains a speed-test report and does not include the optional passive-quality summary.
 
 ## Opt-in adaptive collection
 
-See [collector setup and recovery](COLLECTOR.md). The collector uses an existing operator-installed Ookla CLI and `timeout`; it never installs a binary or accepts its terms for you. A cron tick checks the configured schedule. Low results or failed tests can trigger three five-minute follow-ups, bounded by 24 extras per UTC day. Healthy results stop the burst early. Adaptive limits cap test counts. Optional actual-byte accounting and `monthly_budget_bytes` add a CLI-configured start guard; one allowed test can overshoot it. See [accounting limits](COLLECTOR.md#actual-test-bytes-and-optional-budget).
+See [collector setup and recovery](COLLECTOR.md). The collector uses an existing operator-installed Ookla CLI and `timeout`; it never installs a binary or accepts its terms for you. A cron tick checks the configured schedule. Low results or failed tests can trigger three five-minute follow-ups, bounded by 24 extras per UTC day. Healthy results stop the burst early. Adaptive limits cap test counts. Optional actual-byte accounting and the Settings/CLI monthly budget add a start guard; one allowed test can overshoot it. See [accounting limits](COLLECTOR.md#actual-test-bytes-and-optional-budget).
 
 ## Core behaviour
 
@@ -33,6 +41,12 @@ See [collector setup and recovery](COLLECTOR.md). The collector uses an existing
 - Allowlisted numeric fields, UTC timestamps, sanitized failure codes and optional opaque collector-generated attempt IDs; IP/MAC addresses, hostnames, ISP labels, result links and arbitrary backend fields are discarded.
 - CSV export includes actual test bytes when available; absent or invalid byte totals remain unknown.
 - Optional native-quality CLI reads an already-enabled GL.iNet 4.11 service without starting probes; [commands and retention](COLLECTOR.md#optional-native-quality-history).
+
+## Router page API
+
+The CGI at `/cgi-bin/wan-observer` uses the existing authenticated GL.iNet root/admin session; it is not a public monitoring API. GET accepts no query (7 days), or exactly `period=1`, `period=7` or `period=30`. It returns `collector`, `measurements`, `readiness` and `quality`; quality history is read only when enabled, with no recording or probes from a GET. Missing/invalid configuration returns `collector: null`, empty measurements and an unconfigured quality state. Unavailable quality leaves speed-test history available; unknown metrics remain null.
+
+POST supports the separate sole-field action `{"action":"run_speedtest"}`, or the schedule fields described in [collector setup](COLLECTOR.md#manual-tests-and-plan-speeds). It rejects unknown fields and invalid values. Optional settings omitted by older clients are preserved. There is no install, license-acceptance, arbitrary command or native-service-enable action.
 
 ## CLI (try locally)
 
@@ -59,7 +73,7 @@ Place `package/wan-observer` inside a matching OpenWrt SDK's `package/` director
 make package/wan-observer/compile V=s
 ```
 
-The package installs the history, collector, readiness and optional native-quality CLIs with their jq modules. Installation does not run network tests, bundle Ookla software, accept third-party terms, change DNS/firewall/VPN settings, or enable a daemon. The optional collector invokes an operator-provided binary only after explicit configuration and scheduling. The SDK recipe has not yet been validated across firmware releases.
+The package installs the history, collector, readiness and optional native-quality CLIs with their jq modules. Installation does not run network tests, bundle Ookla software, accept third-party terms, change DNS/firewall/VPN settings, or enable a daemon. The optional collector invokes an operator-provided binary only after configuration and an explicit manual request or enabled schedule. The SDK recipe has not yet been validated across firmware releases.
 
 ## Storage
 
@@ -76,6 +90,12 @@ Before upgrading, stop scheduling and allow any running test to finish. Run `sys
 Restore a trusted, inspected backup through the matching firmware's supported restore flow (`sysupgrade -r /path/to/private-backup.tar.gz` on standard OpenWrt). This restores system configuration as well as WAN Observer files; it is not a WAN Observer-only importer. Verify configuration and history before explicitly resuming scheduling. Package installation performs no restore and overwrites no operator state.
 
 This keep list follows the [OpenWrt 21.02 sysupgrade implementation](https://github.com/openwrt/openwrt/blob/openwrt-21.02/package/base-files/files/sbin/sysupgrade); it is not proof that every GL.iNet firmware preserves state. Reset/no-keep upgrades discard it. External storage paths selected through environment variables require a separate backup. Packages, the operator's licensed measurement binary, and root cron policy require their own preservation/reinstallation checks. No firmware flash, reboot, or hardware restore has been validated by the offline lifecycle tests.
+
+### Roll back or remove
+
+Before changing package versions, pause scheduled tests, let any running test finish, export needed reports and make a private backup of configuration/history. Retain the exact matching core and UI IPKs from the previous known-good release. Follow the firmware's supported package downgrade procedure for both packages together, then check configuration, history and readiness before resuming. Older versions may not understand newer fields or formats; no automatic reverse migration is promised. Preserve the current backup separately rather than overwriting it with an older snapshot.
+
+To remove WAN Observer, remove only its cron entry and uninstall `wan-observer-glinet` and `wan-observer` through the firmware package manager. Default history is intentionally retained. Do not delete `/etc/wan-observer/` unless you have independently decided to discard that private data. Router reset, no-keep firmware upgrade and arbitrary downgrade are not preservation guarantees.
 
 ## Privacy
 
@@ -117,12 +137,18 @@ npm --prefix package/wan-observer-glinet/ui test
 
 Tests are synthetic and offline. Python is only a development dependency.
 
+## Third-party notices
+
+The project code and original logo composition use the [MIT license](../LICENSE), copyright © 2026 Danijel Dedic. The outlined Manrope wordmark retains its [SIL OFL 1.1 notice](assets/MANROPE-OFL.txt); no runtime font download is required.
+
+The bundled UI uses jsPDF and esbuild-generated third-party license notices. Preserve the emitted `view.js.LEGAL.txt` when packaging. The GitHub footer icon uses [Octicons](https://github.com/primer/octicons) under MIT, copyright © 2026 GitHub Inc.; its [notice](../package/wan-observer-glinet/files/OCTICONS-LICENSE.txt) is included in the UI package. [Source provenance and notices](../THIRD_PARTY_NOTICES.md) are retained in the repository. The operator-installed Ookla CLI is separate and is not covered by the project MIT license.
+
 ## Limitations
 
 - Speed tests are samples. Gaps are unmeasured time; failed tests do not establish an outage or its cause.
 - Concurrent traffic, VPN routing, server choice and router load can affect results. Whole-router traffic and router-load context are not recorded.
 - Actual test-byte accounting is partial; unknown attempts block a configured budget. A start guard permits one-test overshoot and does not cap whole-router data use. The displayed data-use estimate is illustrative.
-- Optional native-quality snapshots have unknown source freshness and do not prove throughput or outage duration. Monitoring and byte-budget dashboard controls are not implemented.
+- Optional native-quality snapshots have unknown source freshness and do not prove throughput or outage duration. Recording is opt-in and can have gaps while the collector is busy; passive snapshots do not trigger full tests.
 - Reports support troubleshooting; they are not certified measurements or findings of a contract breach.
 - Native integration was checked on Flint 2 firmware 4.11.0. Other firmware releases, mobile behavior and firmware-upgrade preservation need further validation.
 
@@ -131,9 +157,9 @@ Tests are synthetic and offline. Python is only a development dependency.
 | Stage | Status |
 | --- | --- |
 | Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
-| GL.iNet SDK4 router dashboard and direct PDF | Verified on Flint 2 firmware 4.11.0 (0.4.4) |
+| GL.iNet SDK4 router dashboard and direct PDF | 0.5.0 interface verified offline; earlier versions checked on Flint 2 firmware 4.11.0 |
 | Opt-in collection with adaptive follow-ups | Count caps and optional CLI byte start guard; partial accounting |
 | Disposable local dashboard and browser printing | Developer-only |
 | OpenWrt SDK build and package lifecycle | Not yet verified |
-| Native-quality history | Optional GL.iNet 4.11 CLI; no probes or automatic scheduling |
+| Native-quality history | Optional GL.iNet 4.11 snapshots, Settings/CLI opt-in through the minute tick; no extra WAN probes |
 | Whole-router traffic and router load | Planned |

@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=wan-observer
-PKG_VERSION:=0.4.5
-PKG_RELEASE:=3
+PKG_VERSION:=0.5.0
+PKG_RELEASE:=1
 PKG_LICENSE:=MIT
 
 include $(INCLUDE_DIR)/package.mk

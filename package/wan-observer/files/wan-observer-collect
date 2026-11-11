@@ -33,30 +33,33 @@ case "$1" in
     [ -f "$config" ] || fail 'collector is not configured'
     jq -L "$lib" -sce --slurpfile current "$config" '
       import "collector" as c;
-      # Legacy five schedule fields, optionally with both plan speeds; nothing else.
-      if length == 1 and (.[0] | type == "object" and (keys as $k |
-         $k == ["adaptive", "enabled", "end_hour", "interval_minutes", "start_hour"] or
-         $k == ["adaptive", "download_mbps", "enabled", "end_hour", "interval_minutes", "start_hour", "upload_mbps"]))
+      if length == 1 and (.[0] | c::schedule_patch)
       then ($current[0] + .[0]) | c::valid_config
       else error("invalid schedule") end
     ' "$work/input" > "$work/config" 2>/dev/null || fail 'invalid schedule'
   else
     # Older full configuration clients omit the optional guard; preserve it.
     if [ -f "$config" ]; then
-      jq --slurpfile old "$config" 'if has("monthly_budget_bytes") then . else . + {monthly_budget_bytes:($old[0].monthly_budget_bytes // 0)} end' "$work/input" > "$work/merged" 2>/dev/null || fail 'invalid configuration'
+      jq --slurpfile old "$config" '
+        reduce ["monthly_budget_bytes","quality_history_enabled","window_timezone"][] as $key (.;
+          if has($key) or ($old[0]|has($key)|not) then . else .[$key]=$old[0][$key] end)
+      ' "$work/input" > "$work/merged" 2>/dev/null || fail 'invalid configuration'
       mv "$work/merged" "$work/input"
     fi
     validate "$work/input" > "$work/config" || fail 'invalid configuration'
   fi
-  if [ -f "$config" ] && cmp -s "$work/config" "$config"; then
+  # Compare semantics, so adding normalized optional defaults does not rewrite
+  # old files or turn an unchanged save into an extra due test.
+  if [ -f "$config" ] && validate "$config" > "$work/old-config" &&
+     cmp -s "$work/config" "$work/old-config"; then
     printf '%s\n' 'Collector configuration unchanged.'
     exit 0
   fi
   retime=1
   # Plan-only edits keep the next scheduled test; timing changes run on the next eligible tick.
-  if [ "$1" = schedule ] && jq -e --slurpfile old "$config" '
-      [.enabled,.adaptive,.interval_minutes,.start_hour,.end_hour] ==
-      ($old[0]|[.enabled,.adaptive,.interval_minutes,.start_hour,.end_hour])' "$work/config" >/dev/null; then retime=0; fi
+  if [ -f "$work/old-config" ] && jq -L "$lib" -e --slurpfile old "$work/old-config" '
+      import "collector" as c; c::timing == ($old[0]|c::timing)
+    ' "$work/config" >/dev/null; then retime=0; fi
   mkdir -p "$(dirname "$config")"
   [ ! -L "$config.next" ] || fail 'symlink refused'
   cp "$work/config" "$config.next"
@@ -87,9 +90,35 @@ fi
 # Read-time adaptation never rewrites legacy evidence.
 jq -L "$lib" --argjson limit "$limit" 'import "collector" as c; c::coverage($limit)' "$work/state" > "$work/updated"
 mv "$work/updated" "$work/state"
+# OpenWrt stores the trusted POSIX timezone in /etc/TZ. Read it as data,
+# never source it; libc localtime also handles native zoneinfo when absent.
+tz_file=${WAN_OBSERVER_TZ_FILE:-/etc/TZ}
+if [ -r "$tz_file" ]; then
+ router_tz=$(head -c 513 "$tz_file" 2>/dev/null) || fail 'router timezone unavailable'
+ [ "${#router_tz}" -le 512 ] || fail 'router timezone unavailable'
+ TZ=$router_tz
+ export TZ
+fi
 now=${WAN_OBSERVER_NOW:-$(date +%s)}
 case "$now" in ''|*[!0-9]*) fail 'invalid clock';; esac
 [ "$now" -ge 1704067200 ] || fail 'clock not initialized'
+# Only tick observes passive native quality. Failures never trigger extra full
+# tests; reserve the runtime minute before invoking the existing bounded CLI.
+if [ "$1" = tick ] && [ "$(jq -r .quality_history_enabled "$work/config")" = true ]; then
+ quality_cli=${WAN_OBSERVER_QUALITY_CLI:-/usr/bin/wan-observer-quality}
+ quality_minute=$((now / 60))
+ quality_previous=
+ if [ ! -L "$runtime/quality-minute" ] && [ ! -L "$runtime/quality-minute.next" ]; then
+  if [ -f "$runtime/quality-minute" ]; then quality_previous=$(head -c 32 "$runtime/quality-minute" 2>/dev/null) || quality_previous=; fi
+  if [ "$quality_previous" != "$quality_minute" ] && [ -f "$quality_cli" ]; then
+   if { printf '%s' "$quality_minute" > "$runtime/quality-minute.next" &&
+        mv "$runtime/quality-minute.next" "$runtime/quality-minute"; } 2>/dev/null; then
+    WAN_OBSERVER_QUALITY_NOW="$now" WAN_OBSERVER_QUALITY_STORE="${WAN_OBSERVER_QUALITY_STORE:-/etc/wan-observer/quality}" \
+      sh "$quality_cli" tick >/dev/null 2>&1 || :
+   fi
+  fi
+ fi
+fi
 usage_readable=1
 [ ! -L "$store" ] && [ ! -L "$store/collector-usage.json" ] || fail 'symlink usage refused'
 jq -n -L "$lib" --argjson now "$now" 'import "collector" as c; c::usage_initial($now)' > "$work/usage"
@@ -111,8 +140,16 @@ if [ "$1" = status ]; then
  if [ -f "$runtime/manual.json" ] && [ ! -L "$runtime/manual.json" ]; then
   started=$(jq -e '.started|numbers' "$runtime/manual.json" 2>/dev/null) || started=null
  fi
- jq -n --slurpfile config "$work/config" --slurpfile state "$work/state" --slurpfile usage "$work/usage-status" --argjson busy "$busy" --argjson started "$started" \
-  '$state[0] + {config:($config[0]|del(.binary,.interface)), busy:$busy, manual_started:$started, usage:$usage[0]}'
+ # Flint jq1.6 loses timezone offsets when formatting localtime; use native
+ # date for current timezone metadata, never for epoch window arithmetic.
+ date '+%Z %z' | jq -R '
+  split(" ") | {label:.[0],utc_offset:.[1]} |
+  if (.label|type=="string" and length<=32 and (explode|all(.>=32 and .<127))) and
+     (.utc_offset|type=="string" and length==5)
+  then . else {label:"router",utc_offset:null} end
+ ' > "$work/timezone" 2>/dev/null || printf '{"label":"router","utc_offset":null}\n' > "$work/timezone"
+ jq -n --slurpfile config "$work/config" --slurpfile state "$work/state" --slurpfile usage "$work/usage-status" --slurpfile zone "$work/timezone" --argjson busy "$busy" --argjson started "$started" \
+  '$state[0] + {config:($config[0]|del(.binary,.interface)), busy:$busy, manual_started:$started, usage:$usage[0],router_timezone:$zone[0]}'
  exit 0
 fi
 if [ "$1" = tick ] && [ "$(jq -r .enabled "$work/config")" != true ]; then exit 0; fi
@@ -259,11 +296,20 @@ if [ "$1" = start ]; then
 fi
 next=$(jq -r .next_epoch "$work/state")
 [ "$now" -ge "$next" ] || exit 0
-# Window is UTC, independent of host DST. All-day default avoids DST ambiguity.
-hour=$(( (now / 3600) % 24 ))
+# Only window eligibility uses router localtime. The UTC epoch interval grid
+# below remains unchanged across skipped/repeated DST hours.
+if [ "$(jq -r .window_timezone "$work/config")" = router ]; then
+ hour=$(jq -nr --argjson now "$now" '$now|localtime|.[3]') || fail 'router timezone unavailable'
+else
+ hour=$(( (now / 3600) % 24 ))
+fi
 start=$(jq -r .start_hour "$work/config")
 end=$(jq -r .end_hour "$work/config")
-[ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ] || exit 0
+if [ "$start" -lt "$end" ]; then
+ [ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ] || exit 0
+else
+ [ "$hour" -ge "$start" ] || [ "$hour" -lt "$end" ] || exit 0
+fi
 interval=$(jq -r .interval_minutes "$work/config")
 normal=$(jq -r .next_normal "$work/state")
 reason=degradation_followup

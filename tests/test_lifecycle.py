@@ -67,6 +67,54 @@ class ReadinessContracts(unittest.TestCase):
                 self.assertEqual(self.status()['status'],'ready')
                 self.assertEqual(self.status()['checks']['scheduler'],'installed')
 
+    def test_local_readiness_clock_storage_engine_and_timezone_without_execution(self):
+        self.config.write_text(json.dumps(self.value))
+        fakebin=self.path/'bin';fakebin.mkdir()
+        for name,script in {
+            'pidof':'exit 0',
+            'df':"printf 'Filesystem 1024-blocks Used Available Capacity Mounted on\\nprivate-device 99999 100 12345 1%% /\\n'",
+            'uci':"case \"$3\" in *zonename) printf '%s\\n' 'Europe/Vienna';; *timezone) printf '%s\\n' 'CET-1CEST,M3.5.0,M10.5.0/3';; esac"
+        }.items():
+            file=fakebin/name;file.write_text('#!/bin/sh\n'+script+'\n');file.chmod(0o700)
+        self.env['PATH']=str(fakebin)+os.pathsep+self.env['PATH']
+        self.env['WAN_OBSERVER_NOW']='1767225600'
+        marker=self.path/'engine-executed'
+        self.env['ENGINE_EXECUTED_MARKER']=str(marker)
+        self.binary.write_text('#!/bin/sh\nprintf x > "$ENGINE_EXECUTED_MARKER"\n')
+        self.cron.write_text('* * * * * /usr/bin/wan-observer-collect tick\n')
+        result=self.status()
+        self.assertTrue(result['checks']['clock_initialized'])
+        self.assertEqual(result['checks']['free_storage_kb'],12345)
+        self.assertTrue(result['checks']['engine_available'])
+        self.assertEqual(result['checks']['license_status'],'unknown')
+        self.assertEqual(result['router_timezone'],{'zonename':'Europe/Vienna','posix':'CET-1CEST,M3.5.0,M10.5.0/3'})
+        self.env['WAN_OBSERVER_NOW']='0'
+        result=self.status();self.assertFalse(result['checks']['clock_initialized'])
+        self.assertEqual(result['status'],'clock_uninitialized')
+        self.binary.chmod(0o600)
+        self.assertFalse(self.status()['checks']['engine_available'])
+        (fakebin/'uci').write_text('#!/bin/sh\nprintf "invalid private-zone\\nnewline\\n"\n')
+        (fakebin/'df').write_text('#!/bin/sh\nexit 1\n')
+        result=self.status()
+        self.assertEqual(result['router_timezone'],{'zonename':None,'posix':None})
+        self.assertIsNone(result['checks']['free_storage_kb'])
+        self.config.unlink()
+        self.assertIsNone(self.status()['checks']['engine_available'])
+        self.assertFalse(marker.exists(),'readiness must not execute the measurement engine')
+
+    def test_passive_history_still_needs_cron_while_full_tests_are_paused(self):
+        self.value.update(enabled=False,quality_history_enabled=True)
+        self.config.write_text(json.dumps(self.value));self.binary.chmod(0o600)
+        fakebin=self.path/'bin';fakebin.mkdir()
+        pidof=fakebin/'pidof';pidof.write_text('#!/bin/sh\nexit 0\n');pidof.chmod(0o700)
+        self.env['PATH']=str(fakebin)+os.pathsep+self.env['PATH']
+        self.assertEqual(self.status()['status'],'scheduler_missing')
+        self.cron.write_text('* * * * * /usr/bin/wan-observer-collect tick\n')
+        self.assertEqual(self.status()['status'],'ready')
+        self.assertFalse(self.status()['checks']['engine_available'])
+        self.value['quality_history_enabled']=False;self.config.write_text(json.dumps(self.value))
+        self.assertEqual(self.status()['status'],'disabled')
+
     def test_enabled_requires_binary_and_active_cron(self):
         self.config.write_text(json.dumps(self.value))
         fakebin=self.path/'bin';fakebin.mkdir()

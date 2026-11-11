@@ -24,6 +24,18 @@ class UsageTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return json.loads(result.stdout)['usage']
 
+    def test_passive_quality_continues_after_test_budget_is_reached(self):
+        script=self.path/'quality';script.write_text('#!/bin/sh\necho tick >> "$QUALITY_LOG"\nexit 1\n')
+        self.env.update(WAN_OBSERVER_QUALITY_CLI=str(script),QUALITY_LOG=str(self.path/'quality-log'))
+        self.config.update(monthly_budget_bytes=100,quality_history_enabled=True)
+        self.configure();self.result_bytes()
+        self.assertEqual(self.run_cli('run').returncode,0)
+        self.assertFalse((self.path/'quality-log').exists())
+        self.assertEqual(self.run_cli('tick',1767225660).returncode,0)
+        self.assertEqual((self.path/'quality-log').read_text(),'tick\n')
+        self.assertEqual(self.usage()['known_bytes'],150)
+        self.assertEqual(len(self.status()['events']),1)
+
     def test_actual_bytes_survive_reboot_and_retention_without_estimate(self):
         self.configure()
         self.env['WAN_OBSERVER_MAX_RECORDS'] = '1'

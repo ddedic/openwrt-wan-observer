@@ -1,9 +1,17 @@
 # Security and privacy
 
-This is pre-release software. Do not expose a future administration interface publicly. The router CLI has no listener or remote API. The optional desktop preview has a loopback listener (read-only by default; explicit SSH mode can change collector schedules); never expose it through a proxy, tunnel or public interface.
+WAN Observer is experimental. Security fixes target the current prerelease; older versions are not maintained separately. Include the installed package version or source commit in a report.
 
-Report vulnerabilities using GitHub private vulnerability reporting when available. If it is unavailable, open an issue requesting a private contact channel without disclosing exploit details, credentials or real measurement data.
+## Report a vulnerability privately
 
-Protect local history and any exported reports. The normalizer deliberately drops backend identities and result links, but numeric measurements and timestamps are still potentially sensitive. No tool can promise that a report is anonymous in every context.
+Use [GitHub private vulnerability reporting](https://github.com/ddedic/openwrt-wan-observer/security/advisories/new). Include affected versions, minimal reproduction steps using synthetic data, expected impact and any suggested mitigation. Do not include passwords, tokens, SSH keys, router backups, private addresses, raw speed-test output or real measurement history. Do not post exploit details in public issues. If the private form becomes unavailable, open a public issue asking for a private contact channel, without vulnerability details.
 
-The SSH preview holds a session token in memory and enforces Host, Origin and token checks on schedule writes. It permits only schedule fields, not executable or interface changes. SSH mode inherits the configured account’s authority: use it only on a trusted computer, close it when finished, and never proxy it to another network. Collector configuration is trusted operator data.
+## Trust boundary
+
+The optional GL.iNet router page has a CGI endpoint authorized through the router's root/admin session and protected writes. Keep the router administration interface on a trusted network; do not expose it publicly. The core CLI itself has no listener. Collector configuration is trusted operator data: it selects an executable run with the invoking account's authority. Install third-party measurement tools only from sources you trust and review their terms yourself.
+
+The developer desktop preview listens on loopback. It is read-only by default; explicit SSH mode can change collector schedules and inherits the SSH account's privileges. It keeps a session token in memory and checks Host, Origin and token on schedule writes. Use it only on a trusted computer, close it when finished, and never expose it through a proxy, tunnel or public listener.
+
+## Data handling
+
+The importer discards backend IP/MAC addresses, hostnames, ISP labels and result links. Normalized measurements, timestamps and test-server IDs can still be sensitive. Review PDF/CSV exports before sharing; no report is guaranteed anonymous. Protect private configuration, local history and backups. A system backup can contain unrelated router secrets. WAN Observer does not delete original source files or prevent the external speed-test tool from contacting its own services.
