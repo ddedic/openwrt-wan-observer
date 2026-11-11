@@ -84,6 +84,8 @@ Experimental. Version 0.5.0 adds quality-history and byte-budget controls, clear
 
 - [Technical guide](docs/TECHNICAL.md) — building IPKs, CLI, OpenWrt SDK, storage, privacy, development
 - [Collector setup and recovery](docs/COLLECTOR.md)
+- [Changelog](CHANGELOG.md)
+- [Website](https://ddedic.github.io/openwrt-wan-observer/) — project overview
 
 ## Contributing
 
