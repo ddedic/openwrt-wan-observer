@@ -42,11 +42,11 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 - **Privacy by allowlist** — IP/MAC addresses, hostnames, ISP labels and result links are discarded on import.
 
 <details>
-<summary>More screenshots — settings and mobile</summary>
+<summary>More screenshots — settings and dark theme</summary>
 
 ![Settings and editable plan speeds — synthetic demo](docs/assets/settings.png)
 
-[Open the full mobile screenshot](docs/assets/mobile.png)
+![Dark theme — synthetic demo](docs/assets/dashboard-dark.png)
 
 </details>
 
@@ -66,12 +66,12 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 
 | Component | Status |
 | --- | --- |
-| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.2) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
+| GL.iNet SDK4 plugin (`wan-observer-glinet` 0.4.4) | Installed and checked on a GL-MT6000 (Flint 2), firmware 4.11.0 |
 | Core collector/CLI (`wan-observer`) | Synthetic offline tests; hardware smoke test on Flint 2 |
 | Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
 | Local desktop preview (`tools/preview.py`) | Developer-only tool |
 
-Experimental. Version 0.4.2 adds the theme-aware application logo and fixes README logo contrast. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
+Experimental. Version 0.4.4 refines the theme-aware header logo and native alignment. Planned: WAN traffic, router load and measurement context. Full details: [scope and limitations](docs/SCOPE.md).
 
 > Results are diagnostic records, not certified evidence or proof that a provider breached a contract. Speed tests use data; frequent unattended tests can use a lot of it, and adaptive follow-ups are limited by test count, not by a byte budget.
 
