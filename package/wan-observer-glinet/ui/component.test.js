@@ -92,3 +92,36 @@ test('stored reading remains visible with explicit storage issue warning after f
     const h=harness(async()=>response({...configured,measurements:[{timestamp:new Date((epoch+10)*1000).toISOString(),download_mbps:100,upload_mbps:20,idle_latency_ms:8,attempt_id:id}],collector:{...configured.collector,events:[{epoch,reason:'scheduled',outcome:'failed',failure_code:'storage_error',pending:false,attempt_id:id}]}}));
     await h.vm.refresh();const text=renderText(h);assert.match(text,/storage issue/i);assert.match(text,/100/);assert.match(text,/incomplete/);
 });
+
+test('collector lock without active attempt uses neutral waiting copy',async()=>{
+    const h=harness(async()=>response({...configured,collector:{...configured.collector,busy:true,manual_started:false,events:[]}}));
+    await h.vm.refresh();const text=renderText(h);assert.match(text,/Please wait/);assert.doesNotMatch(text,/A speed test is running/);
+    h.vm.payload.collector.events=[{epoch:Math.floor(Date.now()/1000)-86400,reason:'scheduled',outcome:'failed',pending:true}];
+    const pendingText=renderText(h);assert.match(pendingText,/Please wait/);assert.doesNotMatch(pendingText,/A speed test is running/);
+});
+test('short busy retry recovers transient collector lock and cleanup cancels retry',async()=>{
+    let calls=0;const h=harness(async()=>{calls++;return response({...configured,collector:{...configured.collector,busy:calls===1}});});
+    await h.vm.refresh();const retry=[...h.timers.values()].find(t=>t.ms===4000);assert.ok(retry,'short busy GET retry scheduled');
+    await retry.fn();await settle();assert.equal(calls,2);assert.equal(h.component.computed.busy.call(h.vm),false);assert.equal(h.timers.size,0);
+    const busy=harness(async()=>response({...configured,collector:{...configured.collector,busy:true}}));await busy.vm.refresh();assert.equal(busy.timers.size,1);
+    busy.component.beforeDestroy.call(busy.vm);assert.equal(busy.timers.size,0);
+    h.component.beforeDestroy.call(h.vm);assert.equal(h.timers.size,0);
+});
+test('busy retry stops while hidden and bounded retry budget avoids permanent fast polling',async()=>{
+    let calls=0;const h=harness(async()=>{calls++;return response({...configured,collector:{...configured.collector,busy:true}});});
+    await h.vm.refresh();h.document.hidden=true;
+    await [...h.timers.values()].find(t=>t.ms===4000).fn();await settle();assert.equal(calls,1);assert.equal(h.timers.size,0);
+    h.document.hidden=false;h.vm.busyRefreshCount=44;await h.vm.refresh();assert.equal(h.timers.size,0);
+    h.component.beforeDestroy.call(h.vm);
+});
+
+test('busy retry shares its pending GET with periodic refresh instead of overlapping',async()=>{
+    let calls=0,release;const h=harness(async()=>{
+        if(++calls===1)return response({...configured,collector:{...configured.collector,busy:true}});
+        return new Promise(resolve=>{release=resolve;});
+    });
+    await h.vm.refresh();await [...h.timers.values()].find(t=>t.ms===4000).fn();
+    const overlap=h.vm.backgroundRefresh();await settle();assert.equal(calls,2);
+    release(response(configured));await overlap;assert.equal(h.component.computed.busy.call(h.vm),false);assert.equal(h.timers.size,0);
+    h.component.beforeDestroy.call(h.vm);
+});
