@@ -157,7 +157,7 @@ The bundled UI uses jsPDF and esbuild-generated third-party license notices. Pre
 | Stage | Status |
 | --- | --- |
 | Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
-| GL.iNet SDK4 router dashboard and direct PDF | 0.5.0 interface verified offline; earlier versions checked on Flint 2 firmware 4.11.0 |
+| GL.iNet SDK4 router dashboard and direct PDF | 0.5.0-1 installed and checked on Flint 2 firmware 4.11.0; 98 Python/Lua and 48 JavaScript tests pass |
 | Opt-in collection with adaptive follow-ups | Count caps and optional CLI byte start guard; partial accounting |
 | Disposable local dashboard and browser printing | Developer-only |
 | OpenWrt SDK build and package lifecycle | Not yet verified |
