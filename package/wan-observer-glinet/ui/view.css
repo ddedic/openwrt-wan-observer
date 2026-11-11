@@ -6,7 +6,7 @@
   --wo-border:var(--border,#e2e4ec);--wo-divider:var(--divider,#eef0f4);--wo-shadow:var(--shadow,#e2e4ec);
   --wo-primary:var(--primary,#3b6cf0);--wo-primary-hover:var(--primary-hover,#2e57c8);
   --wo-ok:#2f9e57;--wo-ok-bg:#e9f6ee;--wo-sp:#d18a10;--wo-sp-bg:#fdf4e3;--wo-cn:#d63a3a;--wo-cn-bg:#fbeaea;--wo-na:#9ca0b0;
-  display:grid;grid-template-columns:minmax(0,1fr);gap:20px;color:var(--wo-text);font-size:14px;line-height:1.5
+  display:grid;grid-template-columns:minmax(0,1fr);gap:20px;padding-top:20px;color:var(--wo-text);font-size:14px;line-height:1.5
 }
 .wo *{box-sizing:border-box}
 .wo h1,.wo h2,.wo h3,.wo p,.wo ul{margin:0}

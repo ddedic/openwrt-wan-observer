@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+<title id="title">WAN Observer</title>
+<desc id="desc">A W-shaped measurement trace ending in a sampled point.</desc>
+<!-- Original mark: Copyright (c) 2026 Danijel Dedic, MIT. Lettering: Manrope, SIL OFL 1.1. -->
+<path d="M8 18 20 46 32 24 44 46 52 28" fill="none" stroke="#153B52" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="57" cy="17" r="4.5" fill="#007F83"/>
+</svg>

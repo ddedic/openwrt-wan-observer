@@ -7,7 +7,7 @@ Use a focused issue or pull request. Explain the problem, supported firmware and
 - Keep runtime dependencies suitable for routers; no automatic external tests on install.
 - Do not redistribute third-party speed-test binaries or accept terms on a user's behalf.
 - Keep device addresses, interface names, plan speeds and schedules configurable.
-- Dashboard and report layout work is deferred to a separate maintainer-reviewed design milestone.
+- For dashboard changes, include screenshots with synthetic data and check the native GL.iNet layout, keyboard controls and small-screen behavior.
 - State which SDK and real firmware were actually tested. Do not imply that a package recipe proves universal compatibility.
 
 Code contributions are licensed under this repository's MIT license. Do not copy incompatible upstream code without explicitly addressing its license.
