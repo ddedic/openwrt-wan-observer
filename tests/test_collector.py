@@ -434,6 +434,17 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual([(e['reason'],e['outcome']) for e in s['events']],[('manual','healthy')])
         self.assertEqual(s['next_epoch'],0)
 
+    def test_dashboard_start_without_home_still_finds_backend_license(self):
+        # GL.iNet CGI runs `start` with no HOME; Ookla CLI then can't find its accepted license.
+        self.configure()
+        self.fake.write_text('#!/bin/sh\n[ -n "${HOME:-}" ] || exit 2\ncat "$FAKE_RESULT"\n')
+        self.env.pop('HOME', None)
+        r=self.run_cli('start');self.assertEqual(r.stdout,'Manual test started.\n',r.stderr)
+        deadline=time.time()+10
+        while self.status()['busy'] and time.time()<deadline: time.sleep(0.05)
+        events=self.status()['events']
+        self.assertEqual([(e['reason'],e['outcome'],e['failure_code']) for e in events],[('manual','healthy',None)])
+
     def test_plan_update_persists_preserves_timing_and_drives_detection(self):
         self.configure();self.run_cli('tick');before=self.status()['next_epoch']
         patch=dict(enabled=True,adaptive=True,interval_minutes=30,start_hour=0,end_hour=24)
