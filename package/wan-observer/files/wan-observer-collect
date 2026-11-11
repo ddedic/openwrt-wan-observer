@@ -193,6 +193,13 @@ measure() {
  interface=$(jq -r .interface "$work/config")
  set -- "$binary" --format=json --progress=no "--server-id=$server"
  if [ -n "$interface" ]; then set -- "$@" "--interface=$interface"; fi
+ # The dashboard's CGI starts tests without HOME, unlike cron. Ookla CLI keeps the
+ # accepted license under $HOME/.config/ookla and exits non-zero without it.
+ if [ -z "${HOME:-}" ] || [ ! -d "$HOME" ]; then
+  HOME=$(awk -F: -v uid="$(id -u)" '$3 == uid { print $6; exit }' /etc/passwd 2>/dev/null) || HOME=
+  [ -n "$HOME" ] || HOME=/root
+  export HOME
+ fi
  outcome=failed
  failure_code=backend_exit
  # BusyBox reports signal termination rather than GNU's deadline status124.
