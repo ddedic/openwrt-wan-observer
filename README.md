@@ -23,7 +23,7 @@
   <img src="docs/assets/dashboard.png" alt="WAN Observer dashboard inside a router admin page, showing latest test, download and upload history against plan speeds, and a test list" width="900">
 </p>
 
-<p align="center"><sub><b>Synthetic demo.</b> Rendered locally from the production UI bundle with invented data (fictional 250/50 Mbps plan). The router admin shell and GL.iNet components are local approximations, not an on-device screenshot.</sub></p>
+<p align="center"><sub>WAN Observer running on a GL.iNet Flint 2, firmware 4.11.0.</sub></p>
 
 ## Why
 
@@ -42,11 +42,9 @@ Intermittent slowdowns are hard to prove from memory. WAN Observer keeps a bound
 - **Privacy by allowlist** — IP/MAC addresses, hostnames, ISP labels and result links are discarded on import.
 
 <details>
-<summary>More screenshots — settings and dark theme</summary>
+<summary>Testing settings</summary>
 
-![Settings and editable plan speeds — synthetic demo](docs/assets/settings.png)
-
-![Dark theme — synthetic demo](docs/assets/dashboard-dark.png)
+![Testing settings on Flint 2](docs/assets/settings.png)
 
 </details>
 
