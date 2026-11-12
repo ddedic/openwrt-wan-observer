@@ -434,16 +434,23 @@ class CollectorTests(unittest.TestCase):
         self.assertEqual([(e['reason'],e['outcome']) for e in s['events']],[('manual','healthy')])
         self.assertEqual(s['next_epoch'],0)
 
-    def test_dashboard_start_without_home_still_finds_backend_license(self):
-        # GL.iNet CGI runs `start` with no HOME; Ookla CLI then can't find its accepted license.
+    def test_dashboard_start_uses_account_home_for_backend_license(self):
+        # GL.iNet fcgiwrap runs `start` with HOME=/ (or none); Ookla CLI then can't find
+        # its accepted license under $HOME/.config/ookla and exits with a license prompt.
         self.configure()
-        self.fake.write_text('#!/bin/sh\n[ -n "${HOME:-}" ] || exit 2\ncat "$FAKE_RESULT"\n')
-        self.env.pop('HOME', None)
-        r=self.run_cli('start');self.assertEqual(r.stdout,'Manual test started.\n',r.stderr)
-        deadline=time.time()+10
-        while self.status()['busy'] and time.time()<deadline: time.sleep(0.05)
-        events=self.status()['events']
-        self.assertEqual([(e['reason'],e['outcome'],e['failure_code']) for e in events],[('manual','healthy',None)])
+        home=self.path/'account-home';(home/'.config/ookla').mkdir(parents=True)
+        (home/'.config/ookla/speedtest-cli.json').write_text('{}')
+        (self.path/'passwd').write_text(f'other:x:{os.getuid()+1}:0::/nowhere:/bin/sh\nme:x:{os.getuid()}:0::{home}:/bin/sh\n')
+        self.env['WAN_OBSERVER_PASSWD']=str(self.path/'passwd')
+        self.fake.write_text('#!/bin/sh\n[ -f "$HOME/.config/ookla/speedtest-cli.json" ] || exit 1\ncat "$FAKE_RESULT"\n')
+        for start_home in ('/', None):
+            if start_home: self.env['HOME']=start_home
+            else: self.env.pop('HOME', None)
+            r=self.run_cli('start');self.assertEqual(r.stdout,'Manual test started.\n',r.stderr)
+            deadline=time.time()+10
+            while self.status()['busy'] and time.time()<deadline: time.sleep(0.05)
+            event=self.status()['events'][-1]
+            self.assertEqual((event['reason'],event['outcome'],event['failure_code']),('manual','healthy',None),start_home)
 
     def test_plan_update_persists_preserves_timing_and_drives_detection(self):
         self.configure();self.run_cli('tick');before=self.status()['next_epoch']
