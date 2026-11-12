@@ -114,4 +114,13 @@ checks pass. Workflow parsed with Ruby's standard YAML parser after a Node YAML
 module was unavailable; no parser dependency was added. Runtime source remains the
 same as the 58-test UI/106-test Python/build checkpoint above.
 
-Branch publication and final synchronization receipt follow after committing fixes.
+## Publication receipt
+
+Published `codex/technabit-foundation` to `origin` with source/fix commit
+`a89c5df29d9030d47b6aedcae0cd7be372ae3d32`; `git ls-remote` matched local HEAD.
+The working tree was clean. This receipt/checklist completion is a documentation-only
+follow-up; its remote synchronization is verified in the coordinator transcript.
+Main remains unchanged. No release, deploy or router operation was performed.
+
+Next packet: page/workflow/component ownership extraction, then CGI boundaries and
+non-JavaScript semantic quality tools, with focused research/checks before each.
