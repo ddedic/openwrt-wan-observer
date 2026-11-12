@@ -1,0 +1,19 @@
+{
+  "baseline": "d8bcf8ef53eff7eea1eb9c2ad6e3a1a47dbc781c",
+  "cases": {
+    "false:loading": "faf40307aa9127af98b708cdbbf772b5b040cb118339b1bb0cb870b5a49646de",
+    "false:error": "ee828cfda9b81646300d6b1f2090547ab3c66f55559cd372668c56bd15f993bc",
+    "false:setup": "b14a0f45d95a10a5fbc3bc5e47912d8c0a32b8ba41a6a5164301095de837d074",
+    "false:empty": "f481ee11f74f67bd539cc9d418756dd904f5157b60657d2483f391f9061de5d9",
+    "false:recorded": "cf63a56941f10ad9d571f0bed5cac6857c69b6bd229757f6b5c8745b321042b8",
+    "false:settings": "dd0e7a2dc122e8be3d7668f9b3c1b7da720afcdd78f2f5a67cb90c538c3bd60b",
+    "false:export": "d3cb740c7783cc4f4f4b02944836475bb5c7272f1bd08caf5f9c806acd99d38e",
+    "true:loading": "faf40307aa9127af98b708cdbbf772b5b040cb118339b1bb0cb870b5a49646de",
+    "true:error": "163c0159cc70baf1f6648753b7bc14ee98affcea5bef0429b01083833960e92b",
+    "true:setup": "2dd24dc91f20f803102cf4c45fdb34dbdfd6d22513c3bd9422d8847cf3fdd8ca",
+    "true:empty": "7203b7af7c2f41d3366e67b8bb2054e942b93944cec99ba862947fd7061b4185",
+    "true:recorded": "dd19445afe5f9edda435bc515812891c38b7278310f937d88fe8ccc9c3d6f103",
+    "true:settings": "646f675e0e7b54b2d938450736c2afe99cca2a533efcac0b91e02be0e6bd96f8",
+    "true:export": "f32de7361da87ad6035221acea9526e33f1aa82ce962035646d6944a69fb7846"
+  }
+}

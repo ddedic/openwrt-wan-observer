@@ -2,7 +2,9 @@
 
 Accepted scope: the owner's 12 November 2026 instruction to execute the proposed
 behavior-preserving migration, starting with conventions, quality checks, router
-transport and settings validation. Later packets remain planned.
+transport and settings validation. The next UI ownership packet was authorized subsequently; see the
+[UI ownership worklog](../worklogs/2026-11-12-ui-ownership.md). CGI and non-JavaScript
+semantic tooling remain planned.
 
 ## Standards and ownership
 
@@ -44,7 +46,17 @@ callbacks. Transport adapters own requests; page workflows own cancellation,
 supersession, refresh and manual-test polling. Infrastructure cannot import UI
 features or the application. Settings validation is pure and cannot import them.
 No production dependency may reach a test, preview, verification tool or fixture.
-Existing flat UI files are retained until their named packet moves them.
+UI owners now live under `src/app`, `src/features`, `src/measurements`, `src/time`,
+`src/scheduling`, `src/collector`, `src/components` and `src/infrastructure`.
+The root SDK entry and report-data compatibility entry have real consumers;
+`view.css` stays byte-preserved at its existing path. Integration code lives under
+`ui/tests`. Features cannot import the application or another feature's private
+files; the application composes their view/workflow contracts.
+
+Stateless named Vue 2 view functions use explicit data/callback inputs and adjacent
+JSDoc `.types.js` contracts; the parent's `h` preserves VNode context and refs.
+One page instance owns reactive state, lifecycle hooks, cancellation and dialog refs.
+JSDoc documents inputs; no TypeScript-checking claim is made.
 
 Use PascalCase for components and named contracts, kebab-case for other modules,
 camelCase for functions and locals, and SCREAMING_SNAKE_CASE for fixed module

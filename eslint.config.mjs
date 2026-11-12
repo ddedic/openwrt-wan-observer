@@ -27,7 +27,12 @@ export default [
     },
   },
   {
-    files: ['**/*.test.js', '**/*.mjs', '**/*.cjs'],
+    files: [
+      '**/*.test.js',
+      '**/*.mjs',
+      '**/*.cjs',
+      'package/wan-observer-glinet/ui/tests/**/*.js',
+    ],
     languageOptions: { globals: { ...globals.node } },
   },
   {

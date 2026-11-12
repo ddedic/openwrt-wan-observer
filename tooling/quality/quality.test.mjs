@@ -191,7 +191,9 @@ test('canonical discovery includes production, adjacent/legacy tests, preview an
 
   for (const file of [
     `${UI}/index.js`,
-    `${UI}/report.test.js`,
+    `${UI}/src/features/reports/report.test.js`,
+    `${UI}/tests/integration/dashboard.test.js`,
+    `${UI}/tests/component-source.js`,
     `${UI}/src/infrastructure/router-api.js`,
     `${UI}/src/features/settings/settings-validation.test.js`,
     'tools/preview/app.js',
@@ -320,6 +322,24 @@ test('resolver rejects production fixture imports, normalized back-edges, re-exp
       "require('./side-effect.js');",
       `${UI}/src/features/settings/side-effect.js`,
       'settings-validation-is-pure',
+    ],
+    [
+      'src/infrastructure/probe.js',
+      "require('../../tests/helper.js');",
+      `${UI}/tests/helper.js`,
+      'production-cannot-import-development',
+    ],
+    [
+      'src/features/settings/probe.js',
+      "require('../../app/private.js');",
+      `${UI}/src/app/private.js`,
+      'features-cannot-import-app',
+    ],
+    [
+      'src/features/settings/probe.js',
+      "require('../reports/private.js');",
+      `${UI}/src/features/reports/private.js`,
+      'settings-cannot-import-another-feature',
     ],
   ];
 

@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
-const { reportData, speedSeries } = require('./report-data');
-const { createPDF } = require('./pdf');
+const { reportData, speedSeries } = require('../../measurements/report-data');
+const { createPDF } = require('./pdf-export');
 
 const now = Date.parse('2026-01-02T12:00:00Z');
 const config = {
@@ -117,7 +117,7 @@ test('chart series keeps gaps and failures empty instead of bridging them', () =
 });
 
 test('data-use illustration follows frequency, hours, pause and adaptive choice', () => {
-  const { usageEstimate } = require('./report-data');
+  const { usageEstimate } = require('../../measurements/report-data');
   assert.deepEqual(
     usageEstimate({
       enabled: true,
@@ -151,7 +151,7 @@ test('data-use illustration follows frequency, hours, pause and adaptive choice'
 });
 
 test('diagnostic exports preserve missing values, current baseline and incomplete history', () => {
-  const { csvContent } = require('./report-data');
+  const { csvContent } = require('../../measurements/report-data');
   const report = reportData(
     {
       measurements: [
@@ -420,7 +420,7 @@ test('matching opaque attempt ID dedupes unresolved reservation even outside tim
   assert.equal(report.integrityWarning, true);
   assert.equal(report.latest.reason, 'manual');
   assert.equal(report.completed[0].attemptFinalized, false);
-  const csv = require('./report-data').csvContent(report);
+  const csv = require('../../measurements/report-data').csvContent(report);
   assert.match(csv, /attempt_finalized/);
   assert.match(csv, /"false","current_settings"/);
   assert.match(
@@ -528,7 +528,10 @@ test('same-ID final storage error retains one measured attempt and explicit stor
   assert.equal(report.completed[0].attemptFinalized, false);
   assert.equal(report.integrityWarning, true);
   assert.equal(report.coverage.complete, false);
-  assert.match(require('./report-data').csvContent(report), /storage_error/);
+  assert.match(
+    require('../../measurements/report-data').csvContent(report),
+    /storage_error/,
+  );
 });
 test('backend and timeout failures with coincident IDs are retained as conflicting evidence', () => {
   for (const failure_code of [
