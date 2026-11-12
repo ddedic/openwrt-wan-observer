@@ -7,6 +7,8 @@ const {markGithub16} = require('./octicon');
 const endpoint = '/cgi-bin/wan-observer';
 const pollMs = 4000, pollLimit = 45; // bounded wait: 3 minutes covers the 130 s collector cap
 const repository = 'https://github.com/ddedic/openwrt-wan-observer';
+// tools/build-ipk.py replaces this with the package version; unpackaged builds show none.
+const packageVersion = '__WAN_OBSERVER_VERSION__';
 const guide = repository + '#install-on-a-glinet-flint-2';
 const ooklaCli = 'https://www.speedtest.net/apps/cli';
 const intervals = [15,30,60,120,180,240,360,720];
@@ -357,7 +359,10 @@ module.exports = {
         const footer=h('footer',{class:'wo-foot'},[h('span','© 2026 Danijel Dedic'),h('span',{attrs:{'aria-hidden':'true'}},'·'),
             h('a',{attrs:{href:repository,target:'_blank',rel:'noopener noreferrer',referrerpolicy:'no-referrer'}},[
                 h('svg',{attrs:{width:16,height:16,viewBox:'0 0 16 16',fill:'currentColor','aria-hidden':'true',focusable:'false'}},[h('path',{attrs:{d:markGithub16}})]),
-                'Source on GitHub',h('span',{class:'wo-vh'},' (opens in new tab)')])]);
+                'Source on GitHub',h('span',{class:'wo-vh'},' (opens in new tab)')]),
+            ...(/^\d+\.\d+\.\d+-\d+$/.test(packageVersion)?[h('span',{attrs:{'aria-hidden':'true'}},'·'),
+                h('a',{class:'wo-version',attrs:{href:`${repository}/releases/tag/v${packageVersion.replace(/-\d+$/,'')}`,target:'_blank',rel:'noopener noreferrer',referrerpolicy:'no-referrer',
+                    title:`Installed package ${packageVersion}`}},[`v${packageVersion.replace(/-\d+$/,'')}`,h('span',{class:'wo-vh'},` installed, release notes (opens in new tab)`)])]:[])]);
         const title=h('div',{class:'wo-brand'},[mark,vm.native('gl-title')?h('gl-title',{props:{title:'WAN Observer'}}):h('h1',{class:'wo-h1'},'WAN Observer')]);
         const head=h('div',{class:'wo-head'},[title,h('div',{class:'wo-head-actions'},c?[
             h('label',{class:'wo-switch-label'},[h('span','Scheduled tests'),vm.native('gl-switch')

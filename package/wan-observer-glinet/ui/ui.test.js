@@ -13,12 +13,13 @@ const config={enabled:true,adaptive:false,interval_minutes:120,start_hour:0,end_
 const rec=(min,down,extra={})=>({timestamp:new Date(now-min*60000).toISOString(),download_mbps:down,upload_mbps:41,idle_latency_ms:8,...extra});
 const fail=(min,code='timeout')=>({epoch:(now-min*60000)/1000,reason:'scheduled',outcome:'failed',failure_code:code});
 
-function harness(fetcher,payload){
+function harness(fetcher,payload,version){
     const timers=new Map(),listeners=new Map();let id=0;
     const document={hidden:false,getElementById:()=>true,addEventListener:(k,v)=>listeners.set(k,v),removeEventListener:k=>listeners.delete(k),activeElement:null};
     const context={require:p=>p==='./view.css'?'':createRequire(__filename)(p),module:{exports:{}},AbortController,Date:class extends Date{static now(){return now;}constructor(...a){super(...(a.length?a:[now]));}},
         Intl,fetch:fetcher,window:{$getCookie:()=>'a'.repeat(32)},document,setTimeout:(fn,ms)=>{timers.set(++id,{fn,ms});return id;},clearTimeout:n=>timers.delete(n),setInterval:()=>++id,clearInterval:()=>{}};
-    vmModule.runInNewContext(fs.readFileSync(__dirname+'/index.js','utf8'),context);
+    const source=fs.readFileSync(__dirname+'/index.js','utf8');
+    vmModule.runInNewContext(version?source.replace('__WAN_OBSERVER_VERSION__',version):source,context);
     const component=context.module.exports,vm={...component.data(),$el:{},$options:{components:{}},...component.methods};
     for(const k of Object.keys(component.methods))vm[k]=component.methods[k].bind(vm);
     for(const [k,fn] of Object.entries(component.computed))Object.defineProperty(vm,k,{configurable:true,get:()=>fn.call(vm)});
@@ -115,6 +116,14 @@ test('footer links only to the repository with no referrer, and external links a
     assert.deepEqual(JSON.parse(JSON.stringify(footer.data.attrs)),{href:'https://github.com/ddedic/openwrt-wan-observer',target:'_blank',rel:'noopener noreferrer',referrerpolicy:'no-referrer'});
     assert.match(h.text(),/© 2026 Danijel Dedic/);
     for(const a of links)assert.equal(a.data.attrs.rel,'noopener noreferrer');
+});
+test('footer shows the installed package version only when packaging stamped one',()=>{
+    assert.doesNotMatch(harness(null,base()).text(),/\bv\d/,'unpackaged build shows no version');
+    const h=harness(null,base(),'0.5.2-1');
+    const link=h.find(n=>n.tag==='a').find(n=>/v0\.5\.2/.test(JSON.stringify(n.children)));
+    assert.equal(link.data.attrs.href,'https://github.com/ddedic/openwrt-wan-observer/releases/tag/v0.5.2');
+    assert.equal(link.data.attrs.rel,'noopener noreferrer');
+    assert.match(h.text(),/v0\.5\.2\s+installed/);
 });
 test('quality card appears only when history is enabled and never claims downtime',()=>{
     const off=harness(null,base());assert.doesNotMatch(off.text(),/Connection quality/);assert.match(off.text(),/Quality history off/);

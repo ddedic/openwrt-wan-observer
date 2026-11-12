@@ -2,12 +2,14 @@
 """Build script-only OpenWrt 21.02 IPKs, with an optional GL.iNet admin package."""
 import gzip
 import io
+import subprocess
 from pathlib import Path, PurePosixPath
 import tarfile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = '0.5.1-1'
+VERSION = '0.5.2-1'
 OUT = ROOT / 'dist'
+VERSION_MARK = b'__WAN_OBSERVER_VERSION__'
 
 
 def archive(files):
@@ -27,6 +29,13 @@ def archive(files):
             info.uname = info.gname = 'root'
             tar.addfile(info, io.BytesIO(content))
     return gzip.compress(stream.getvalue(), mtime=0)
+
+
+def stamp(bundle):
+    """Write the package version into the dashboard footer (exactly one placeholder)."""
+    if bundle.count(VERSION_MARK) != 1:
+        raise SystemExit('dashboard bundle must contain exactly one version placeholder; run npm run build')
+    return bundle.replace(VERSION_MARK, VERSION.encode())
 
 
 def build(name, description, depends, files, conffiles=()):
@@ -58,7 +67,9 @@ def read(path, mode=0o644):
 if __name__ == '__main__':
     core = 'package/wan-observer/files/'
     gl = 'package/wan-observer-glinet/'
-    bundle = (ROOT / (gl + 'ui/dist/view.js')).read_bytes()
+    # Always rebuild the dashboard so a stale ui/dist can never be packaged.
+    subprocess.run(['npm', 'run', 'build', '--silent'], cwd=ROOT / (gl + 'ui'), check=True)
+    bundle = stamp((ROOT / (gl + 'ui/dist/view.js')).read_bytes())
     OUT.mkdir(exist_ok=True)
     build('wan-observer', 'Local WAN measurement history and opt-in collector.',
           'jq, coreutils-timeout', {
@@ -73,7 +84,7 @@ if __name__ == '__main__':
               'usr/share/licenses/wan-observer/LICENSE': read('LICENSE'),
           }, conffiles=['/etc/wan-observer/collector.json'])
     build('wan-observer-glinet', 'GL.iNet dashboard, schedule controls and direct PDF export.',
-          'wan-observer, gl-sdk4-ui-core, gl-oui-rpc, lua, lua-cjson, libubus-lua', {
+          f'wan-observer (= {VERSION}), gl-sdk4-ui-core, gl-oui-rpc, lua, lua-cjson, libubus-lua', {
               'www/cgi-bin/wan-observer': read(gl + 'files/wan-observer.cgi', 0o755),
               'usr/share/oui/menu.d/wan-observer.json': read(gl + 'files/menu.json'),
               'www/views/gl-sdk4-ui-wan-observer.common.js.gz': (gzip.compress(bundle, mtime=0), 0o644),

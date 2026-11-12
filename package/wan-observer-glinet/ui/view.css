@@ -170,6 +170,7 @@
 .wo-foot a:hover{text-decoration:underline;text-underline-offset:2px}
 .wo-foot a:focus-visible{border-radius:2px}
 .wo-foot svg{flex:none}
+.wo-foot .wo-version{color:var(--wo-weak);font-variant-numeric:tabular-nums}
 
 /* Fallback controls when the host does not register gl-* components */
 .wo-btn{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 16px;border:1px solid var(--wo-border);border-radius:4px;background:var(--wo-card);color:var(--wo-text);font-weight:500;cursor:pointer;white-space:nowrap}

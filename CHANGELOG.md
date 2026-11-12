@@ -2,6 +2,14 @@
 
 Notable changes to WAN Observer. Router package versions follow the tags below; download builds and checksums from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
 
+## 0.5.2 — 2026-11-12
+
+Installed version in the dashboard.
+
+- The dashboard footer shows the installed version, linked to its release notes.
+- The 0.5.1 dashboard package contained an outdated dashboard build. This release ships a fresh build, and packaging now always rebuilds the dashboard first.
+- The dashboard package now requires the collector package of the same version, so both always upgrade together.
+
 ## 0.5.1 — 2026-11-12
 
 Fix for dashboard-started speed tests.

@@ -144,6 +144,14 @@ class PreservationContracts(unittest.TestCase):
             self.assertTrue(('/etc/wan-observer/'+state).startswith(paths[0]))
         self.assertFalse('/tmp/wan-observer-collector/state.json'.startswith(paths[0]))
 
+    def test_dashboard_bundle_is_stamped_with_package_version(self):
+        spec=importlib.util.spec_from_file_location('builder', ROOT/'tools/build-ipk.py')
+        builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
+        self.assertEqual(builder.stamp(b'a="__WAN_OBSERVER_VERSION__"'),b'a="'+builder.VERSION.encode()+b'"')
+        for broken in (b'no mark', b'__WAN_OBSERVER_VERSION____WAN_OBSERVER_VERSION__'):
+            with self.assertRaises(SystemExit): builder.stamp(broken)
+        self.assertIn("wan-observer (= {VERSION})",(ROOT/'tools/build-ipk.py').read_text())
+
     def test_ipk_conffiles_and_no_operational_config_or_lifecycle_scripts(self):
         spec=importlib.util.spec_from_file_location('builder', ROOT/'tools/build-ipk.py')
         builder=importlib.util.module_from_spec(spec);spec.loader.exec_module(builder)
