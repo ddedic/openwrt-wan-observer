@@ -29,8 +29,9 @@ React/Hono stacks are optional examples. The project profile below adapts those 
   bounded retention, atomic writes, budget guards and operator-owned state.
 - Preserve CSS bytes/order, markup, copy, focus behavior and async lifetimes.
   All visual/interaction design belongs to Opus 5.5 and requires owner review.
-- No live router operations, speed tests, release, deployment or credential access
-  are part of this migration. Publish the working branch for review; do not merge it.
+- Initial migration excluded live operations. The owner subsequently authorized
+  actual-device validation; see the [native worklog](../worklogs/2026-11-12-native-validation.md).
+  Publish the working branch for review; do not merge or release it.
 
 ## Ownership and allowed dependencies
 
@@ -103,7 +104,11 @@ original rendered-tree fixtures remain unchanged. Chromium runs the actual built
 IPK bundle with Vue 2 runtime and synthetic APIs at desktop/mobile sizes, testing
 keyboard focus, settings save and CSV/PDF downloads. This proves real DOM behavior
 in that test host, not native GL.iNet components, actual firmware or device behavior.
-No live router validation was performed for this migration.
+Subsequent owner-authorized validation installed the exact candidate on an actual
+Flint 2/firmware 4.11.0, checked native login/API/settings/history/exports/focus and
+an isolated fake-backend detached worker. Persistent data/configuration and schedule
+were preserved byte-for-byte. See the native worklog for exact scope and limitations;
+this does not establish other firmware or physical-phone compatibility.
 
 The source inventory retains every original source mapping and records the final
 canonical source census. Root quality tools, browser fixtures and development

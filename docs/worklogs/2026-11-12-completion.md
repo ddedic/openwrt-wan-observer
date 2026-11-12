@@ -149,3 +149,11 @@ a temporary regular file, invokes jq's documented `-f` API and removes the direc
 in `finally`; no router source/runtime changed. The same positive and unknown-builtin
 negative controls must pass locally and on the final Linux run. This is a small
 adaptation of the already researched upstream jq API, not a new compiler.
+
+## Subsequent owner-authorized native validation
+
+The owner subsequently instructed actual-device testing. The exact candidate
+`aa4cdc6` was installed and passed the scoped native firmware/API/UI/worker checks
+in the [native validation worklog](2026-11-12-native-validation.md). This supersedes
+the earlier lack of hardware evidence for those paths; historical phase limits
+above remain recorded. No merge or release was performed.
