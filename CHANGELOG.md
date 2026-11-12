@@ -2,9 +2,12 @@
 
 Notable changes to WAN Observer. Router package versions follow the tags below; download builds and checksums from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
 
-## Unreleased
+## 0.5.1 — 2026-11-12
 
-- Project website at <https://ddedic.github.io/openwrt-wan-observer/>, built from `site/` and published by the `Website` workflow. Router packages are unchanged.
+Fix for dashboard-started speed tests.
+
+- **Run Speedtest** from the GL.iNet dashboard no longer fails with *Program error*. The dashboard starts tests without `HOME`, which made the Ookla CLI abort; the collector now uses the account's home directory. Scheduled tests were not affected.
+- Project website at <https://ddedic.github.io/openwrt-wan-observer/>, built from `site/` and published by the `Website` workflow.
 - Social metadata now describes OpenWrt speed-test history with a native GL.iNet dashboard, and uses a designed 1200×630 preview instead of the raw dashboard capture.
 
 ## 0.5.0 — 2026-11-11
