@@ -82,12 +82,13 @@ jobs:
           sh -n package/wan-observer/files/wan-observer-readiness
           sh -n package/wan-observer/files/wan-observer-quality
           luac5.1 -p package/wan-observer-glinet/files/wan-observer.cgi
+      - name: Install dashboard build dependencies for installed-IPK tests
+        run: npm --prefix package/wan-observer-glinet/ui ci
       - name: Synthetic privacy and behavior tests
         run: python3 -m unittest discover -s tests -v
       - name: Router dashboard and PDF tests
         working-directory: package/wan-observer-glinet/ui
         run: |
-          npm ci
           npm test
           npm run build
       - name: Build router IPKs

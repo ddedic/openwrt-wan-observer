@@ -88,12 +88,20 @@ export function checkLanguages(root, groups, { formatting = false } = {}) {
             .join(';')})`;
     });
     const program = `${source}\nif . == "__quality_compile_only__" then (${references.join(',')}) else empty end\n`;
-    execute(
-      root,
-      'jq',
-      ['-n', '-L', dirname(resolve(root, file)), '-f', '/dev/stdin'],
-      program,
-    );
+    const temp = mkdtempSync(join(tmpdir(), 'wan-jq-check-'));
+    try {
+      const filter = join(temp, 'compile.jq');
+      writeFileSync(filter, program);
+      execute(root, 'jq', [
+        '-n',
+        '-L',
+        dirname(resolve(root, file)),
+        '-f',
+        filter,
+      ]);
+    } finally {
+      rmSync(temp, { recursive: true, force: true });
+    }
   }
   for (const file of groups.make || []) {
     const temp = mkdtempSync(join(tmpdir(), 'wan-make-check-'));

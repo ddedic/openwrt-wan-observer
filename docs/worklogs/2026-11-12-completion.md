@@ -131,3 +131,21 @@ supplier limitation is documented rather than forced through an incompatible fix
 Final publication gate: fresh independent review, pushed source commit, green CI
 on the final branch head and exact local/remote synchronization. Record results
 below when available.
+
+## Independent review and clean-runner fixes
+
+Fresh read-only review of `725a94d..f577a24` found one important CI setup-order
+issue and no additional substantiated runtime regression. The newly added
+installed-IPK test invokes the real UI build, so the offline matrix must install
+UI dependencies before Python tests. The clean runner reproduced the failure;
+its UI install now precedes the Python suite. The reviewer independently reran
+79 UI and 24 quality/artifact tests and delivered the required explicit handoff.
+
+First CI run <https://github.com/ddedic/openwrt-wan-observer/actions/runs/43226009109>
+also caught a Linux portability failure in the jq checker: Node supplies a socket
+for child stdin, which Linux cannot reopen as `/dev/stdin`. The retained positive
+jq control failed exactly there. The checker now writes its synthetic filter to
+a temporary regular file, invokes jq's documented `-f` API and removes the directory
+in `finally`; no router source/runtime changed. The same positive and unknown-builtin
+negative controls must pass locally and on the final Linux run. This is a small
+adaptation of the already researched upstream jq API, not a new compiler.

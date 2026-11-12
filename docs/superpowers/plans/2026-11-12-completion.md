@@ -17,7 +17,7 @@ final package/application contracts without changing design or router behavior.
       run full integration/UI/tooling tests and deterministic builds on final source.
 - [x] Reconcile every inventory entry/profile convention; document bounded evidence
       and exact exceptions (no false whole-project runtime/firmware claims).
-- [ ] Fresh read-only review, one meaningful fix pass with regressions, then final
+- [x] Fresh read-only review, one meaningful fix pass with regressions, then final
       local/remote checks and green GitHub CI. Publish review branch, no merge/release.
 
 ## Coordination and review focus

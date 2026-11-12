@@ -984,7 +984,7 @@
       "path": "tooling/quality/language-checks.mjs",
       "language": "javascript",
       "owner": "development verification",
-      "sha256": "073379cd6a77a5691cd3de9c11aeca332dba5869826795032fbc04a37c8b02d4"
+      "sha256": "8a492a643013279584814faf4c057108ea2d5627a691aa2d4e069025a2670d72"
     },
     {
       "path": "tooling/quality/languages.test.mjs",
