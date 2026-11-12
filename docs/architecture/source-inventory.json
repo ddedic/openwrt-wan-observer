@@ -7,9 +7,19 @@
       "retainedPath": "package/wan-observer-glinet/files/wan-observer.cgi",
       "baselineSha256": "8db949607d87660b623b1636014e7e3593a08599e4971b60675876f2552cd306",
       "owner": "repository maintainer",
-      "nextPacket": "CGI boundary extraction",
-      "currentPaths": ["package/wan-observer-glinet/files/wan-observer.cgi"],
-      "secondPacketDisposition": "retained unchanged"
+      "currentPaths": [
+        "package/wan-observer-glinet/files/wan-observer.cgi",
+        "package/wan-observer-glinet/lua/wan_observer/adapters/commands.lua",
+        "package/wan-observer-glinet/lua/wan_observer/application.lua",
+        "package/wan-observer-glinet/lua/wan_observer/contracts/json-object.lua",
+        "package/wan-observer-glinet/lua/wan_observer/contracts/schedule.lua",
+        "package/wan-observer-glinet/lua/wan_observer/http/authentication.lua",
+        "package/wan-observer-glinet/lua/wan_observer/http/handler.lua",
+        "package/wan-observer-glinet/lua/wan_observer/services/dashboard.lua",
+        "package/wan-observer-glinet/lua/wan_observer/services/quality-projection.lua"
+      ],
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "responsibility extraction and native checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/chart.js",
@@ -17,13 +27,13 @@
       "retainedPath": "package/wan-observer-glinet/ui/chart.js",
       "baselineSha256": "10c9c316ff276489c66068266545dbfe3cf102afbc2d18bc42525b310a01b24a",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/src/features/history/charts/chart-geometry.js",
         "package/wan-observer-glinet/ui/src/features/history/charts/Chart.js",
         "package/wan-observer-glinet/ui/src/features/history/charts/chart-layout.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "responsibility extraction and native checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/component.test.js",
@@ -31,11 +41,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/component.test.js",
       "baselineSha256": "0725014f2e950e35b84031a6e2cca4e7f7642452f8dfbc95c1d43aaef3424bab",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/tests/integration/lifecycle.test.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/index.js",
@@ -43,7 +53,6 @@
       "retainedPath": "package/wan-observer-glinet/ui/index.js",
       "baselineSha256": "9590fd5a0000993d3e7a60c2f608f27896eaa34761bd2d34df6738d12af39727",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/index.js",
         "package/wan-observer-glinet/ui/src/app/dialog-lifecycle.js",
@@ -70,7 +79,8 @@
         "package/wan-observer-glinet/ui/src/infrastructure/router-api.js",
         "package/wan-observer-glinet/ui/src/features/settings/settings-validation.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "responsibility extraction and native checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/octicon.js",
@@ -78,11 +88,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/octicon.js",
       "baselineSha256": "7860e426181e75288920c44fe305bc3ca462671443d15751e4b17066ca9a5be1",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/src/app/assets/github-mark.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/pdf.js",
@@ -90,11 +100,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/pdf.js",
       "baselineSha256": "dc79fee9be670a9ca4a09af36e71f6ea8ebbf911a31f3f555b323102e04fb868",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/src/features/reports/pdf-export.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/report-data.js",
@@ -102,12 +112,19 @@
       "retainedPath": "package/wan-observer-glinet/ui/report-data.js",
       "baselineSha256": "773dcab94ebf69fa88e953f7338625c56cb89604184c3b7d4037b17d03380a77",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
-        "package/wan-observer-glinet/ui/report-data.js",
-        "package/wan-observer-glinet/ui/src/measurements/report-data.js"
+        "package/wan-observer-glinet/ui/src/measurements/attempt-reconciliation.js",
+        "package/wan-observer-glinet/ui/src/measurements/csv-export.js",
+        "package/wan-observer-glinet/ui/src/measurements/data-usage.js",
+        "package/wan-observer-glinet/ui/src/measurements/measurement-statistics.js",
+        "package/wan-observer-glinet/ui/src/measurements/report-data.js",
+        "package/wan-observer-glinet/ui/src/measurements/report-format.js",
+        "package/wan-observer-glinet/ui/src/measurements/report-status.js",
+        "package/wan-observer-glinet/ui/src/measurements/report-timeline.js",
+        "package/wan-observer-glinet/ui/src/measurements/speed-series.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "responsibility extraction and native checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/report.test.js",
@@ -115,11 +132,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/report.test.js",
       "baselineSha256": "f03f30417a73e9416b6b98d38a2ebfe5f02632ee456049d9b3ba7c30bf93f80f",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/src/features/reports/report.test.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/time.js",
@@ -127,11 +144,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/time.js",
       "baselineSha256": "323a2344f0db62dbab331ad439855eba17efb3ee0adc2e4100de4def48c6c261",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/src/time/router-time.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/ui.test.js",
@@ -139,11 +156,11 @@
       "retainedPath": "package/wan-observer-glinet/ui/ui.test.js",
       "baselineSha256": "d85213d6fa430a78b1de12dec5adb8850045b4415401953699a68b32e3aa8dd1",
       "owner": "repository maintainer",
-      "nextPacket": "retain public contracts; further algorithm/typing work requires focused proof",
       "currentPaths": [
         "package/wan-observer-glinet/ui/tests/integration/dashboard.test.js"
       ],
-      "secondPacketDisposition": "ownership extraction; existing contract preserved"
+      "secondPacketDisposition": "ownership extraction; existing contract preserved",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer-glinet/ui/view.css",
@@ -151,9 +168,9 @@
       "retainedPath": "package/wan-observer-glinet/ui/view.css",
       "baselineSha256": "09cf772a9e8260e21fc59d4f7790dd6720e9c490263effa33dafe98126478221",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer-glinet/ui/view.css"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/Makefile",
@@ -161,9 +178,9 @@
       "retainedPath": "package/wan-observer/Makefile",
       "baselineSha256": "5fba7db4a55e559795500d570709caa75e0fb5ed40ced006731827ac410e25ba",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/Makefile"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/collector.jq",
@@ -171,9 +188,9 @@
       "retainedPath": "package/wan-observer/files/collector.jq",
       "baselineSha256": "1e6346b52abd5401f8ff7cabe0ccff322b3a654aa19d338bccd33cb58ecb87e2",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/collector.jq"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/quality.jq",
@@ -181,9 +198,9 @@
       "retainedPath": "package/wan-observer/files/quality.jq",
       "baselineSha256": "202fe7e25c2f9d1d79b66bf967fd17dd1d48354f4e8a1c460c19c5c9ebfeee9e",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/quality.jq"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/record.jq",
@@ -191,9 +208,9 @@
       "retainedPath": "package/wan-observer/files/record.jq",
       "baselineSha256": "7a05d226c6a4720360e7fb0cca7a23d751498e32751061ad171cfd59370753c5",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/record.jq"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/wan-observer",
@@ -201,9 +218,9 @@
       "retainedPath": "package/wan-observer/files/wan-observer",
       "baselineSha256": "c3efcd515f6e648593bf2ce885aa234784ecabf30a4f01a4541d273719a65e52",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/wan-observer"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/wan-observer-collect",
@@ -211,9 +228,9 @@
       "retainedPath": "package/wan-observer/files/wan-observer-collect",
       "baselineSha256": "5440b56c101e33018151d16ed5acafd57cfdc8b31b31cce07a040efae7b2d056",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/wan-observer-collect"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/wan-observer-quality",
@@ -221,9 +238,9 @@
       "retainedPath": "package/wan-observer/files/wan-observer-quality",
       "baselineSha256": "d44b1079e4fbf9859ce770ab3be7598be5c9be4b438360d2bd027a952e11fb5d",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/wan-observer-quality"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/wan-observer-readiness",
@@ -231,9 +248,9 @@
       "retainedPath": "package/wan-observer/files/wan-observer-readiness",
       "baselineSha256": "8aec3f69960057ded25d5dfb57381685c85eccbfcc553ea792edcc4d44cc9414",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/wan-observer-readiness"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "package/wan-observer/files/wan-observer.keep",
@@ -241,9 +258,9 @@
       "retainedPath": "package/wan-observer/files/wan-observer.keep",
       "baselineSha256": "c01c35afa45110b8c7fe3c4fb62b90585cf221f6d229eeec072fe4ac689ff91b",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["package/wan-observer/files/wan-observer.keep"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "site/index.html",
@@ -251,9 +268,9 @@
       "retainedPath": "site/index.html",
       "baselineSha256": "c219d5488318a66c4e6275a1c357e3956b7ff9eee09c258401b124b7f919e0e6",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["site/index.html"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "site/styles.css",
@@ -261,9 +278,9 @@
       "retainedPath": "site/styles.css",
       "baselineSha256": "23f47d90e277b71335ec4bee93fef53eeb1be47dbcd0723e34f34493f916f95f",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["site/styles.css"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_budget.py",
@@ -271,9 +288,9 @@
       "retainedPath": "tests/test_budget.py",
       "baselineSha256": "44bcaaa8ea5de29d8ba098a290d77a62e0453738948dd31f6499ba8c5b1b6045",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_budget.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_cgi.py",
@@ -281,9 +298,9 @@
       "retainedPath": "tests/test_cgi.py",
       "baselineSha256": "046352cb70debc9d38e0afe78fe496dfa6eea610f53616399e6dfbbdc298b7fd",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_cgi.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_cli.py",
@@ -291,9 +308,9 @@
       "retainedPath": "tests/test_cli.py",
       "baselineSha256": "2a94cef6bf779c1eee32d572f9254b6b7ff946ee9bdfd7b90f33df721d669de1",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_cli.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_collector.py",
@@ -301,9 +318,9 @@
       "retainedPath": "tests/test_collector.py",
       "baselineSha256": "28e05d499f5905334db9e7614225ada984b9c7c7db0507174972035039083c21",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_collector.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_lifecycle.py",
@@ -311,9 +328,9 @@
       "retainedPath": "tests/test_lifecycle.py",
       "baselineSha256": "b55791c01441431b97230b6610b884d4212a07ba52883a82ff2e7b0cb4aff0f0",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_lifecycle.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_preview.py",
@@ -321,9 +338,9 @@
       "retainedPath": "tests/test_preview.py",
       "baselineSha256": "cb78073155b0bf7823206d3b5aced266578a9be03abbd1550a4068666296df36",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_preview.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_quality.py",
@@ -331,9 +348,9 @@
       "retainedPath": "tests/test_quality.py",
       "baselineSha256": "b824ceee0a83c4746f5612bad4a3f80de5aa72d833fb4773e11a6932165dbe19",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_quality.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tests/test_site.py",
@@ -341,9 +358,9 @@
       "retainedPath": "tests/test_site.py",
       "baselineSha256": "b556af821e8b455dbabb4291257e1268287c2975c750a962c993d989345ed572",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tests/test_site.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tools/build-ipk.py",
@@ -351,9 +368,9 @@
       "retainedPath": "tools/build-ipk.py",
       "baselineSha256": "8126c5c224d7fab0f81c4fcb6b03c6fd5710b49549cbd1820497e7d823d1133c",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tools/build-ipk.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tools/preview.py",
@@ -361,9 +378,9 @@
       "retainedPath": "tools/preview.py",
       "baselineSha256": "6335173c3d2f27f456883b9463ddc789607b2f478c21802a6ea24d39a6910896",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tools/preview.py"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tools/preview/app.js",
@@ -371,9 +388,9 @@
       "retainedPath": "tools/preview/app.js",
       "baselineSha256": "6db2f7ee10a9a19168b98299c37cf1e605d3131720448b43b1817fc9562f5682",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tools/preview/app.js"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tools/preview/index.html",
@@ -381,9 +398,9 @@
       "retainedPath": "tools/preview/index.html",
       "baselineSha256": "97b2b68085fab7a5fcef861453a60d016cfd67eeb301d2be5793231ac4203ca6",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tools/preview/index.html"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     },
     {
       "source": "tools/preview/style.css",
@@ -391,10 +408,643 @@
       "retainedPath": "tools/preview/style.css",
       "baselineSha256": "6bdb0a9d6afdfad3fadcba47d56fb0c35b6ec7d756ff2e59df708a0ff2ae4fb8",
       "owner": "repository maintainer",
-      "nextPacket": "retain; review when its capability changes",
       "currentPaths": ["tools/preview/style.css"],
-      "secondPacketDisposition": "retained unchanged"
+      "secondPacketDisposition": "retained unchanged",
+      "finalDisposition": "retained contract; canonical quality checks"
     }
   ],
-  "secondPacketBaseline": "d8bcf8ef53eff7eea1eb9c2ad6e3a1a47dbc781c"
+  "secondPacketBaseline": "d8bcf8ef53eff7eea1eb9c2ad6e3a1a47dbc781c",
+  "completionBaseline": "725a94dabd067948983b35cc0c969b48c38399ec",
+  "canonicalSources": [
+    {
+      "path": ".dependency-cruiser.cjs",
+      "language": "javascript",
+      "owner": "development tools",
+      "sha256": "a9a3ac965cf5622aa1e0508b64387247a4981055e2ed4670bd5e7ed3392a2e21"
+    },
+    {
+      "path": ".luacheckrc",
+      "language": "lua",
+      "owner": "development tools",
+      "sha256": "0d95efc26473414ba1c64b890d50a80672f1b365bf8215fb34171bb142f767c1"
+    },
+    {
+      "path": "eslint.config.mjs",
+      "language": "javascript",
+      "owner": "development tools",
+      "sha256": "10656e196d8f4c8a8548055a0e02cca6a47a4c4a82acf12c915cd0b862416d85"
+    },
+    {
+      "path": "package/wan-observer-glinet/files/wan-observer.cgi",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "735babaab5fa0db948f6880ee1974f39895eb9497da7fc84c8bd744ad2c1b429"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/adapters/commands.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "672145a36e93a2ef3d465145dd8c75ade00af9f4a93e919113108fe1be91ff9e"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/application.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "81529a16e94f321857f390bb58fdc276ca113896ba66c5e479ea1966778f2c55"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/contracts/json-object.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "266e594bfb7bdda9011a1ca9dcdecd32a0028cb24e259a786c645ab5bd2035e4"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/contracts/schedule.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "2dc5a5f6a07a3f2597177f4e74dbe4c27ad4d1fec6b919458b123cb1935f6772"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/http/authentication.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "93f28968649815ea0c5acd627b1aed25c220f02765273f485adb952ef7da8e36"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/http/handler.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "36c779eb1c13e48627210f45de5d71475f905a186d8c9c0f50471a3a220c7f93"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/services/dashboard.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "73227f276f0bde5a4e62b4f8b76a594d1565a79add67e53c6c88688e3d2bbaca"
+    },
+    {
+      "path": "package/wan-observer-glinet/lua/wan_observer/services/quality-projection.lua",
+      "language": "lua",
+      "owner": "router package",
+      "sha256": "5127333dc116e38192574e77aa5ba2b753fe0a5076a5ba449540412e5c6db770"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/index.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "d4308666f4606bd6cd1c2c7709f7e7feedd3b33fe86372b0d5ee81e062c0d73c"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/WanObserverPage.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "8fc70e6f958d5178ac51dc6cf4cb168031c593de12ed6acc6cb4b7f5e56ee97c"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/assets/github-mark.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "47cade050700b9bcdcebb39be2b32ed14801ebb4b9563a9e619a7d8292d63994"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/components/BrandMark.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "3972632e180e7eec7e0b65786e90eb1838a7cf9aa156d44b5b2b6ecac26a5bd7"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/components/ObserverFooter.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "012e691d84a329e9721bfead51de1d48fc9ebb258114c89091b92c7ff43563b1"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/components/ObserverFooter.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "93e4716cff763d742d8c47d2812f1fb6d57d2439374308793f79d849d486b6ce"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/components/ObserverHeader.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "e5a07e43175ac8ce215b2fad1bcc65c98f75a09e487529775c2284a62e36c908"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/components/ObserverHeader.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "11fc4676f36b6338ae411ca665ad3493e9d6122954724b15f2fb18a8bc016da0"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/dialog-lifecycle.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "6d66aa5ff50598689ffd9dec392a7b4093aef723fd7947dfaab357e0bc1873a7"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/package-metadata.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "f102d9019b078ef0a539d50dfea592d148fc882d21ee72ae1450ce878dd57e20"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/app/render-page.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "8d45db96ad17c09b15f85846f969f9deae9322ae52b5964b36f49151ce99fe81"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/collector/collection-policy.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "5d2d591f8e52c6cdb55b9b6132adc48ed18bf7677a285d10b37c0c846761c3c0"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/collector/collector-contract.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "250f85f174c13c5c2003416b0e4581b1024436a52d16ca44fce384af2895f411"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/components/dialog-frame/DialogFrame.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "1964ab0880b6a3189ee0e3bd0463427266b4aee0909af09a189b5b2da8fed5b2"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/components/dialog-frame/DialogFrame.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "c3783ed7c943712c0461c04a4efe1304936e50eff8749154a089eb0cc2cc8e48"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/dashboard/components/CurrentStatus.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "142c98e6cbe603c8f1fb741bdf22a5c512c3ce5c884dc98e2f3aa4135ac92ee8"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/dashboard/components/CurrentStatus.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "f453957eeedeb29a1699459d3d96e8b32d50997c1e57525eccce4df71b41cb13"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/charts/Chart.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "eca0d31821f0c35906555eb54cae7bf4fc897f4cc6249bb998db69a05f8996c3"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/charts/Chart.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "ebc4d01e8adaee825ce5c790e79f4e2e36e958567645e802278d8c198c2cae2a"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/charts/chart-geometry.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "f99a79e65671a7b852e6e01d003d6c12bc05f798c3685a9ea4a597eef032577b"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/charts/chart-layout.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "6ac7141ca3e9ec23c5aadb4d21811f2f57cc83630d25fa593112c16db1833224"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/components/HistoryPanel.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "06ab0614d37d6d6ec30fe177fe311a22280ff18b614bf398398622b769e0c125"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/components/HistoryPanel.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "d861b59c37c250d2e30537b1bfbafb3e5627e000a93248e762ff1dbcd020f14b"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/history/history-workflow.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "1f10843e6e61c43137cef57873f2061a3ada402c95c98edb0ef36d2eadadd5bf"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/reports/components/ExportDialog.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "39eb6b55d3b68a2adb799cabb5897697f624cf8bb631bef10aebe39f2c98cfb7"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/reports/components/ExportDialog.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "8b0f69db4476500662bd399913d79d3a18cbc9fa8d040a32407106a6c87bab81"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/reports/export-workflow.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "bbeb0e0afd3b358a01a0f53d6a542dec946a80e651f9e09125d95dbd44571866"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/reports/pdf-export.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "07510b03e70f49acc9ff9331e45a4cd12e983f80a3d61ec89863fd430f8e182c"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/reports/report.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "472e71319419444c2b29f61c5ec90b297a7fa49d74949bc897874739bb589457"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/settings/components/SettingsDialog.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "984f46261ff915595cc0ffdbb8ecb990a9cefd9e70db7172d32d3e11fb06d45d"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/settings/components/SettingsDialog.types.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "ca5331ea33cc47733349798b19e81a0002045b146ef3470dfae8ffb584e2b3dc"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/settings/settings-validation.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "c5858f02c394c58f90eab2ab3506f539de38fbcaaa894497230ef61c41dce58b"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/settings/settings-validation.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "e0a329f91501958f852dde23a200036d92c43ed0abd5938104a809a3309a998e"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/settings/settings-workflow.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "b81351d2a34ed4683ae68e925e50d992ca48aa7126f5c695e276b2f7f7a1eb7f"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/features/speedtest/speedtest-workflow.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "940772d3ec245db73e1191fc59b602a909c97f8af9c22f550451158ba8037df0"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/infrastructure/browser-download.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "4b1f58d194e3e5da7da968246cbb77041da282c3c60b1afd962f3b0fbbe7e154"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/infrastructure/router-api.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "ebd7b8f69704d7df11aabd1990d45905e502197dba3947393accc75f0e6319e0"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/infrastructure/router-api.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "dfd5d8320484245894872ce4b417a985246122b73de1bc0d4225f6072e80c512"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/attempt-reconciliation.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "0657ebc4e8600d2b774786501517fab201caeaa3df8a5154d8ae15a4b5555500"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/csv-export.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "60712d2c73f9e764ff2a1a7db419a4cb0b91986ed529cdf7710a3a1cfe05b45d"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/data-usage.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "2dd78de0b6ea3f9a27e8b8a069c07eea1ea23f8d0e7fd65a01c926b15b976c01"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/format-measurements.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "a5b755a5da43e0db7bc74a73c295c447a8652df14115ae4c359f351193a72ec4"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/measurement-statistics.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "588817e7ea316f511c2dd20735cb8f23b39ac75b9cb65c5a5f4493169abb30f7"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/report-boundary.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "27c1f8d1189a9c182f7a8927a6d48d6f101d8364380bf4b290a388c5cc2cf063"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/report-data.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "ff776bbc73d73b60592f6427a9fbe2fcaeddd4e82a4f344688d158129d1e5628"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/report-format.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "7aeb3305a00a74c6bdc5f86f8f4f0045d4c910295d06947cd70b673906ea0f46"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/report-status.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "c3043102b9ceea0b6c9c45cb0c59e74137737c9baae0d0bc2e8abaf3f4225536"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/report-timeline.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "eefd00e800d49203315e159cb5eba7961d0c7af1d03a29cbae63ebbab653017a"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/measurements/speed-series.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "6a4b217548bd4b2efb10f19a23fcf7a9e59a7d452268f26c701aee15063dfc69"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/scheduling/schedule-format.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "6df5dfaf7fd8507c8324b90e054881cd7585b8da625d217f5d0a952529d73b5e"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/src/time/router-time.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "d988c74e5882630731730b51aff5bee7630dbe3bdf73a1c806f542624e520763"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/component-source.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "23a956e82c512e4e887d86824de71d68acf095e0239e25e74e2e293909952c96"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/integration/dashboard.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "8f3f7638ff134a5fb97ab8cf041485d5f1f2f5ec393774c6893a49779e6f0730"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/integration/lifecycle.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "e65f0bbcd2ad17c814b8ab2f06a6546802472d0f2d00c79914db2174b1992c7e"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/page-assembly.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "bef9d903c548b58c6977bdb9c90ea6cbdddae53e710ff61fbf115cf9059266ce"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/render-contract.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "b110d6a3fe28f3fca191b35d7aa446ded034db4e9f1af286d11b682961759815"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/render-scenarios.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "e3a40b7396381b2ad077030f0c06722f8aef4b473b6fff148e1ba2d85fae6e4e"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/tests/view-actions.test.js",
+      "language": "javascript",
+      "owner": "router package",
+      "sha256": "8261d2ac90a012d65a145a7f3b217d41bb577240e07a967a8d8fea794cc62bc0"
+    },
+    {
+      "path": "package/wan-observer/Makefile",
+      "language": "make",
+      "owner": "router package",
+      "sha256": "5fba7db4a55e559795500d570709caa75e0fb5ed40ced006731827ac410e25ba"
+    },
+    {
+      "path": "package/wan-observer/files/collector.jq",
+      "language": "jq",
+      "owner": "router package",
+      "sha256": "1e6346b52abd5401f8ff7cabe0ccff322b3a654aa19d338bccd33cb58ecb87e2"
+    },
+    {
+      "path": "package/wan-observer/files/quality.jq",
+      "language": "jq",
+      "owner": "router package",
+      "sha256": "202fe7e25c2f9d1d79b66bf967fd17dd1d48354f4e8a1c460c19c5c9ebfeee9e"
+    },
+    {
+      "path": "package/wan-observer/files/record.jq",
+      "language": "jq",
+      "owner": "router package",
+      "sha256": "7a05d226c6a4720360e7fb0cca7a23d751498e32751061ad171cfd59370753c5"
+    },
+    {
+      "path": "package/wan-observer/files/wan-observer",
+      "language": "shell",
+      "owner": "router package",
+      "sha256": "11b5c77d18eef294d36978f22f2b7535c41fdc41105ffe6554540dbc6eeda8d7"
+    },
+    {
+      "path": "package/wan-observer/files/wan-observer-collect",
+      "language": "shell",
+      "owner": "router package",
+      "sha256": "9cea458242e10c509f179374cce214380883c8fab29816a726ad9fbf7ec0938c"
+    },
+    {
+      "path": "package/wan-observer/files/wan-observer-quality",
+      "language": "shell",
+      "owner": "router package",
+      "sha256": "10891209e36b76a8806e1e70c12d806763ac0304e6bea94a2448c04a0ea5981b"
+    },
+    {
+      "path": "package/wan-observer/files/wan-observer-readiness",
+      "language": "shell",
+      "owner": "router package",
+      "sha256": "195bcab9d8533aa62aa7aa5513e1bab5bc848be9b15dc263b8e42c6df8c4e866"
+    },
+    {
+      "path": "tests/test_budget.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "0c584ca3c49bbd2dd975e9579010069b5388339d5954654086c94dbdfdee4712"
+    },
+    {
+      "path": "tests/test_cgi.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "730cf072970feac0e76eceb5bf14fc60a5450ef6fcd453a8d96a0e4c40cea6c2"
+    },
+    {
+      "path": "tests/test_cgi_modules.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "c4ba7972c5005d5e226a17094d06b29a49ab19aa280f4177fa8f0dee6d5457c6"
+    },
+    {
+      "path": "tests/test_cgi_package.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "7e9fa7506f13f14465a87a222ff3124066f93d1d5a587a88eed468f72ac6699c"
+    },
+    {
+      "path": "tests/test_cli.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "0e34a3628c5a1db224f2ac33dc83b663164b70bd88a170f2cea3f342c9e44c4b"
+    },
+    {
+      "path": "tests/test_collector.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "dfecbea84cf20e4dc00b69b68a56ec276e7ec4d009929e42ba7f9f24ebef348f"
+    },
+    {
+      "path": "tests/test_lifecycle.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "775931011d677acf0c7fa47218f3d7b8b2e6cb5435a5c2eda37078cd3ce8ec8c"
+    },
+    {
+      "path": "tests/test_preview.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "e90ec28dce1ed306978915398e0f5f3c2daacee71d58df2b7616652115d91939"
+    },
+    {
+      "path": "tests/test_quality.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "623efce1ffda600bdc7ee4f7985ddc345ec80f62f8cafd63327af4c4622c7bed"
+    },
+    {
+      "path": "tests/test_site.py",
+      "language": "python",
+      "owner": "integration contracts",
+      "sha256": "337b5b0ab0c45d4908daf7cfed96601c0b3217dc1943c9c220f755f61896db91"
+    },
+    {
+      "path": "tooling/browser/dashboard.spec.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "37416579876d963f81b3de4133562866675fe6c4fa42a0f5474485e395aa6902"
+    },
+    {
+      "path": "tooling/browser/playwright.config.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "99d284aac72192d98b6fab0167f4f49b63485fd82753fa1237111a791ba6b145"
+    },
+    {
+      "path": "tooling/browser/server.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "fd894bbe5cddc16db065678470b92227b4a50909e3bc17eb619388d9bbf922d8"
+    },
+    {
+      "path": "tooling/quality/bootstrap.sh",
+      "language": "shell",
+      "owner": "development verification",
+      "sha256": "725bf7ce83086c4f43a762a56013624de696b4b23a5685da9a4dc8e83b44bcc6"
+    },
+    {
+      "path": "tooling/quality/check.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "1bd4fbbb8ba1c19ef99e67400bc7eb00c9ddcfbeaeaa00ac4269454e74b1ad7a"
+    },
+    {
+      "path": "tooling/quality/files.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "a3ffe2279ff27b2bbdfdb871d9d064dd59f80fc49d081ddfdc971e7353115809"
+    },
+    {
+      "path": "tooling/quality/language-checks.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "073379cd6a77a5691cd3de9c11aeca332dba5869826795032fbc04a37c8b02d4"
+    },
+    {
+      "path": "tooling/quality/languages.test.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "b5d088c1978884d809a84b03a9ec196937263af686cf23e631e66177205c26e2"
+    },
+    {
+      "path": "tooling/quality/native-tools.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "081f75f275cb611f3485a98df5d83c50592cd716b121964ff341150f8c9010fb"
+    },
+    {
+      "path": "tooling/quality/quality.test.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "9823bf9d4c3c7b4bc44abdea96014dc8f3956caba102a054a13766429367fcd9"
+    },
+    {
+      "path": "tooling/quality/source-kinds.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "3c1f87450eb026d30eadd1d8b9128234f3b328abf92815cbb7eeb18c0e4c890b"
+    },
+    {
+      "path": "tooling/quality/source-policy.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "18c09056189ffed172df554b2ce3a51d66403e9d12dd801f5e415f08af050068"
+    },
+    {
+      "path": "tooling/quality/test-repository.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "76e68cc45fcbe8742409c59d044cb0034bce308b69dbe27d20cf62c7096bbcf4"
+    },
+    {
+      "path": "tooling/verification/artifacts.test.mjs",
+      "language": "javascript",
+      "owner": "development verification",
+      "sha256": "e49746b021764d448faf9b879eccf135c117c1ba54c9ae3623ab5e73ad4bb86e"
+    },
+    {
+      "path": "tools/build-ipk.py",
+      "language": "python",
+      "owner": "development tools",
+      "sha256": "3505daaf2aaec060c3351e91e3961aa3b21fd379e674f3ba99a88d125ae19dea"
+    },
+    {
+      "path": "tools/preview.py",
+      "language": "python",
+      "owner": "development tools",
+      "sha256": "dd58cfc83f5cef123761fd4cdfa4b04edb8201955f1d4a50caff16deaac00962"
+    },
+    {
+      "path": "tools/preview/app.js",
+      "language": "javascript",
+      "owner": "development tools",
+      "sha256": "306acacf0d4bab0ab2119e166d072857dd4220a1a03c18bab464c71e13bb2e28"
+    }
+  ]
 }

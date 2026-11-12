@@ -1,4 +1,5 @@
 """Local-only passive quality contract tests; fixtures never make network calls."""
+
 import json
 import os
 from pathlib import Path
@@ -18,29 +19,57 @@ class QualityTests(unittest.TestCase):
         self.base = Path(self.tmp.name)
         self.store = self.base / 'history'
         self.payload = self.base / 'snapshot'
-        self.payload.write_text(json.dumps({
-            'responsiveness': dict.fromkeys(['wan_gateway_latency', 'internet_latency',
-                'dns_lookup_latency', 'typical_latency', 'worst_latency', 'jitter_latency', 'score'], 12),
-            'reliability': {'score': 95, 'packet_loss_percent': 2, 'status_label': 'private.example',
-                'status': [1] * 30},
-            'rate': {'total_current': 13, 'upload_current': 3, 'download_current': 10},
-            'target': '192.0.2.1',
-        }))
+        self.payload.write_text(
+            json.dumps(
+                {
+                    'responsiveness': dict.fromkeys(
+                        [
+                            'wan_gateway_latency',
+                            'internet_latency',
+                            'dns_lookup_latency',
+                            'typical_latency',
+                            'worst_latency',
+                            'jitter_latency',
+                            'score',
+                        ],
+                        12,
+                    ),
+                    'reliability': {
+                        'score': 95,
+                        'packet_loss_percent': 2,
+                        'status_label': 'private.example',
+                        'status': [1] * 30,
+                    },
+                    'rate': {'total_current': 13, 'upload_current': 3, 'download_current': 10},
+                    'target': '192.0.2.1',
+                }
+            )
+        )
         self.ubus = self.base / 'ubus'
-        self.ubus.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n'
+        self.ubus.write_text(
+            '#!/bin/sh\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n'
             'case "$*" in *list*) [ "${MISSING:-0}" != 1 ] || exit 1; echo network-quality;;\n'
-            '*snapshot*) [ "${PROBE_ERROR:-0}" != 1 ] || exit 1; cat "$PAYLOAD";; *) exit 9;; esac\n')
+            '*snapshot*) [ "${PROBE_ERROR:-0}" != 1 ] || exit 1; cat "$PAYLOAD";; *) exit 9;; esac\n'
+        )
         self.uci = self.base / 'uci'
         self.uci.write_text('#!/bin/sh\nprintf "%s\\n" "${ENABLED:-1}"\n')
         self.ubus.chmod(0o700)
         self.uci.chmod(0o700)
-        self.env = dict(os.environ, WAN_OBSERVER_LIB=str(LIB),
-            WAN_OBSERVER_QUALITY_STORE=str(self.store), WAN_OBSERVER_QUALITY_UBUS=str(self.ubus),
-            WAN_OBSERVER_QUALITY_UCI=str(self.uci), WAN_OBSERVER_QUALITY_NOW='1794355200',
-            PAYLOAD=str(self.payload), CALL_LOG=str(self.base / 'calls'))
+        self.env = dict(
+            os.environ,
+            WAN_OBSERVER_LIB=str(LIB),
+            WAN_OBSERVER_QUALITY_STORE=str(self.store),
+            WAN_OBSERVER_QUALITY_UBUS=str(self.ubus),
+            WAN_OBSERVER_QUALITY_UCI=str(self.uci),
+            WAN_OBSERVER_QUALITY_NOW='1794355200',
+            PAYLOAD=str(self.payload),
+            CALL_LOG=str(self.base / 'calls'),
+        )
 
     def run_cli(self, *args, good=True):
-        result = subprocess.run(['sh', str(CLI), *args], env=self.env, text=True, capture_output=True)
+        result = subprocess.run(
+            ['sh', str(CLI), *args], env=self.env, text=True, capture_output=True
+        )
         if good:
             self.assertEqual(result.returncode, 0, result.stderr)
         else:
@@ -84,10 +113,14 @@ class QualityTests(unittest.TestCase):
         self.assertEqual(json.loads(self.run_cli('status').stdout)['state'], 'disabled')
 
     def test_invalid_json_and_numeric_values(self):
-        for payload in ['not json', '{}', '{"responsiveness":null}',
-                        self.payload.read_text().replace('12', '-1'),
-                        self.payload.read_text().replace('12', 'NaN'),
-                        self.payload.read_text().replace('12', '1e999')]:
+        for payload in [
+            'not json',
+            '{}',
+            '{"responsiveness":null}',
+            self.payload.read_text().replace('12', '-1'),
+            self.payload.read_text().replace('12', 'NaN'),
+            self.payload.read_text().replace('12', '1e999'),
+        ]:
             self.payload.write_text(payload)
             status = json.loads(self.run_cli('status').stdout)
             self.assertEqual(status['state'], 'error')
@@ -156,9 +189,28 @@ class QualityTests(unittest.TestCase):
         # jq1.8 accepts variables that jq1.6 tokenizes as keywords before '$'.
         # Keep this check even on newer hosts; real target compilation is required too.
         import re
-        keywords = {'as', 'import', 'include', 'module', 'def', 'if', 'then', 'else',
-                    'elif', 'and', 'or', 'end', 'reduce', 'foreach', 'try', 'catch',
-                    'label', 'break', '__loc__'}
+
+        keywords = {
+            'as',
+            'import',
+            'include',
+            'module',
+            'def',
+            'if',
+            'then',
+            'else',
+            'elif',
+            'and',
+            'or',
+            'end',
+            'reduce',
+            'foreach',
+            'try',
+            'catch',
+            'label',
+            'break',
+            '__loc__',
+        }
         variables = set(re.findall(r'\$([A-Za-z_][A-Za-z_0-9]*)', (LIB / 'quality.jq').read_text()))
         self.assertEqual(variables & keywords, set())
 
@@ -169,7 +221,9 @@ class QualityTests(unittest.TestCase):
             self.assertEqual(series['end_epoch'] - series['start_epoch'], days * 86400)
             self.assertEqual(series['observations'], 0)
             self.assertIsNone(series['observed_since_epoch'])
-            self.assertTrue(all(p['sample_count'] == p['valid_count'] == 0 for p in series['points']))
+            self.assertTrue(
+                all(p['sample_count'] == p['valid_count'] == 0 for p in series['points'])
+            )
             self.assertTrue(all(p['latency_median_ms'] is None for p in series['points']))
             self.assertFalse(self.store.exists())
         for days in ['', '0', '2', '31', '01', '7;touch x']:
@@ -180,8 +234,9 @@ class QualityTests(unittest.TestCase):
         start = 1794355200
         for minute, latency, jitter, loss, dns in [(0, 10, 2, 1, 8), (1, 30, 6, 9, 12)]:
             payload = json.loads(json.dumps(original))
-            payload['responsiveness'].update(internet_latency=latency, jitter_latency=jitter,
-                                              dns_lookup_latency=dns)
+            payload['responsiveness'].update(
+                internet_latency=latency, jitter_latency=jitter, dns_lookup_latency=dns
+            )
             payload['reliability']['packet_loss_percent'] = loss
             self.payload.write_text(json.dumps(payload))
             self.env['WAN_OBSERVER_QUALITY_NOW'] = str(start + minute * 60)
@@ -192,7 +247,9 @@ class QualityTests(unittest.TestCase):
         self.env['WAN_OBSERVER_QUALITY_NOW'] = str(start + 400)
         result = self.run_cli('series', '1')
         series = json.loads(result.stdout)
-        self.assertEqual((series['observations'], series['available_count'], series['error_count']), (3, 2, 1))
+        self.assertEqual(
+            (series['observations'], series['available_count'], series['error_count']), (3, 2, 1)
+        )
         self.assertEqual(series['observed_since_epoch'], start)
         point = next(p for p in series['points'] if p['sample_count'])
         self.assertEqual((point['sample_count'], point['valid_count']), (3, 2))

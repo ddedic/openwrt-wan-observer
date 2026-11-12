@@ -39,46 +39,65 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
     clock_uninitialized:
       "Scheduled testing is unavailable: the router clock is not set yet, so test times would be wrong. Check the router's time settings; see the installation guide.",
   }[readiness.status];
-  const guard =
-    usage && usage.budget_state === 'reached'
-      ? "Data limit reached: new tests won't start until next month, or until you raise or clear the limit in Settings."
-      : usage && usage.budget_state === 'unknown'
-        ? `Data use of ${usage.unknown_attempts || 'some'} ${usage.unknown_attempts === 1 ? 'test' : 'tests'} is unknown, so new tests won't start while a limit is set. Clear the limit in Settings to keep testing.`
-        : '';
+  const budgetWarning = () => {
+    if (usage && usage.budget_state === 'reached') {
+      return "Data limit reached: new tests won't start until next month, or until you raise or clear the limit in Settings.";
+    }
+    if (usage && usage.budget_state === 'unknown') {
+      return `Data use of ${usage.unknown_attempts || 'some'} ${usage.unknown_attempts === 1 ? 'test' : 'tests'} is unknown, so new tests won't start while a limit is set. Clear the limit in Settings to keep testing.`;
+    }
+    return '';
+  };
+  const guard = budgetWarning();
+  const integrityWarning = () => {
+    if (r.integrityWarning) {
+      if (r.storageIssue) {
+        return 'A storage issue prevented attempt finalization. Saved readings are retained; attempt coverage is incomplete.';
+      }
+      return 'Attempt history was not finalized. Saved readings are retained; attempt coverage is incomplete.';
+    }
+    return '';
+  };
   const warnings = [
     vm.error
       ? 'Could not refresh. Displayed history may be stale; retry when the router is reachable.'
       : '',
     prerequisite,
-    r.integrityWarning
-      ? r.storageIssue
-        ? 'A storage issue prevented attempt finalization. Saved readings are retained; attempt coverage is incomplete.'
-        : 'Attempt history was not finalized. Saved readings are retained; attempt coverage is incomplete.'
-      : '',
+    integrityWarning(),
     guard,
   ].filter(Boolean);
   const elapsed = Math.max(0, Math.round((vm.tick - vm.startedAt) / 1000));
-  const status = vm.running
-    ? h('div', { class: 'wo-status is-info', attrs: { role: 'status' } }, [
-        h('span', { class: 'wo-spinner', attrs: { 'aria-hidden': 'true' } }),
-        `Running speed test · ${elapsed} s · uses the full connection for about a minute`,
-      ])
-    : vm.busy
-      ? h(
-          'div',
-          { class: 'wo-status is-info', attrs: { role: 'status' } },
-          'Please wait. Results refresh automatically.',
-        )
-      : vm.notice
-        ? h(
-            'div',
-            {
-              class: ['wo-status', `is-${vm.notice.kind}`],
-              attrs: { role: 'status' },
-            },
-            vm.notice.text,
-          )
-        : null;
+  const renderRunningStatus = () => {
+    if (vm.running) {
+      return h(
+        'div',
+        { class: 'wo-status is-info', attrs: { role: 'status' } },
+        [
+          h('span', { class: 'wo-spinner', attrs: { 'aria-hidden': 'true' } }),
+          `Running speed test · ${elapsed} s · uses the full connection for about a minute`,
+        ],
+      );
+    }
+    if (vm.busy) {
+      return h(
+        'div',
+        { class: 'wo-status is-info', attrs: { role: 'status' } },
+        'Please wait. Results refresh automatically.',
+      );
+    }
+    if (vm.notice) {
+      return h(
+        'div',
+        {
+          class: ['wo-status', `is-${vm.notice.kind}`],
+          attrs: { role: 'status' },
+        },
+        vm.notice.text,
+      );
+    }
+    return null;
+  };
+  const status = renderRunningStatus();
   const when = (test) =>
     `${t.stamp(test.time)}${reasons[test.reason] ? ` · ${reasons[test.reason]}` : ''}`;
   const slowDetail = (test) =>
@@ -92,26 +111,30 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
           `${name} ${mbps(test[k])} of ${plan} Mbps (${Math.round((test[k] / plan) * 100)}%)`,
       )
       .join(' · ');
+  const latestAttemptLabel = () => {
+    if (latest.state === 'cn') {
+      return 'Latest test failed';
+    }
+    if (latest.state === 'sp') {
+      return 'Latest test slow';
+    }
+    return 'Latest test good';
+  };
+  const latestAttemptDetail = () => {
+    if (latest.state === 'cn') {
+      return ` · ${failureMessage(latest.failureCode)}`;
+    }
+    if (latest.state === 'sp') {
+      return ` · ${slowDetail(latest)}`;
+    }
+    return '';
+  };
   const attempt = latest
     ? h('div', { class: ['wo-attempt', `is-${latest.state}`] }, [
-        chip(
-          latest.state,
-          h(
-            'b',
-            latest.state === 'cn'
-              ? 'Latest test failed'
-              : latest.state === 'sp'
-                ? 'Latest test slow'
-                : 'Latest test good',
-          ),
-        ),
+        chip(latest.state, h('b', latestAttemptLabel())),
         h('span', { class: 'wo-attempt-text' }, [
           when(latest),
-          latest.state === 'cn'
-            ? ` · ${failureMessage(latest.failureCode)}`
-            : latest.state === 'sp'
-              ? ` · ${slowDetail(latest)}`
-              : '',
+          latestAttemptDetail(),
         ]),
         latest.state === 'cn'
           ? button('Run again', {
@@ -149,82 +172,127 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
     finite(value)
       ? h('span', [label + ' ', h('b', `${ms(value)}${unit}`)])
       : null;
-  const qualityRow = !supports(c, 'quality_history_enabled')
-    ? null
-    : !qOn
-      ? h('div', { class: 'wo-qnow' }, [
-          h('span', { class: 'wo-muted' }, 'Quality history off'),
-          h(
-            'button',
-            {
-              class: 'wo-text-btn',
-              attrs: { type: 'button' },
-              on: {
-                click: () => vm.openSettings(false, 'quality_history_enabled'),
-              },
+  const renderQualityRow = () => {
+    if (!supports(c, 'quality_history_enabled')) {
+      return null;
+    }
+    if (!qOn) {
+      return h('div', { class: 'wo-qnow' }, [
+        h('span', { class: 'wo-muted' }, 'Quality history off'),
+        h(
+          'button',
+          {
+            class: 'wo-text-btn',
+            attrs: { type: 'button' },
+            on: {
+              click: () => vm.openSettings(false, 'quality_history_enabled'),
             },
-            'Turn on',
-          ),
-        ])
-      : qs.state === 'available' && obs && finite(obs.sampled_at)
-        ? h('div', { class: 'wo-qnow' }, [
-            h(
-              'span',
-              { class: 'wo-muted' },
-              `GL Network Quality · latest snapshot ${t.clock(obs.sampled_at * 1000)}`,
-            ),
-            metric(
-              'Latency',
-              obs.responsiveness && obs.responsiveness.internet_latency,
-              ' ms',
-            ),
-            metric(
-              'Jitter',
-              obs.responsiveness && obs.responsiveness.jitter_latency,
-              ' ms',
-            ),
-            metric(
-              'Loss',
-              obs.reliability && obs.reliability.packet_loss_percent,
-              '%',
-            ),
-            metric(
-              'DNS',
-              obs.responsiveness && obs.responsiveness.dns_lookup_latency,
-              ' ms',
-            ),
-          ])
-        : h('div', { class: 'wo-qnow' }, [
-            h(
-              'span',
-              { class: 'wo-muted' },
-              qs.state === 'unsupported'
-                ? 'GL Network Quality is not available on this firmware.'
-                : qs.state === 'disabled'
-                  ? 'GL Network Quality is off. Turn it on in the GL admin (Network Quality) to record history.'
-                  : qs.state === 'available'
-                    ? 'Waiting for the first GL Network Quality snapshot.'
-                    : "Couldn't read GL Network Quality. History resumes when it responds.",
-            ),
-          ]);
-  const perTest = measured
-    ? `${mb(measured.bytes)} per test (measured)`
-    : c.enabled
-      ? `≈ ${usageEstimate(c).gbDay} GB/day (est. ${exampleMbPerTest} MB/test)`
-      : '';
-  const limitText =
-    !usage || !usage.budget_state
-      ? ''
-      : usage.budget_state === 'unset'
-        ? 'no data limit set'
-        : usage.budget_state === 'available'
-          ? `${gb(usage.known_bytes || 0)} of ${gb(usage.budget_bytes)} GB used${finite(usage.accounting_since_epoch) ? ` since ${t.date(usage.accounting_since_epoch * 1000)}` : ' so far'}`
-          : usage.budget_state === 'reached'
-            ? 'data limit reached'
-            : 'data use unknown';
+          },
+          'Turn on',
+        ),
+      ]);
+    }
+    if (qs.state === 'available' && obs && finite(obs.sampled_at)) {
+      return h('div', { class: 'wo-qnow' }, [
+        h(
+          'span',
+          { class: 'wo-muted' },
+          `GL Network Quality · latest snapshot ${t.clock(obs.sampled_at * 1000)}`,
+        ),
+        metric(
+          'Latency',
+          obs.responsiveness && obs.responsiveness.internet_latency,
+          ' ms',
+        ),
+        metric(
+          'Jitter',
+          obs.responsiveness && obs.responsiveness.jitter_latency,
+          ' ms',
+        ),
+        metric(
+          'Loss',
+          obs.reliability && obs.reliability.packet_loss_percent,
+          '%',
+        ),
+        metric(
+          'DNS',
+          obs.responsiveness && obs.responsiveness.dns_lookup_latency,
+          ' ms',
+        ),
+      ]);
+    }
+    const qualityStatusText = () => {
+      if (qs.state === 'unsupported') {
+        return 'GL Network Quality is not available on this firmware.';
+      }
+      if (qs.state === 'disabled') {
+        return 'GL Network Quality is off. Turn it on in the GL admin (Network Quality) to record history.';
+      }
+      if (qs.state === 'available') {
+        return 'Waiting for the first GL Network Quality snapshot.';
+      }
+      return "Couldn't read GL Network Quality. History resumes when it responds.";
+    };
+
+    return h('div', { class: 'wo-qnow' }, [
+      h('span', { class: 'wo-muted' }, qualityStatusText()),
+    ]);
+  };
+  const qualityRow = renderQualityRow();
+  const testUsageText = () => {
+    if (measured) {
+      return `${mb(measured.bytes)} per test (measured)`;
+    }
+    if (c.enabled) {
+      return `≈ ${usageEstimate(c).gbDay} GB/day (est. ${exampleMbPerTest} MB/test)`;
+    }
+    return '';
+  };
+  const perTest = testUsageText();
+  const budgetUsageText = () => {
+    if (!usage || !usage.budget_state) {
+      return '';
+    }
+    if (usage.budget_state === 'unset') {
+      return 'no data limit set';
+    }
+    if (usage.budget_state === 'available') {
+      return `${gb(usage.known_bytes || 0)} of ${gb(usage.budget_bytes)} GB used${finite(usage.accounting_since_epoch) ? ` since ${t.date(usage.accounting_since_epoch * 1000)}` : ' so far'}`;
+    }
+    if (usage.budget_state === 'reached') {
+      return 'data limit reached';
+    }
+    return 'data use unknown';
+  };
+  const limitText = budgetUsageText();
   const dataLine =
     [perTest, limitText].filter(Boolean).join(' · ') ||
     (c.enabled ? '' : 'No scheduled data use');
+  const readingSource = () => {
+    if (done) {
+      if (latest !== done) {
+        return [
+          'Last successful test · ',
+          h('b', t.stamp(done.time)),
+          ` · ${ago(latest.time - done.time)}`,
+        ];
+      }
+      return ['Readings from this test'];
+    }
+    return [
+      h('b', 'No successful test yet.'),
+      ' Press Run Speedtest for a first reading.',
+    ];
+  };
+  const scheduleStatusText = () => {
+    if (prerequisite) {
+      return 'Scheduled testing needs attention';
+    }
+    if (c.enabled) {
+      return `Full test every ${every(c.interval_minutes)}, ${hours(c, t)}${c.adaptive ? ', with follow-ups' : ''}`;
+    }
+    return 'Scheduled tests paused';
+  };
   const current = card(
     'Status',
     [
@@ -251,22 +319,7 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
               ),
             ]),
           ])
-        : h(
-            'p',
-            { class: 'wo-last' },
-            done
-              ? latest !== done
-                ? [
-                    'Last successful test · ',
-                    h('b', t.stamp(done.time)),
-                    ` · ${ago(latest.time - done.time)}`,
-                  ]
-                : ['Readings from this test']
-              : [
-                  h('b', 'No successful test yet.'),
-                  ' Press Run Speedtest for a first reading.',
-                ],
-          ),
+        : h('p', { class: 'wo-last' }, readingSource()),
       done
         ? h('div', { class: 'wo-readings' }, [
             reading(mbps(done.down), 'Mbps', 'Download'),
@@ -294,14 +347,7 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
           )
         : null,
       h('div', { class: 'wo-schedule' }, [
-        h(
-          'span',
-          prerequisite
-            ? 'Scheduled testing needs attention'
-            : c.enabled
-              ? `Full test every ${every(c.interval_minutes)}, ${hours(c, t)}${c.adaptive ? ', with follow-ups' : ''}`
-              : 'Scheduled tests paused',
-        ),
+        h('span', scheduleStatusText()),
         h(
           'span',
           { class: 'wo-muted' },
@@ -311,6 +357,7 @@ function CurrentStatus(vm, h, { card, button, chip, link, step, baseSteps }) {
     ],
     'wo-current',
   );
+
   return current;
 }
 module.exports = { CurrentStatus };

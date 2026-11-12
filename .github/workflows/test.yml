@@ -4,7 +4,7 @@ permissions:
   contents: read
 jobs:
   quality:
-    name: JavaScript quality and architecture
+    name: Source quality and architecture
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,10 +14,19 @@ jobs:
         with:
           node-version: 24
           cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install native quality prerequisites
+        run: sudo apt-get -o Acquire::Retries=5 update && sudo apt-get -o Acquire::Retries=5 install -y jq lua5.1 lua-cjson luarocks liblua5.1-0-dev
       - run: npm ci
+      - run: npm run setup:quality
       - run: npm --prefix package/wan-observer-glinet/ui ci
       - run: npm test
       - run: npm run lint
+      - run: npm run format:check
+      - run: npx --no-install playwright install --with-deps chromium
+      - run: npm run test:browser
       - name: Check changed files against an explicit base
         env:
           EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -26,18 +35,7 @@ jobs:
           if [ -z "$base" ] || [ "$base" = '0000000000000000000000000000000000000000' ]; then
             base=$(git merge-base origin/main HEAD)
           fi
-          QUALITY_BASE="$base" node --input-type=module <<'JS'
-          import { spawnSync } from 'node:child_process';
-          import { javascriptFiles, selectFiles } from './tooling/quality/files.mjs';
-          const base = process.env.QUALITY_BASE;
-          const files = javascriptFiles(selectFiles(process.cwd(), base));
-          if (files.length === 0) {
-            console.log('No changed JavaScript; full lint, boundaries and tooling tests ran above.');
-          } else {
-            const result = spawnSync(process.execPath, ['tooling/quality/check.mjs', '--base', base], { stdio: 'inherit' });
-            process.exit(result.status ?? 1);
-          }
-          JS
+          npm run quality -- --base "$base"
   test:
     name: Offline tests (${{ matrix.os }})
     strategy:
@@ -47,6 +45,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package/wan-observer-glinet/ui/package-lock.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Install offline test dependencies
         timeout-minutes: 15
         # Runner DNS to Ubuntu mirrors fails transiently; retry the whole install.

@@ -28,8 +28,9 @@ test('page explicitly composes workflow methods without collisions or shared sta
 
   const page = createWanObserverPage('synthetic CSS');
   assert.equal(page.name, 'wan-observer');
-  for (const name of names)
+  for (const name of names) {
     assert.equal(typeof page.methods[name], 'function', name);
+  }
   const first = page.data();
   const second = page.data();
   first.active.down = 7;

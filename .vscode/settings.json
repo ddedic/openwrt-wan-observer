@@ -6,5 +6,21 @@
       "source.fixAll.eslint": "explicit",
       "source.organizeImports": "never"
     }
+  },
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports": "never"
+    }
+  },
+  "[lua]": {
+    "editor.defaultFormatter": "JohnnyMorganz.stylua",
+    "editor.formatOnSave": true
+  },
+  "[shellscript]": {
+    "editor.defaultFormatter": "mkhl.shfmt",
+    "editor.formatOnSave": true
   }
 }

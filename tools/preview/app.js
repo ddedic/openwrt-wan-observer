@@ -36,17 +36,23 @@ function valid(c) {
 }
 try {
   const saved = JSON.parse(localStorage.getItem('wan-observer-report'));
-  if (saved && valid(saved)) config = saved;
+  if (saved && valid(saved)) {
+    config = saved;
+  }
 } catch {
   /* Browser storage may be unavailable; retain session defaults. */
 }
-for (const k of Object.keys(config)) el(k).value = config[k];
+for (const k of Object.keys(config)) {
+  el(k).value = config[k];
+}
 function chart(id, key, paid) {
   const ctx = el(id).getContext('2d'),
     w = 900,
     h = 260;
   ctx.clearRect(0, 0, w, h);
-  if (!visible.length) return;
+  if (!visible.length) {
+    return;
+  }
   const max = Math.max(paid, ...visible.map((r) => r[key])) * 1.2;
   const y = (v) => 215 - (v / max) * 185;
   const start = Date.parse(visible[0].timestamp),
@@ -106,12 +112,13 @@ function render() {
     const tr = document.createElement('tr');
     for (const f of fields) {
       const td = document.createElement('td');
-      td.textContent =
-        f === 'timestamp'
-          ? stamp(row[f])
-          : f === 'server_id'
-            ? String(row[f] ?? 'Unknown')
-            : fmt(row[f]);
+      if (f === 'timestamp') {
+        td.textContent = stamp(row[f]);
+      } else if (f === 'server_id') {
+        td.textContent = String(row[f] ?? 'Unknown');
+      } else {
+        td.textContent = fmt(row[f]);
+      }
       tr.append(td);
     }
     el('rows').append(tr);
@@ -131,10 +138,12 @@ function render() {
       'worst-note',
       'up-note',
       'latest-note',
-    ])
+    ]) {
       el(id).textContent = '';
-    for (const id of ['slow', 'worst', 'up-average', 'latest'])
+    }
+    for (const id of ['slow', 'worst', 'up-average', 'latest']) {
       el(id).textContent = '—';
+    }
     return;
   }
   const bad = visible.filter(slow),
@@ -149,11 +158,15 @@ function render() {
   el('story').textContent = bad.length
     ? `Download reached as low as ${fmt(worst)} Mbps — ${fmt((worst / config.download) * 100)}% of your ${config.download} Mbps plan. Average upload was ${fmt(avgUp)} Mbps against ${config.upload} Mbps paid. The timeline below shows when the slow results appeared.`
     : `Download averaged ${fmt(average(visible, 'download_mbps'))} Mbps and upload averaged ${fmt(avgUp)} Mbps in this selection. That describes these tests only; performance between them is unknown.`;
-  el('recovery').textContent = slow(latest)
-    ? `The latest test (${time(latest.timestamp)} UTC) was still below your threshold.`
-    : bad.length
-      ? `The latest test (${time(latest.timestamp)} UTC) was back above your threshold. Continuous recovery has not been verified.`
-      : 'The latest test also met your threshold.';
+  if (slow(latest)) {
+    el('recovery').textContent =
+      `The latest test (${time(latest.timestamp)} UTC) was still below your threshold.`;
+  } else if (bad.length) {
+    el('recovery').textContent =
+      `The latest test (${time(latest.timestamp)} UTC) was back above your threshold. Continuous recovery has not been verified.`;
+  } else {
+    el('recovery').textContent = 'The latest test also met your threshold.';
+  }
   el('slow').textContent = `${bad.length} / ${visible.length}`;
   el('worst').textContent = `${fmt(worst)} Mbps`;
   el('worst-note').textContent =
@@ -167,8 +180,9 @@ function render() {
   const groups = [];
   for (const row of visible) {
     const state = slow(row);
-    if (!groups.length || groups.at(-1).bad !== state)
+    if (!groups.length || groups.at(-1).bad !== state) {
       groups.push({ bad: state, rows: [] });
+    }
     groups.at(-1).rows.push(row);
   }
   for (const group of groups) {
@@ -193,7 +207,9 @@ el('settings').addEventListener('submit', (event) => {
     threshold: Number(el('threshold').value),
     range: el('range').value,
   };
-  if (!valid(candidate)) return;
+  if (!valid(candidate)) {
+    return;
+  }
   config = candidate;
   try {
     localStorage.setItem('wan-observer-report', JSON.stringify(config));
@@ -209,7 +225,9 @@ async function refresh() {
   el('refresh').disabled = true;
   try {
     const response = await fetch('/api/measurements', { cache: 'no-store' });
-    if (!response.ok) throw new Error();
+    if (!response.ok) {
+      throw new Error();
+    }
     const data = await response.json();
     records = data.measurements.sort((a, b) =>
       a.timestamp.localeCompare(b.timestamp),
@@ -218,12 +236,16 @@ async function refresh() {
     scheduleToken = data.schedule_token;
     collector = data.collector || null;
     renderCollector();
-    el('source').textContent =
-      source === 'synthetic'
-        ? 'DEMO DATA · This is an invented example, not a report about your connection.'
-        : source === 'router collection'
-          ? 'ROUTER MEASUREMENTS · Refresh reads current history. Tests run independently on the router.'
-          : 'IMPORTED SNAPSHOT · Recorded data, not live monitoring.';
+    if (source === 'synthetic') {
+      el('source').textContent =
+        'DEMO DATA · This is an invented example, not a report about your connection.';
+    } else if (source === 'router collection') {
+      el('source').textContent =
+        'ROUTER MEASUREMENTS · Refresh reads current history. Tests run independently on the router.';
+    } else {
+      el('source').textContent =
+        'IMPORTED SNAPSHOT · Recorded data, not live monitoring.';
+    }
     render();
   } catch {
     records = [];
@@ -272,7 +294,9 @@ function renderCollector() {
   config.download = c.download_mbps;
   config.upload = c.upload_mbps;
   config.threshold = c.threshold_percent;
-  for (const k of ['download', 'upload', 'threshold']) el(k).value = config[k];
+  for (const k of ['download', 'upload', 'threshold']) {
+    el(k).value = config[k];
+  }
   el('saved').textContent =
     'Comparison baseline comes from the collector. Changes here affect only this report; automatic detection uses the collector baseline.';
   const next = collector.next_epoch
@@ -298,7 +322,9 @@ function renderCollector() {
 }
 el('schedule').addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!collector || !scheduleToken) return;
+  if (!collector || !scheduleToken) {
+    return;
+  }
   const patch = {
     enabled: el('enabled').value === 'yes',
     adaptive: el('adaptive').value === 'yes',
@@ -321,7 +347,9 @@ el('schedule').addEventListener('submit', async (event) => {
       },
       body: JSON.stringify(patch),
     });
-    if (!response.ok) throw new Error();
+    if (!response.ok) {
+      throw new Error();
+    }
     await refresh();
     el('schedule-result').textContent =
       'Saved on the router. The next scheduler tick will use these settings.';

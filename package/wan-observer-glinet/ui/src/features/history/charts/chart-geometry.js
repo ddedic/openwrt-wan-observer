@@ -8,6 +8,7 @@ function niceAxis(value) {
     .map((m) => m * power)
     .find((m) => Math.ceil(v / m) <= 5);
   const max = Math.ceil(v / step) * step;
+
   return {
     max,
     ticks: Array.from(
@@ -21,8 +22,11 @@ function median(values) {
   const sorted = values
     .filter((v) => v != null && Number.isFinite(v))
     .sort((a, b) => a - b);
-  if (!sorted.length) return null;
+  if (!sorted.length) {
+    return null;
+  }
   const mid = (sorted.length - 1) / 2;
+
   return (sorted[Math.floor(mid)] + sorted[Math.ceil(mid)]) / 2;
 }
 function bin(items, start, end, count, value) {
@@ -33,7 +37,9 @@ function bin(items, start, end, count, value) {
       count - 1,
       Math.max(0, Math.floor((item.time - start) / width)),
     );
-    if (!bins.has(index)) bins.set(index, []);
+    if (!bins.has(index)) {
+      bins.set(index, []);
+    }
     bins.get(index).push(item);
   }
   return [...bins.entries()]
@@ -59,6 +65,7 @@ function frame(width, height, start, end, max, rail) {
   const plotH = height - pad.top - pad.bottom - (rail ? railGap : 0),
     plotW = width - pad.left - pad.right;
   const span = Math.max(1, end - start);
+
   return {
     width,
     height,
@@ -144,13 +151,17 @@ function speedGeometry(
     }
     segment.push(p);
   });
-  if (segment.length) segments.push(segment);
+  if (segment.length) {
+    segments.push(segment);
+  }
   for (const p of points) {
     p.x = f.x(p.time);
     p.y = f.y(p.value);
     p.markY = p.low != null ? f.y(p.low) : p.y;
   }
-  for (const p of rail) p.x = f.x(p.time);
+  for (const p of rail) {
+    p.x = f.x(p.time);
+  }
   return {
     ...f,
     kind: 'speed',
@@ -190,6 +201,7 @@ function qualityGeometry(series, { width = 900, height = 190 } = {}) {
     .map((p) => {
       const from = Math.max(p.epoch * 1000, since),
         to = Math.min(p.epoch * 1000 + step, end);
+
       return {
         time: (from + to) / 2,
         from,
@@ -212,11 +224,17 @@ function qualityGeometry(series, { width = 900, height = 190 } = {}) {
   let segment = [];
   all.forEach((p) => {
     if (p.value == null || !Number.isFinite(p.value)) {
-      if (segment.length) segments.push(segment);
+      if (segment.length) {
+        segments.push(segment);
+      }
       segment = [];
-    } else segment.push(p);
+    } else {
+      segment.push(p);
+    }
   });
-  if (segment.length) segments.push(segment);
+  if (segment.length) {
+    segments.push(segment);
+  }
   for (const p of points) {
     p.x = f.x(p.time);
     p.y = f.y(p.value);
@@ -227,6 +245,7 @@ function qualityGeometry(series, { width = 900, height = 190 } = {}) {
     .filter((p) => p.loss > 0)
     .map((p) => {
       const w = Math.max(1.5, f.x(p.to) - f.x(p.from) - 0.5);
+
       return {
         ...p,
         x: f.x(p.time),
@@ -235,6 +254,7 @@ function qualityGeometry(series, { width = 900, height = 190 } = {}) {
         h: Math.max(3, Math.min(14, p.loss * 4)),
       };
     });
+
   return {
     ...f,
     kind: 'quality',

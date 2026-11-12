@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
+
 const { reportData, speedSeries } = require('../../measurements/report-data');
 const { createPDF } = require('./pdf-export');
 
@@ -337,7 +338,9 @@ test('PDF methodology paginates before body text enters footer area', () => {
     for (const match of page
       .join('\n')
       .matchAll(/([-\d.]+) ([-\d.]+) Td\n\((.*?)\) Tj/g)) {
-      if (/WAN Observer|Page \d/.test(match[3])) continue;
+      if (/WAN Observer|Page \d/.test(match[3])) {
+        continue;
+      }
       assert.ok(
         Number(match[2]) > 70,
         'body text stays above footer: ' + match[3],

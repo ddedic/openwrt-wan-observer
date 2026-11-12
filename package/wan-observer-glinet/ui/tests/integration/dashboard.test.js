@@ -1,9 +1,11 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const vmModule = require('node:vm');
-const { componentSource } = require('../component-source');
+
 const fs = require('node:fs');
 const { createRequire } = require('node:module');
+
+const { componentSource } = require('../component-source');
 const { reportData } = require('../../src/measurements/report-data');
 const {
   speedGeometry,
@@ -87,41 +89,54 @@ function harness(fetcher, payload, version) {
       $options: { components: {} },
       ...component.methods,
     };
-  for (const k of Object.keys(component.methods))
+  for (const k of Object.keys(component.methods)) {
     vm[k] = component.methods[k].bind(vm);
-  for (const [k, fn] of Object.entries(component.computed))
+  }
+  for (const [k, fn] of Object.entries(component.computed)) {
     Object.defineProperty(vm, k, {
       configurable: true,
       get: () => fn.call(vm),
     });
+  }
   component.created.call(vm);
-  if (payload) vm.payload = payload;
+  if (payload) {
+    vm.payload = payload;
+  }
   // Minimal virtual DOM: keeps attrs so links and ARIA can be asserted.
   const h = (tag, data, children) => {
     if (
       children === undefined &&
       (Array.isArray(data) || typeof data !== 'object' || data === null)
-    )
+    ) {
       return { tag, data: {}, children: data };
+    }
     return { tag, data: data || {}, children };
   };
   const render = () => component.render.call(vm, h);
-  const text = (node) =>
-    node == null || node === false
-      ? ''
-      : Array.isArray(node)
-        ? node.map(text).join(' ')
-        : typeof node === 'object'
-          ? text(node.children)
-          : String(node);
+  const text = (node) => {
+    if (node == null || node === false) {
+      return '';
+    }
+    if (Array.isArray(node)) {
+      return node.map(text).join(' ');
+    }
+    if (typeof node === 'object') {
+      return text(node.children);
+    }
+    return String(node);
+  };
   const find = (node, pred, out = []) => {
-    if (Array.isArray(node)) node.forEach((n) => find(n, pred, out));
-    else if (node && typeof node === 'object') {
-      if (pred(node)) out.push(node);
+    if (Array.isArray(node)) {
+      node.forEach((n) => find(n, pred, out));
+    } else if (node && typeof node === 'object') {
+      if (pred(node)) {
+        out.push(node);
+      }
       find(node.children, pred, out);
     }
     return out;
   };
+
   return {
     vm,
     component,
@@ -184,8 +199,11 @@ test('dense history is capped at 400 marks while keeping every slow and failed t
   const measurements = [],
     events = [];
   for (let i = 0; i < 2880; i++) {
-    if (i % 97 === 13) events.push(fail(i * 15));
-    else measurements.push(rec(i * 15, i % 97 === 40 ? 200 : 405));
+    if (i % 97 === 13) {
+      events.push(fail(i * 15));
+    } else {
+      measurements.push(rec(i * 15, i % 97 === 40 ? 200 : 405));
+    }
   }
   const r = reportData(
     {
@@ -281,7 +299,9 @@ test('status separates the failed latest attempt from the last successful readin
 test('an unmodified save preserves stored settings; changed fields are sent explicitly', async () => {
   const posts = [];
   const h = harness(async (url, o) => {
-    if (o.method === 'POST') posts.push(JSON.parse(o.body));
+    if (o.method === 'POST') {
+      posts.push(JSON.parse(o.body));
+    }
     return { ok: true, json: async () => base() };
   }, base());
   h.vm.$nextTick = (fn) => fn && fn();
@@ -327,7 +347,9 @@ test('an unmodified save preserves stored settings; changed fields are sent expl
 test('invalid fields are reported inline with ARIA and nothing is saved', async () => {
   let posts = 0;
   const h = harness(async (url, o) => {
-    if (o.method === 'POST') posts++;
+    if (o.method === 'POST') {
+      posts++;
+    }
     return { ok: true, json: async () => base() };
   }, base());
   h.vm.$nextTick = () => {};
@@ -389,7 +411,9 @@ test('footer links only to the repository with no referrer, and external links a
     referrerpolicy: 'no-referrer',
   });
   assert.match(h.text(), /© 2026 Danijel Dedic/);
-  for (const a of links) assert.equal(a.data.attrs.rel, 'noopener noreferrer');
+  for (const a of links) {
+    assert.equal(a.data.attrs.rel, 'noopener noreferrer');
+  }
 });
 test('footer shows the installed package version only when packaging stamped one', () => {
   assert.doesNotMatch(
@@ -412,13 +436,22 @@ test('quality card appears only when history is enabled and never claims downtim
   const off = harness(null, base());
   assert.doesNotMatch(off.text(), /Connection quality/);
   assert.match(off.text(), /Quality history off/);
+  const fixturePacketLoss = (i) => {
+    if (i < 150) {
+      return null;
+    }
+    if (i === 170) {
+      return 2;
+    }
+    return 0;
+  };
   const points = Array.from({ length: 180 }, (_, i) => ({
     epoch: now / 1000 - 7 * 86400 + i * 3360,
     sample_count: 56,
     valid_count: i < 150 ? 0 : 56,
     latency_median_ms: i < 150 ? null : 9 + (i % 3),
     jitter_median_ms: i < 150 ? null : 1.2,
-    loss_max_percent: i < 150 ? null : i === 170 ? 2 : 0,
+    loss_max_percent: fixturePacketLoss(i),
     dns_median_ms: i < 150 ? null : 14,
   }));
   const obs = {
@@ -471,7 +504,9 @@ test('a reached or unknown start guard blocks new starts and explains the limit'
   };
   const h = harness(
     async (url, o) => {
-      if (o.method === 'POST') posts++;
+      if (o.method === 'POST') {
+        posts++;
+      }
       return { ok: true, json: async () => base({ usage }) };
     },
     base({ usage, measurements: [rec(30, 420)] }),
@@ -499,7 +534,9 @@ test('unchanged CLI caps outside the entry range never block other edits; edited
     const posts = [];
     const h = harness(
       async (url, o) => {
-        if (o.method === 'POST') posts.push(JSON.parse(o.body));
+        if (o.method === 'POST') {
+          posts.push(JSON.parse(o.body));
+        }
         return {
           ok: true,
           json: async () => base({ config: { monthly_budget_bytes: stored } }),
@@ -558,12 +595,15 @@ test('quality points stay inside the plot and never before the first observation
     };
     const g = qualityGeometry(series, { width: 900 });
     assert.equal(g.points.length, 1);
-    for (const p of [...g.points, ...g.rail])
+    for (const p of [...g.points, ...g.rail]) {
       assert.ok(
         p.x >= 44 && p.x <= 890,
         `x ${p.x} within plot for ${days} days`,
       );
-    for (const p of g.rail) assert.ok(p.x0 >= 44 && p.x0 + p.w <= 890.5);
+    }
+    for (const p of g.rail) {
+      assert.ok(p.x0 >= 44 && p.x0 + p.w <= 890.5);
+    }
     assert.ok(
       g.points[0].time >= (end - 1) * 1000,
       'not placed before the first sample',
@@ -652,15 +692,18 @@ test('modal placement survives host CSS resets (desktop centred, mobile bottom s
     const m = src.match(
       new RegExp(sel.replace(/[.[\]]/g, '\\$&') + '\\{([^}]*)\\}'),
     );
+
     return m ? m[1] : '';
   };
   const desktop = rule('dialog.wo-dialog');
-  for (const d of ['position:fixed', 'inset:0', 'margin:auto'])
+  for (const d of ['position:fixed', 'inset:0', 'margin:auto']) {
     assert.ok(desktop.includes(d), `desktop declares ${d}`);
+  }
   const mobile = css.slice(css.indexOf('@media (max-width:640px)'));
   const sheet = rule('dialog.wo-dialog', mobile);
-  for (const d of ['inset:auto 0 0 0', 'margin:0'])
+  for (const d of ['inset:auto 0 0 0', 'margin:0']) {
     assert.ok(sheet.includes(d), `mobile declares ${d}`);
+  }
 });
 test('layout containment and select styling survive host resets', () => {
   const css = fs
@@ -678,8 +721,9 @@ test('layout containment and select styling survive host resets', () => {
     'appearance:none',
     'padding:0 34px 0 12px',
     'background-repeat:no-repeat',
-  ])
+  ]) {
     assert.ok(select.includes(d), `select declares ${d}`);
+  }
   assert.doesNotMatch(select, /url\(/, 'no external or embedded image asset');
 });
 

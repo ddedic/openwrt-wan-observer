@@ -2,8 +2,15 @@ const pad = (n) => String(n).padStart(2, '0');
 const every = (m) =>
   m >= 60 ? `${m / 60} ${m === 60 ? 'hour' : 'hours'}` : `${m} minutes`;
 const allDay = (c) => c.start_hour === 0 && c.end_hour === 24;
-const zoneName = (c, t) =>
-  c.window_timezone === 'router' ? (t.router ? t.label : 'router time') : 'UTC';
+const zoneName = (c, t) => {
+  if (c.window_timezone === 'router') {
+    if (t.router) {
+      return t.label;
+    }
+    return 'router time';
+  }
+  return 'UTC';
+};
 const hours = (c, t) =>
   allDay(c)
     ? 'all day'

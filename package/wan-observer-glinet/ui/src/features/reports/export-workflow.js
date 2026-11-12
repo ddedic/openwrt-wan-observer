@@ -3,6 +3,7 @@ function createExportWorkflow() {
   return {
     fileName() {
       const r = this.report;
+
       return `wan-observer-${r.days === 1 ? '24h' : r.days + 'd'}-${this.time.ymd(r.now)}`;
     },
     openExport() {

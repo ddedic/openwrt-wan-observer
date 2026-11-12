@@ -13,7 +13,9 @@ function createSettingsWorkflow(api) {
   return {
     openSettings(enable, focus) {
       const c = this.config;
-      if (!c) return;
+      if (!c) {
+        return;
+      }
       const budget =
         finite(c.monthly_budget_bytes) && c.monthly_budget_bytes > 0
           ? c.monthly_budget_bytes
@@ -89,32 +91,38 @@ function createSettingsWorkflow(api) {
         download_mbps: Number(f.download_mbps),
         upload_mbps: Number(f.upload_mbps),
       };
-      if (!form) return body;
+      if (!form) {
+        return body;
+      }
       const initial = JSON.parse(this.initialForm || '{}');
       if (
         f.threshold_percent !== undefined &&
         String(f.threshold_percent).trim() !== initial.threshold_percent
-      )
+      ) {
         body.threshold_percent = Number(f.threshold_percent);
+      }
       if (
         f.quality_history_enabled !== undefined &&
         f.quality_history_enabled !== initial.quality_history_enabled
-      )
+      ) {
         body.quality_history_enabled = f.quality_history_enabled;
+      }
       // The time basis is only sent when chosen for a custom window; a legacy UTC window never switches silently.
       if (
         f.window_timezone !== undefined &&
         f.mode === 'custom' &&
         f.window_timezone !==
           (c.window_timezone === 'router' ? 'router' : 'UTC')
-      )
+      ) {
         body.window_timezone = f.window_timezone;
+      }
       if (
         f.limit_gb !== undefined &&
         String(f.limit_gb).trim() !== String(initial.limit_gb).trim()
-      )
+      ) {
         body.monthly_budget_bytes =
           String(f.limit_gb).trim() === '' ? 0 : Number(f.limit_gb) * 1e9;
+      }
       return body;
     },
     async save(values) {
@@ -128,13 +136,16 @@ function createSettingsWorkflow(api) {
           ),
           first = fieldOrder.find((k) => errors[k]);
         if (first) {
-          if (this.$nextTick)
+          if (this.$nextTick) {
             this.$nextTick(() => {
               const el =
                 this.$refs.dialog &&
                 this.$refs.dialog.querySelector('#wo-f-' + first);
-              if (el) el.focus();
+              if (el) {
+                el.focus();
+              }
             });
+          }
           return;
         }
       }
@@ -154,11 +165,17 @@ function createSettingsWorkflow(api) {
       }
       this.saving = true;
       try {
-        if (this.refreshRequest) await this.refreshRequest;
-        if (this.disposed) return;
+        if (this.refreshRequest) {
+          await this.refreshRequest;
+        }
+        if (this.disposed) {
+          return;
+        }
         await api(this.abort.signal, patch);
         await this.refresh();
-        if (!values) this.close(true);
+        if (!values) {
+          this.close(true);
+        }
         this.notice = {
           kind: 'ok',
           text: patch.enabled
@@ -166,8 +183,11 @@ function createSettingsWorkflow(api) {
             : 'Scheduled tests paused · Run Speedtest still works',
         };
       } catch (error) {
-        if (values) this.notice = { kind: 'error', text: error.message };
-        else this.saveError = error.message;
+        if (values) {
+          this.notice = { kind: 'error', text: error.message };
+        } else {
+          this.saveError = error.message;
+        }
       } finally {
         this.saving = false;
       }

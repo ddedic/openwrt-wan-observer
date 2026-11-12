@@ -1,0 +1,75 @@
+{
+  "baseline": "725a94dabd067948983b35cc0c969b48c38399ec",
+  "files": [
+    {
+      "path": "docs/assets/icon-dark.svg",
+      "sha256": "dd7a988f57e254eef466f789f4e4c5f408468b581a6daadf3df80712ca9e46bd",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "docs/assets/icon.svg",
+      "sha256": "ee4a58ffc3fb0cdb8a3522d5e7b628b0e1ef13fab3c7083f446db6124b5e8e3c",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "docs/assets/logo-dark.svg",
+      "sha256": "bc285c234b9f9fd48af4531cf4fccb17e59a6cff4d8b5f808979ef7b2f195db3",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "docs/assets/logo-mono.svg",
+      "sha256": "2b418972a923f1e71203f4741b4dc4f54e579884b2609d3d5c0f9d8ee13deaf6",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "docs/assets/logo.svg",
+      "sha256": "e855dacbfb46d1ae44c2d05d92e9b9396a3cd316f1b60c922cbf7b8cfc64edcd",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "package/wan-observer-glinet/ui/view.css",
+      "sha256": "09cf772a9e8260e21fc59d4f7790dd6720e9c490263effa33dafe98126478221",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "site/index.html",
+      "sha256": "c219d5488318a66c4e6275a1c357e3956b7ff9eee09c258401b124b7f919e0e6",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "site/styles.css",
+      "sha256": "23f47d90e277b71335ec4bee93fef53eeb1be47dbcd0723e34f34493f916f95f",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "tools/preview/index.html",
+      "sha256": "97b2b68085fab7a5fcef861453a60d016cfd67eeb301d2be5793231ac4203ca6",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    },
+    {
+      "path": "tools/preview/style.css",
+      "sha256": "6bdb0a9d6afdfad3fadcba47d56fb0c35b6ec7d756ff2e59df708a0ff2ae4fb8",
+      "owner": "repository maintainer",
+      "reason": "preserve approved rendering and exact source while migrating structure",
+      "changeDelivery": "approved visual-change task with Opus design and rendered browser evidence"
+    }
+  ]
+}

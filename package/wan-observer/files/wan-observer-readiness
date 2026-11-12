@@ -44,8 +44,8 @@ fi
 clock_initialized=false
 now=${WAN_OBSERVER_NOW:-$(date +%s)}
 case "$now" in
-  ''|*[!0-9]*) :;;
-  *) if [ "${#now}" -le 10 ] && [ "$now" -ge 1704067200 ] && [ "$now" -le 4102444799 ]; then clock_initialized=true; fi;;
+'' | *[!0-9]*) : ;;
+*) if [ "${#now}" -le 10 ] && [ "$now" -ge 1704067200 ] && [ "$now" -le 4102444799 ]; then clock_initialized=true; fi ;;
 esac
 if [ "$status" = ready ] && [ "$clock_initialized" = false ]; then status=clock_uninitialized; fi
 storage=${WAN_OBSERVER_STORE:-/etc/wan-observer/history}
@@ -54,7 +54,7 @@ free_storage=$(df -Pk "$storage" 2>/dev/null | awk 'NR==2 && $4 ~ /^[0-9]+$/ { p
 zonename=$(uci -q get 'system.@system[0].zonename' 2>/dev/null) || zonename=
 posix=$(uci -q get 'system.@system[0].timezone' 2>/dev/null) || posix=
 engine_available=null
-case "$binary_status" in available) engine_available=true;; unavailable) engine_available=false;; esac
+case "$binary_status" in available) engine_available=true ;; unavailable) engine_available=false ;; esac
 # Encode only bounded metadata/checks; never return the configuration or paths.
 jq -nc --arg status "$status" --arg config "$config_status" --arg binary "$binary_status" \
   --arg scheduler "$scheduler" --arg service "$scheduler_service" \

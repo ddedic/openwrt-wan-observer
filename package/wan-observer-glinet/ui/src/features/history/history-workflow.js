@@ -6,14 +6,21 @@ const {
 function createHistoryWorkflow(api) {
   return {
     backgroundRefresh() {
-      if (this.disposed || document.hidden || this.running || this.saving)
+      if (this.disposed || document.hidden || this.running || this.saving) {
         return;
+      }
       return this.refresh();
     },
     refresh() {
-      if (this.disposed) return Promise.resolve();
-      if (this.refreshRequest) return this.refreshRequest;
-      if (this.running) return Promise.resolve();
+      if (this.disposed) {
+        return Promise.resolve();
+      }
+      if (this.refreshRequest) {
+        return this.refreshRequest;
+      }
+      if (this.running) {
+        return Promise.resolve();
+      }
       clearTimeout(this.busyRetry);
       this.busyRetry = null;
       let retryBusy = false;
@@ -25,7 +32,9 @@ function createHistoryWorkflow(api) {
             null,
             `?period=${this.days}`,
           );
-          if (this.disposed) return;
+          if (this.disposed) {
+            return;
+          }
           this.payload = payload;
           this.version++;
           this.busyRefreshCount =
@@ -40,10 +49,13 @@ function createHistoryWorkflow(api) {
             payload.collector &&
             payload.collector.manual_started &&
             !this.running
-          )
+          ) {
             this.follow(null);
+          }
         } catch (error) {
-          if (!this.disposed) this.error = error.message;
+          if (!this.disposed) {
+            this.error = error.message;
+          }
         } finally {
           this.loading = false;
           this.refreshRequest = null;
@@ -65,7 +77,9 @@ function createHistoryWorkflow(api) {
       return this.refreshRequest;
     },
     setPeriod(days) {
-      if (days === this.days) return;
+      if (days === this.days) {
+        return;
+      }
       this.days = days;
       this.showAll = false;
       this.active = { down: -1, up: -1, quality: -1 };

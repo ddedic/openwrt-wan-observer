@@ -10,6 +10,7 @@ function ExportDialog(vm, h, button, t) {
 
   const r = vm.report,
     period = r.days === 1 ? 'Last 24 hours' : `Last ${r.days} days`;
+
   return shell(
     'Export report',
     [

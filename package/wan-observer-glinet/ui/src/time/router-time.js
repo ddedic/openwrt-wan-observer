@@ -5,8 +5,9 @@ function validZone(zone) {
   if (
     typeof zone !== 'string' ||
     !/^[A-Za-z_]+(\/[A-Za-z0-9_+-]+)+$|^UTC$/.test(zone)
-  )
+  ) {
     return null;
+  }
   try {
     new Intl.DateTimeFormat('en-GB', { timeZone: zone });
     return zone;
@@ -37,13 +38,20 @@ function timeModel(payload, now = Date.now()) {
       return 'UTC';
     }
   };
-  const label = zone
-    ? typeof reported.label === 'string' &&
-      reported.label !== 'router' &&
-      /^[A-Za-z0-9+:-]{1,8}$/.test(reported.label)
-      ? reported.label
-      : short(now)
-    : 'UTC';
+  const routerTimeLabel = () => {
+    if (zone) {
+      if (
+        typeof reported.label === 'string' &&
+        reported.label !== 'router' &&
+        /^[A-Za-z0-9+:-]{1,8}$/.test(reported.label)
+      ) {
+        return reported.label;
+      }
+      return short(now);
+    }
+    return 'UTC';
+  };
+  const label = routerTimeLabel();
   const clock = (time) =>
     part(time, { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   const day = (time) =>
@@ -56,8 +64,10 @@ function timeModel(payload, now = Date.now()) {
       month: '2-digit',
       day: '2-digit',
     }).format(new Date(time));
+
     return p;
   };
+
   return {
     zone,
     router: !!zone,

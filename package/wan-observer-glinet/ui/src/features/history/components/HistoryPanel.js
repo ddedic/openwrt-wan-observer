@@ -100,17 +100,23 @@ function HistoryPanel(vm, h, { card, button, chip }) {
       h('i', { class: cls, attrs: { 'aria-hidden': 'true' } }),
       text,
     ]);
+  const selectionDescription = (kind, item) => {
+    if (item) {
+      if (kind === 'quality') {
+        return `${t.stamp(item.time)} · median latency ${ms(item.value)} ms${finite(item.jitter) ? ` · jitter ${ms(item.jitter)} ms` : ''}${finite(item.loss) ? ` · loss up to ${+item.loss.toFixed(1)}%` : ''} · ${item.n} ${item.n === 1 ? 'sample' : 'samples'}`;
+      }
+      if (item.failed) {
+        return `${t.stamp(item.time)} · Failed${item.n > 1 ? ` · ${item.n} tests` : ` · ${failureShort[item.failureCode] || 'no result'}`}`;
+      }
+      return `${t.stamp(item.time)} · ${mbps(item.value)} Mbps · ${item.n > 1 ? `median of ${item.n} tests${item.slow ? `, ${item.slow} slow (lowest ${mbps(item.low)} Mbps)` : ''}` : `${names[item.state]}${reasons[item.reason] ? ` · ${reasons[item.reason]}` : ''}`}`;
+    }
+    return '';
+  };
   const detailLine = (kind, item) =>
     h(
       'p',
       { class: 'wo-chart-detail', attrs: { 'aria-live': 'polite' } },
-      item
-        ? kind === 'quality'
-          ? `${t.stamp(item.time)} · median latency ${ms(item.value)} ms${finite(item.jitter) ? ` · jitter ${ms(item.jitter)} ms` : ''}${finite(item.loss) ? ` · loss up to ${+item.loss.toFixed(1)}%` : ''} · ${item.n} ${item.n === 1 ? 'sample' : 'samples'}`
-          : item.failed
-            ? `${t.stamp(item.time)} · Failed${item.n > 1 ? ` · ${item.n} tests` : ` · ${failureShort[item.failureCode] || 'no result'}`}`
-            : `${t.stamp(item.time)} · ${mbps(item.value)} Mbps · ${item.n > 1 ? `median of ${item.n} tests${item.slow ? `, ${item.slow} slow (lowest ${mbps(item.low)} Mbps)` : ''}` : `${names[item.state]}${reasons[item.reason] ? ` · ${reasons[item.reason]}` : ''}`}`
-        : '',
+      selectionDescription(kind, item),
     );
   const chart = (k, label) => {
     const median = quantile(
@@ -143,6 +149,7 @@ function HistoryPanel(vm, h, { card, button, chip }) {
             }),
             detailLine('speed', items[active]),
           ]);
+
     return card(
       label,
       [
@@ -195,6 +202,7 @@ function HistoryPanel(vm, h, { card, button, chip }) {
               .filter(finite),
             items = chartItems(g),
             active = vm.active.quality;
+
           return card(
             'Connection quality',
             [
@@ -262,6 +270,7 @@ function HistoryPanel(vm, h, { card, button, chip }) {
       : '—';
   const lat = (x) => {
     const l = [x.loadedDown, x.loadedUp].filter(finite);
+
     return x.latency == null
       ? '—'
       : `${ms(x.latency)}${l.length ? ` / ${ms(Math.max(...l))}` : ''} ms`;
@@ -306,6 +315,15 @@ function HistoryPanel(vm, h, { card, button, chip }) {
       ),
     ),
   ]);
+  const testTransferDetail = (x) => {
+    if (x.state === 'cn') {
+      return ` · ${failureShort[x.failureCode] || 'No result'}`;
+    }
+    if (bytes(x) !== '—') {
+      return ` · ${bytes(x)}`;
+    }
+    return '';
+  };
   const list = h(
     'ul',
     { class: 'wo-list' },
@@ -315,14 +333,9 @@ function HistoryPanel(vm, h, { card, button, chip }) {
           t.stamp(x.time),
           h(
             'small',
-            [
-              reasons[x.reason] || 'Unknown type',
-              x.state === 'cn'
-                ? ` · ${failureShort[x.failureCode] || 'No result'}`
-                : bytes(x) !== '—'
-                  ? ` · ${bytes(x)}`
-                  : '',
-            ].join(''),
+            [reasons[x.reason] || 'Unknown type', testTransferDetail(x)].join(
+              '',
+            ),
           ),
         ]),
         h('span', { class: 'wo-list-end' }, [
@@ -378,6 +391,7 @@ function HistoryPanel(vm, h, { card, button, chip }) {
     ],
     'wo-tests',
   );
+
   return h(
     'section',
     { class: 'wo-history', attrs: { 'aria-label': 'History' } },

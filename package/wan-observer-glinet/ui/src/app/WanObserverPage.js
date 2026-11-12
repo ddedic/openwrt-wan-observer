@@ -22,6 +22,7 @@ function createWanObserverPage(css) {
     getCookie: (name) =>
       typeof window.$getCookie === 'function' && window.$getCookie(name),
   });
+
   return {
     name: 'wan-observer',
     data: () => ({
@@ -79,16 +80,20 @@ function createWanObserverPage(css) {
           this.payload &&
           this.payload.collector &&
           this.payload.collector.usage;
+
         return (
           !!u && (u.budget_state === 'reached' || u.budget_state === 'unknown')
         );
       },
       fieldErrors() {
-        if (!this.form) return {};
+        if (!this.form) {
+          return {};
+        }
         const all = validateSettings(
           this.form,
           JSON.parse(this.initialForm || '{}'),
         );
+
         return Object.fromEntries(
           Object.entries(all).filter(
             ([k]) =>
@@ -114,11 +119,13 @@ function createWanObserverPage(css) {
         document.head.append(style);
       }
       this.visibility = () => {
-        if (!document.hidden) this.backgroundRefresh();
+        if (!document.hidden) {
+          this.backgroundRefresh();
+        }
       };
       document.addEventListener('visibilitychange', this.visibility);
       this.refreshTimer = setInterval(this.backgroundRefresh, 30000);
-      if (typeof ResizeObserver === 'function')
+      if (typeof ResizeObserver === 'function') {
         this.resize = new ResizeObserver((entries) => {
           const next = { ...this.widths };
           let changed = false;
@@ -130,24 +137,32 @@ function createWanObserverPage(css) {
               changed = true;
             }
           }
-          if (changed) this.widths = next;
+          if (changed) {
+            this.widths = next;
+          }
         });
+      }
       this.refresh();
     },
     updated() {
-      if (!this.resize || !this.$el || !this.$el.querySelectorAll) return;
-      for (const box of this.$el.querySelectorAll('[data-chart]'))
+      if (!this.resize || !this.$el || !this.$el.querySelectorAll) {
+        return;
+      }
+      for (const box of this.$el.querySelectorAll('[data-chart]')) {
         if (!box.woObserved) {
           box.woObserved = true;
           this.resize.observe(box);
         }
+      }
     },
     beforeDestroy() {
       clearTimeout(this.busyRetry);
       clearInterval(this.refreshTimer);
       document.removeEventListener('visibilitychange', this.visibility);
       clearInterval(this.timer);
-      if (this.resize) this.resize.disconnect();
+      if (this.resize) {
+        this.resize.disconnect();
+      }
       this.disposed = true;
       this.abort.abort();
     },

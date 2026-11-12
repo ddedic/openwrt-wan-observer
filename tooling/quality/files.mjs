@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const gitFiles = (root, args) =>
@@ -14,12 +14,18 @@ export function selectFiles(root, base) {
     '--others',
     '--exclude-standard',
     '-z',
-  ]).filter((file) => existsSync(join(root, file)));
+  ]).filter(
+    (file) =>
+      existsSync(join(root, file)) && statSync(join(root, file)).isFile(),
+  );
 
-  if (base === undefined) return [...new Set(live)].sort();
+  if (base === undefined) {
+    return [...new Set(live)].sort();
+  }
 
-  if (!base || base.startsWith('-'))
+  if (!base || base.startsWith('-')) {
     throw new Error('A commit base is required');
+  }
 
   const commit = execFileSync(
     'git',
@@ -51,7 +57,9 @@ export function javascriptFiles(files) {
 export function requireJavaScript(files) {
   const selected = javascriptFiles(files);
 
-  if (!selected.length) throw new Error('No live JavaScript files selected');
+  if (!selected.length) {
+    throw new Error('No live JavaScript files selected');
+  }
 
   return selected;
 }

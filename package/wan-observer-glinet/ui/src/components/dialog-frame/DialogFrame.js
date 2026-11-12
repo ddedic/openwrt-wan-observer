@@ -1,4 +1,5 @@
 /** Stateless VNode frame: onClose belongs to the page; ref stays on its h context. */
+/** @param {import('./DialogFrame.types').DialogFrameProps} props */
 function DialogFrame(h, { label, children, actions, onClose }) {
   return h(
     'dialog',
@@ -19,13 +20,17 @@ function DialogFrame(h, { label, children, actions, onClose }) {
             return;
           }
           // Keep Tab inside the dialog (APG modal pattern); the native modal alone lets focus reach browser chrome.
-          if (e.key !== 'Tab') return;
+          if (e.key !== 'Tab') {
+            return;
+          }
           const items = [
             ...e.currentTarget.querySelectorAll(
               'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex="0"]',
             ),
           ].filter((el) => el.offsetParent !== null);
-          if (!items.length) return;
+          if (!items.length) {
+            return;
+          }
           const first = items[0],
             last = items[items.length - 1],
             active = document.activeElement;
@@ -41,7 +46,9 @@ function DialogFrame(h, { label, children, actions, onClose }) {
           }
         },
         click: (e) => {
-          if (e.target === e.currentTarget) onClose();
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
         },
       },
     },

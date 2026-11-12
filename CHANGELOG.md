@@ -6,7 +6,7 @@ Notable changes to WAN Observer. Router package versions follow the tags below; 
 
 Run Speedtest fixed for the dashboard.
 
-- **Run Speedtest** from the GL.iNet dashboard no longer fails with *Program error*. The dashboard's web server passes `HOME=/`, so the Ookla CLI could not find its accepted license and exited with its license prompt. The collector now always uses the home directory of the account running the test. The 0.5.1 fix only covered a missing `HOME`.
+- **Run Speedtest** from the GL.iNet dashboard no longer fails with _Program error_. The dashboard's web server passes `HOME=/`, so the Ookla CLI could not find its accepted license and exited with its license prompt. The collector now always uses the home directory of the account running the test. The 0.5.1 fix only covered a missing `HOME`.
 
 ## 0.5.2 — 2026-11-12
 
@@ -20,7 +20,7 @@ Installed version in the dashboard.
 
 Fix for dashboard-started speed tests.
 
-- **Run Speedtest** from the GL.iNet dashboard no longer fails with *Program error*. The dashboard starts tests without `HOME`, which made the Ookla CLI abort; the collector now uses the account's home directory. Scheduled tests were not affected.
+- **Run Speedtest** from the GL.iNet dashboard no longer fails with _Program error_. The dashboard starts tests without `HOME`, which made the Ookla CLI abort; the collector now uses the account's home directory. Scheduled tests were not affected.
 - Project website at <https://ddedic.github.io/openwrt-wan-observer/>, built from `site/` and published by the `Website` workflow.
 - Social metadata now describes OpenWrt speed-test history with a native GL.iNet dashboard, and uses a designed 1200×630 preview instead of the raw dashboard capture.
 

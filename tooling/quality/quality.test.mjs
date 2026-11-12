@@ -1,12 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
-  copyFileSync,
   mkdtempSync,
   mkdirSync,
   renameSync,
   rmSync,
-  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -16,6 +14,8 @@ import { fileURLToPath } from 'node:url';
 
 import { ESLint } from 'eslint';
 import * as prettier from 'prettier';
+
+import { createQualityRepository } from './test-repository.mjs';
 
 import { javascriptFiles, requireJavaScript, selectFiles } from './files.mjs';
 
@@ -36,51 +36,7 @@ function write(root, file, content) {
   writeFileSync(join(root, file), content);
 }
 
-function checkerFixture(t) {
-  const root = fixture(t);
-
-  for (const file of [
-    'package.json',
-    'eslint.config.mjs',
-    '.prettierrc.json',
-    '.dependency-cruiser.cjs',
-    'tooling/quality/check.mjs',
-    'tooling/quality/files.mjs',
-  ]) {
-    mkdirSync(dirname(join(root, file)), { recursive: true });
-    copyFileSync(join(ROOT, file), join(root, file));
-  }
-
-  symlinkSync(join(ROOT, 'node_modules'), join(root, 'node_modules'), 'dir');
-  write(root, '.gitignore', 'node_modules/\n');
-  execFileSync('git', ['init', '-q'], { cwd: root });
-  execFileSync('git', ['add', '.'], { cwd: root });
-  execFileSync(
-    'git',
-    [
-      '-c',
-      'user.name=Test fixture',
-      '-c',
-      'user.email=fixture@example.invalid',
-      '-c',
-      'commit.gpgsign=false',
-      'commit',
-      '-qm',
-      'Fixture baseline',
-    ],
-    { cwd: root },
-  );
-
-  return {
-    root,
-    check: () =>
-      spawnSync(
-        process.execPath,
-        [join(root, 'tooling/quality/check.mjs'), '--base', 'HEAD'],
-        { cwd: root, encoding: 'utf8' },
-      ),
-  };
-}
+const checkerFixture = createQualityRepository;
 
 test('actual checker accepts a formatted module with the pinned root configuration', (t) => {
   const { root, check } = checkerFixture(t);
@@ -352,7 +308,9 @@ test('resolver rejects production fixture imports, normalized back-edges, re-exp
   for (const [entry, source, target, rule] of cases) {
     const root = fixture(t);
     write(root, `${UI}/${entry}`, source);
-    if (target) write(root, target, 'export const value = 1;\n');
+    if (target) {
+      write(root, target, 'export const value = 1;\n');
+    }
     const result = spawnSync(
       process.execPath,
       [

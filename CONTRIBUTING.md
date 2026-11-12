@@ -7,22 +7,33 @@ Never attach passwords, tokens, SSH keys, router backups, private addresses, raw
 ## Development and validation
 
 Use the [engineering profile](docs/architecture/technabit-profile.md) for ownership,
-naming, dependency direction and the current Technabit adoption scope. With Node 24,
-install root development tools using `npm ci` as well as the dashboard dependencies.
-Run `npm test` for quality-tool contracts and `npm run lint` for all live JavaScript
-(including preview and verification code). After each logical JavaScript edit run
-`npm run quality -- --base <starting-commit>`: this includes untracked/renamed files,
-checks formatting of supported changed files and checks resolved module boundaries.
-An empty JavaScript selection is an error; docs-only work can run full lint instead.
-Do not add rule overrides or suppression comments. Format only the files you edit
-with the root pinned Prettier; do not mass-format unrelated legacy source.
+naming, dependency direction and the accepted Technabit project profile. Use Node 24,
+Python 3.12, jq 1.6+, Lua 5.1/cjson and LuaRocks (or Luacheck 1.2.0 already on PATH).
+On Debian/Ubuntu install `jq lua5.1 lua-cjson luarocks liblua5.1-0-dev` first.
 
-Focused UI tests live beside their owning modules under `ui/src/`; the UI test
-command also retains all existing integration/report tests. See the
-[source inventory](docs/architecture/source-inventory.json) for retained files and
-the [foundation worklog](docs/worklogs/2026-11-12-technabit-foundation.md) for proof
-and pending language/structural checks. JavaScript adoption does not establish
-Python/Lua/shell/jq lint compliance. CI keeps their existing behavior/syntax checks.
+```sh
+npm ci
+npm run setup:quality
+npm --prefix package/wan-observer-glinet/ui ci
+npm test
+npm run test:ui
+npm run test:python
+npm run lint
+npm run format:check
+npm run quality -- --base <starting-commit>
+npx --no-install playwright install --with-deps chromium
+npm run test:browser
+```
+
+Setup installs hash-locked native quality tools into `.local/`, never the router.
+All-source lint and formatting include Python, Lua, shell, jq, Make recipes and
+JavaScript; exact coverage/limits are in the profile. Changed-file checks include
+untracked/renamed live files. Do not add rule overrides or suppression comments.
+Use pinned formatters; keep rendering source hashes unchanged during structural work.
+Focused UI tests live beside their owning modules; integration tests remain under
+`ui/tests`. The [source inventory](docs/architecture/source-inventory.json) maps
+original files to their owners; the [completion worklog](docs/worklogs/2026-11-12-completion.md)
+records full verification and bounded exceptions.
 
 See the [technical guide](docs/TECHNICAL.md#development) for prerequisites and exact offline test commands. Run the Python/Lua contracts, shell syntax checks and UI tests; build the UI and IPKs when package content changes. These checks do not require a live speed test. State which tests you ran and mark untested assumptions explicitly.
 

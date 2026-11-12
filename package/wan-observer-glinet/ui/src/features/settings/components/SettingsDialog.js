@@ -126,12 +126,16 @@ function SettingsDialog(vm, h, button, t) {
     f.mode === 'custom' && Number(f.start_hour) > Number(f.end_hour);
   const zones = supports(c, 'window_timezone');
   const routerName = t.router ? `Router time (${t.label})` : 'Router time';
-  const zoneHint =
-    f.window_timezone === 'router'
-      ? t.router
-        ? t.zone
-        : `Router zone not reported${t.offset ? `; router clock is UTC${t.offset} now` : ''}`
-      : 'Hours in UTC';
+  const windowTimezoneLabel = () => {
+    if (f.window_timezone === 'router') {
+      if (t.router) {
+        return t.zone;
+      }
+      return `Router zone not reported${t.offset ? `; router clock is UTC${t.offset} now` : ''}`;
+    }
+    return 'Hours in UTC';
+  };
+  const zoneHint = windowTimezoneLabel();
   const measured = measuredTestBytes(vm.payload.measurements);
   const size = measured ? measured.bytes / 1e6 : exampleMbPerTest;
   const plan = {
@@ -167,6 +171,35 @@ function SettingsDialog(vm, h, button, t) {
       ),
     ),
   );
+
+  const renderDialogMessage = () => {
+    if (vm.confirmDiscard) {
+      return h(
+        'p',
+        { class: 'wo-dialog-message', attrs: { role: 'alert' } },
+        'Discard unsaved changes?',
+      );
+    }
+    if (errorCount && vm.submitted) {
+      return h(
+        'p',
+        { class: 'wo-dialog-message is-error', attrs: { role: 'alert' } },
+        `${errorCount} ${errorCount === 1 ? 'field needs' : 'fields need'} attention`,
+      );
+    }
+    if (vm.saveError) {
+      return h(
+        'p',
+        {
+          class: 'wo-dialog-message is-error',
+          attrs: { role: 'alert' },
+        },
+        vm.saveError,
+      );
+    }
+    return null;
+  };
+
   return shell(
     'Testing settings',
     [
@@ -319,28 +352,7 @@ function SettingsDialog(vm, h, button, t) {
       ]),
     ],
     [
-      vm.confirmDiscard
-        ? h(
-            'p',
-            { class: 'wo-dialog-message', attrs: { role: 'alert' } },
-            'Discard unsaved changes?',
-          )
-        : errorCount && vm.submitted
-          ? h(
-              'p',
-              { class: 'wo-dialog-message is-error', attrs: { role: 'alert' } },
-              `${errorCount} ${errorCount === 1 ? 'field needs' : 'fields need'} attention`,
-            )
-          : vm.saveError
-            ? h(
-                'p',
-                {
-                  class: 'wo-dialog-message is-error',
-                  attrs: { role: 'alert' },
-                },
-                vm.saveError,
-              )
-            : null,
+      renderDialogMessage(),
       ...(vm.confirmDiscard
         ? [
             button('Keep editing', {

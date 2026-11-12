@@ -1,4 +1,5 @@
 const { jsPDF } = require('jspdf');
+
 const {
   quantile,
   labels,
@@ -39,13 +40,16 @@ function createPDF(report, appendix = false) {
   header();
   text('Summary', 15, 42, 11, ink, true);
   rect(15, 46, 180, 17, '#faf6ee');
-  rect(
-    15,
-    46,
-    1.5,
-    17,
-    counts.cn ? colors.cn : counts.sp ? colors.sp : colors.ok,
-  );
+  const headlineColor = () => {
+    if (counts.cn) {
+      return colors.cn;
+    }
+    if (counts.sp) {
+      return colors.sp;
+    }
+    return colors.ok;
+  };
+  rect(15, 46, 1.5, 17, headlineColor());
   text(report.headline, 20, 53, 12, ink, true);
   text(
     `${selected.length} observed tests. The connection between tests was not measured.`,
@@ -71,7 +75,7 @@ function createPDF(report, appendix = false) {
   const cellWidth = 153 / rows[0].cells.length;
   const showEvery = Math.ceil(rows.length / 9);
   rows.forEach((row, i) => {
-    if (i % showEvery === 0)
+    if (i % showEvery === 0) {
       text(
         new Date(row.day).toISOString().slice(5, 10),
         15,
@@ -79,6 +83,7 @@ function createPDF(report, appendix = false) {
         7,
         muted,
       );
+    }
     row.cells.forEach(
       (cell, j) =>
         !cell.future &&
@@ -166,7 +171,9 @@ function createPDF(report, appendix = false) {
       }
       const px = x + 2 + (i * (w - 4)) / Math.max(1, series.length - 1),
         py = yp(v);
-      if (prev) line(prev[0], prev[1], px, py, '#2e6fd6');
+      if (prev) {
+        line(prev[0], prev[1], px, py, '#2e6fd6');
+      }
       rect(px - 0.45, py - 0.45, 0.9, 0.9, '#2e6fd6');
       prev = [px, py];
     });
@@ -194,7 +201,9 @@ function createPDF(report, appendix = false) {
   y = nextPage('Observed incidents and methodology');
   function tableHead(cols) {
     rect(15, y - 4, 180, 7, '#eef0f3');
-    for (const [label, x] of cols) text(label, x, y, 8, ink, true);
+    for (const [label, x] of cols) {
+      text(label, x, y, 8, ink, true);
+    }
     y += 8;
   }
   const incidentColumns = [
@@ -224,8 +233,9 @@ function createPDF(report, appendix = false) {
     line(15, y + 2, 195, y + 2);
     y += 7;
   }
-  if (y > 235) y = nextPage('Methodology');
-  else {
+  if (y > 235) {
+    y = nextPage('Methodology');
+  } else {
     y += 6;
     text('Methodology and limits', 15, y, 11, ink, true);
     y += 7;
@@ -238,7 +248,9 @@ function createPDF(report, appendix = false) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   for (const row of doc.splitTextToSize(methodology, 176)) {
-    if (y > 265) y = nextPage('Methodology (continued)');
+    if (y > 265) {
+      y = nextPage('Methodology (continued)');
+    }
     text(row, 15, y, 9, muted);
     y += 4.5;
   }

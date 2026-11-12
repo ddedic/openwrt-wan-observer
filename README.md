@@ -69,12 +69,12 @@ Keep a private backup before upgrading or removing packages; see [preservation a
 
 ## Compatibility and status
 
-| Component | Status |
-| --- | --- |
+| Component                                         | Status                                                                                                                             |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | GL.iNet SDK4 plugin (`wan-observer-glinet` 0.5.0) | 0.5.0-1 installed and checked on GL-MT6000 (Flint 2), firmware 4.11.0; screenshots show the current native dashboard and settings. |
-| Core collector/CLI (`wan-observer`) | Synthetic offline tests and Flint 2 smoke checks; not universal firmware validation |
-| Other OpenWrt builds / SDK package recipe | Not yet validated across firmware releases |
-| Local desktop preview (`tools/preview.py`) | Developer-only tool |
+| Core collector/CLI (`wan-observer`)               | Synthetic offline tests and Flint 2 smoke checks; not universal firmware validation                                                |
+| Other OpenWrt builds / SDK package recipe         | Not yet validated across firmware releases                                                                                         |
+| Local desktop preview (`tools/preview.py`)        | Developer-only tool                                                                                                                |
 
 Experimental. Version 0.5.0 adds quality-history and byte-budget controls, clearer setup/attempt states and time-proportional charts. Existing two-hour, adaptive-off, all-day settings remain unchanged; quality history defaults off, the budget stays unset and existing UTC windows stay UTC. Full details: [limitations](docs/TECHNICAL.md#limitations).
 

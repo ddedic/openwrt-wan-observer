@@ -17,8 +17,15 @@ const {
   SettingsDialog,
 } = require('../features/settings/components/SettingsDialog');
 const { ExportDialog } = require('../features/reports/components/ExportDialog');
-const read = (r, key) =>
-  r ? (r[key] !== undefined ? r[key] : r.checks && r.checks[key]) : undefined;
+const read = (r, key) => {
+  if (r) {
+    if (r[key] !== undefined) {
+      return r[key];
+    }
+    return r.checks && r.checks[key];
+  }
+  return undefined;
+};
 function renderPage(h) {
   const vm = this,
     r = this.report,
@@ -104,20 +111,21 @@ function renderPage(h) {
     h,
     button,
   );
+  const stepStateText = (state) => {
+    if (state === 'ok') {
+      return ' (ready)';
+    }
+    if (state === 'bad') {
+      return ' (needs attention)';
+    }
+    return ' (not checked)';
+  };
   const step = (state, label, detail, action) =>
     h('li', { class: ['wo-step', `is-${state}`] }, [
       h('span', { class: 'wo-step-icon', attrs: { 'aria-hidden': 'true' } }),
       h('div', { class: 'wo-step-text' }, [
         h('b', label),
-        h(
-          'span',
-          { class: 'wo-vh' },
-          state === 'ok'
-            ? ' (ready)'
-            : state === 'bad'
-              ? ' (needs attention)'
-              : ' (not checked)',
-        ),
+        h('span', { class: 'wo-vh' }, stepStateText(state)),
         detail ? h('small', [detail]) : null,
       ]),
       action || null,
@@ -128,28 +136,55 @@ function renderPage(h) {
     storage = read(readiness, 'free_storage_kb');
   const found = checks.binary === 'available' || engine === true,
     missing = checks.binary === 'unavailable' || engine === false;
+  const configurationDetail = () => {
+    if (checks.config === 'valid') {
+      return 'Valid';
+    }
+    if (checks.config === 'invalid') {
+      return 'Present but invalid';
+    }
+    return 'Not created yet';
+  };
+  const engineState = () => {
+    if (found) {
+      return 'ok';
+    }
+    if (missing) {
+      return 'bad';
+    }
+    return 'unknown';
+  };
+  const engineDetail = () => {
+    if (found) {
+      return 'Found at the configured path';
+    }
+    if (missing) {
+      return 'Not found at the configured path. Install the Ookla CLI as described in the guide.';
+    }
+    return 'Checked once the configuration is valid';
+  };
+  const schedulerDetail = () => {
+    if (checks.scheduler !== 'installed') {
+      return 'Cron entry not installed';
+    }
+    if (checks.scheduler_service === 'stopped') {
+      return 'Cron service is not running';
+    }
+    if (checks.scheduler_service === 'running') {
+      return 'Cron entry installed and running';
+    }
+    return 'Cron entry installed';
+  };
   const baseSteps = () =>
     [
       checks.config
         ? step(
             checks.config === 'valid' ? 'ok' : 'bad',
             'Configuration',
-            checks.config === 'valid'
-              ? 'Valid'
-              : checks.config === 'invalid'
-                ? 'Present but invalid'
-                : 'Not created yet',
+            configurationDetail(),
           )
         : null,
-      step(
-        found ? 'ok' : missing ? 'bad' : 'unknown',
-        'Speedtest program',
-        found
-          ? 'Found at the configured path'
-          : missing
-            ? 'Not found at the configured path. Install the Ookla CLI as described in the guide.'
-            : 'Checked once the configuration is valid',
-      ),
+      step(engineState(), 'Speedtest program', engineDetail()),
       checks.scheduler
         ? step(
             checks.scheduler === 'installed' &&
@@ -157,13 +192,7 @@ function renderPage(h) {
               ? 'ok'
               : 'bad',
             'Scheduler',
-            checks.scheduler !== 'installed'
-              ? 'Cron entry not installed'
-              : checks.scheduler_service === 'stopped'
-                ? 'Cron service is not running'
-                : checks.scheduler_service === 'running'
-                  ? 'Cron entry installed and running'
-                  : 'Cron entry installed',
+            schedulerDetail(),
           )
         : null,
       typeof clockOk === 'boolean'
@@ -194,7 +223,7 @@ function renderPage(h) {
     ].filter(Boolean);
 
   if (!r) {
-    if (vm.payload && !vm.payload.collector)
+    if (vm.payload && !vm.payload.collector) {
       return h('div', { class: 'wo' }, [
         head,
         card(
@@ -219,7 +248,8 @@ function renderPage(h) {
         ),
         footer,
       ]);
-    if (vm.error)
+    }
+    if (vm.error) {
       return h('div', { class: 'wo' }, [
         head,
         card('', [
@@ -234,6 +264,7 @@ function renderPage(h) {
         ]),
         footer,
       ]);
+    }
     // First load: the brand appears once, centred, and the head row waits for data. A scoped card is used
     // instead of gl-card because an untitled native card's header rendering is not verified.
     return h('div', { class: 'wo', attrs: { 'aria-busy': 'true' } }, [
@@ -336,54 +367,60 @@ function renderPage(h) {
     ]),
   ]);
 
+  const renderActiveDialog = () => {
+    if (vm.sheet) {
+      if (vm.sheet === 'export') {
+        return ExportDialog(
+          {
+            report: vm.report,
+            appendix: vm.appendix,
+            exportError: vm.exportError,
+            fileName: vm.fileName,
+            close: vm.close,
+            pdf: vm.pdf,
+            setAppendix: (value) => {
+              vm.appendix = value;
+            },
+          },
+          h,
+          button,
+          t,
+        );
+      }
+      return SettingsDialog(
+        {
+          form: vm.form,
+          config: vm.config,
+          fieldErrors: vm.fieldErrors,
+          payload: vm.payload,
+          confirmDiscard: vm.confirmDiscard,
+          submitted: vm.submitted,
+          saveError: vm.saveError,
+          saving: vm.saving,
+          close: vm.close,
+          save: vm.save,
+          touch: (key) => {
+            vm.touched = { ...vm.touched, [key]: true };
+          },
+          clearDiscard: () => {
+            vm.confirmDiscard = false;
+          },
+        },
+        h,
+        button,
+        t,
+      );
+    }
+    return null;
+  };
+
   return h('div', { class: 'wo' }, [
     head,
     current,
     history,
     about,
     footer,
-    vm.sheet
-      ? vm.sheet === 'export'
-        ? ExportDialog(
-            {
-              report: vm.report,
-              appendix: vm.appendix,
-              exportError: vm.exportError,
-              fileName: vm.fileName,
-              close: vm.close,
-              pdf: vm.pdf,
-              setAppendix: (value) => {
-                vm.appendix = value;
-              },
-            },
-            h,
-            button,
-            t,
-          )
-        : SettingsDialog(
-            {
-              form: vm.form,
-              config: vm.config,
-              fieldErrors: vm.fieldErrors,
-              payload: vm.payload,
-              confirmDiscard: vm.confirmDiscard,
-              submitted: vm.submitted,
-              saveError: vm.saveError,
-              saving: vm.saving,
-              close: vm.close,
-              save: vm.save,
-              touch: (key) => {
-                vm.touched = { ...vm.touched, [key]: true };
-              },
-              clearDiscard: () => {
-                vm.confirmDiscard = false;
-              },
-            },
-            h,
-            button,
-            t,
-          )
-      : null,
+    renderActiveDialog(),
   ]);
 }
 module.exports = { renderPage };

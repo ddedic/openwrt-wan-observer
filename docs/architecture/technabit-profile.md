@@ -1,10 +1,9 @@
 # WAN Observer engineering profile
 
-Accepted scope: the owner's 12 November 2026 instruction to execute the proposed
-behavior-preserving migration, starting with conventions, quality checks, router
-transport and settings validation. The next UI ownership packet was authorized subsequently; see the
-[UI ownership worklog](../worklogs/2026-11-12-ui-ownership.md). CGI and non-JavaScript
-semantic tooling remain planned.
+Accepted scope: the owner's 12 November 2026 full behavior-preserving migration.
+Foundation, UI ownership, CGI extraction and mixed-language enforcement are complete.
+See the [completion worklog](../worklogs/2026-11-12-completion.md) for verification
+and the explicit limits of synthetic testing.
 
 ## Standards and ownership
 
@@ -15,8 +14,7 @@ Check upstream before each work packet and weekly during active work; do not
 silently change dependencies or update a shared skill checkout concurrently.
 
 Apply the portable core, frontend ownership and backend boundary rules. Reference
-React/Hono stacks are optional examples. This is an incremental adoption, not a
-claim that untouched source already satisfies every rule.
+React/Hono stacks are optional examples. The project profile below adapts those rules to the existing router stack.
 
 ## Stack and delivery contracts
 
@@ -32,7 +30,7 @@ claim that untouched source already satisfies every rule.
 - Preserve CSS bytes/order, markup, copy, focus behavior and async lifetimes.
   All visual/interaction design belongs to Opus 5.5 and requires owner review.
 - No live router operations, speed tests, release, deployment or credential access
-  are part of this packet. Publish the working branch for review; do not merge it.
+  are part of this migration. Publish the working branch for review; do not merge it.
 
 ## Ownership and allowed dependencies
 
@@ -48,7 +46,8 @@ features or the application. Settings validation is pure and cannot import them.
 No production dependency may reach a test, preview, verification tool or fixture.
 UI owners now live under `src/app`, `src/features`, `src/measurements`, `src/time`,
 `src/scheduling`, `src/collector`, `src/components` and `src/infrastructure`.
-The root SDK entry and report-data compatibility entry have real consumers;
+The root SDK entry preserves the host contract; report consumers use the explicit
+`src/measurements/report-data.js` facade. The temporary root bridge is removed.
 `view.css` stays byte-preserved at its existing path. Integration code lives under
 `ui/tests`. Features cannot import the application or another feature's private
 files; the application composes their view/workflow contracts.
@@ -58,32 +57,57 @@ JSDoc `.types.js` contracts; the parent's `h` preserves VNode context and refs.
 One page instance owns reactive state, lifecycle hooks, cancellation and dialog refs.
 JSDoc documents inputs; no TypeScript-checking claim is made.
 
-Use PascalCase for components and named contracts, kebab-case for other modules,
+Python keeps native snake_case module/test names; Lua uses the `wan_observer`
+namespace and kebab-case responsibility modules. External installed paths remain
+OpenWrt-compatible. Use PascalCase for components and named contracts, kebab-case for other modules,
 camelCase for functions and locals, and SCREAMING_SNAKE_CASE for fixed module
 constants. Preserve external protocol names (for example `download_mbps`). Use
 explicit exports, meaningful responsibility boundaries, and adjacent focused tests.
 No empty mandatory files, generic helpers buckets or line-count-driven splits.
 JavaScript contracts use JSDoc where useful; TypeScript conversion is not required.
 
-## Enforcement and migration limits
+## CGI ownership
 
-The first packet introduces ESLint recommended rules, Prettier and resolver-based
-JavaScript boundaries. Strict changed-file checking uses an explicit Git base,
-includes untracked/renamed live files, rejects empty code selection and disallows
-rule overrides/inline suppressions. The checker pins root ESLint and Prettier
-configuration; JavaScript formatter-ignore comments are lint errors. Full JavaScript lint discovers UI, tests,
-preview and quality tooling. Formatting applies to changed files; mass formatting
-of untouched legacy files is a separate packet. See the worklog for actual proof.
+The executable CGI only boots `wan_observer.application`. `http/` owns root/admin
+session authentication and response mapping; `services/` owns dashboard projection
+and finite operation results; `adapters/commands.lua` alone opens fixed command
+processes; `contracts/` owns JSON/schedule validation. Services cannot import HTTP,
+adapters cannot import services/HTTP, and contracts import only contracts.
+The builder installs all modules under `/usr/lib/lua/wan_observer`; installed-IPK
+contracts execute that tree without source fallback. No framework/router runtime
+was added.
 
-Python semantic lint/formatting, Lua semantic lint, shell semantic lint and jq
-style enforcement remain planned, not waived and not claimed as implemented.
-Existing Python behavior tests, shell syntax and Lua syntax checks remain required.
-Before those languages change, add and prove their compatible checks or record a
-specific reviewed exception. This packet changes JavaScript and configuration only.
-Import-group/statement-padding automation and full component naming/boundary
-migration also remain planned; use readable grouping while writing new modules.
+## Enforcement and evidence limits
 
-The source inventory records every original live file and its first-packet
-status. Later packets must update its disposition without losing tests/assets.
-Run affected tests per edit and the integration/package checkpoint for this
-transport extraction. A synthetic test is not real firmware or browser proof.
+All tracked and untracked live sources are discovered through Git, including
+extensionless shell. Explicit-base checks include live renamed/untracked files;
+empty scope fails and docs-only scope is valid. Root configurations are pinned;
+inline suppressions, nested weakening, hidden shell options and unknown source
+languages fail. JavaScript uses ESLint recommended, curly/no-nested-ternary,
+import grouping and statement spacing; Prettier handles source/docs layout and
+resolver-based dependency rules cover all project JavaScript.
+
+Python uses hash-locked Ruff 0.17.4; Lua uses Luacheck 1.2.0 with Lua51 globals and
+StyLua 2.6.0; POSIX shell uses ShellCheck 0.11.0 and shfmt 3.14.1. StyLua owns Lua
+line layout, so Luacheck's duplicate line-length check is disabled; no semantic
+unused-variable checks are disabled. Native format checks cover all these sources.
+jq 1.6+ compiles every column-zero library definition through synthetic references,
+including unused definitions, and retained behavior tests exercise the filters.
+There is no adopted jq source formatter: existing layout is retained, rather than
+claiming an unsupported style tool. GNU Make parses recipes with minimal SDK include
+stubs; this establishes syntax only, not an actual OpenWrt SDK build.
+
+Exact CSS/HTML/SVG hashes are registered in `tooling/quality/frozen-rendering.json`;
+changes/new visual sources require the approved visual-design delivery. Fourteen
+original rendered-tree fixtures remain unchanged. Chromium runs the actual built
+IPK bundle with Vue 2 runtime and synthetic APIs at desktop/mobile sizes, testing
+keyboard focus, settings save and CSV/PDF downloads. This proves real DOM behavior
+in that test host, not native GL.iNet components, actual firmware or device behavior.
+No live router validation was performed for this migration.
+
+The source inventory retains every original source mapping and records the final
+canonical source census. Root quality tools, browser fixtures and development
+suppliers cannot enter production bundles/IPKs. JSDoc contracts document inputs;
+they are not static type checking. Root Vue 2 is a development-only runtime supplier;
+its low-severity compiler advisory is recorded in the completion worklog. Production
+UI runtime dependency audit is clean at verification time.

@@ -61,6 +61,7 @@ function ObserverFooter(props, h) {
         ]
       : []),
   ]);
+
   return footer;
 }
 module.exports = { ObserverFooter };

@@ -7,14 +7,26 @@
   "scripts": {
     "lint": "node tooling/quality/check.mjs --all --lint-only",
     "quality": "node tooling/quality/check.mjs",
-    "test": "node --test tooling/quality/*.test.mjs"
+    "test": "node --test 'tooling/quality/*.test.mjs' 'tooling/verification/*.test.mjs'",
+    "setup:quality": "sh tooling/quality/bootstrap.sh",
+    "format:check": "node tooling/quality/check.mjs --all --format-check",
+    "test:ui": "npm --prefix package/wan-observer-glinet/ui test",
+    "test:browser": "npm run build && playwright test --config tooling/browser/playwright.config.mjs",
+    "test:python": "python3 -m unittest discover -s tests -v",
+    "build": "python3 tools/build-ipk.py"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@johnnymorganz/stylua-bin": "2.6.0",
+    "@playwright/test": "1.65.0",
+    "@stylistic/eslint-plugin": "5.10.0",
     "dependency-cruiser": "18.7.2",
     "eslint": "10.14.0",
+    "eslint-plugin-import-x": "4.18.1",
     "globals": "17.14.0",
-    "prettier": "3.10.1"
+    "luaparse": "0.3.1",
+    "prettier": "3.10.1",
+    "vue": "2.7.16"
   },
   "overrides": {
     "eslint": {

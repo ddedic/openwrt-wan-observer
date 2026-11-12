@@ -1,8 +1,12 @@
 function showDialog(value) {
-  if (!value) return;
+  if (!value) {
+    return;
+  }
   this.$nextTick(() => {
     const dialog = this.$refs.dialog;
-    if (!dialog) return;
+    if (!dialog) {
+      return;
+    }
     if (!dialog.open) {
       try {
         dialog.showModal();
@@ -17,7 +21,9 @@ function showDialog(value) {
       dialog.querySelector(
         'input:not([disabled]),select,button:not([disabled])',
       );
-    if (first) first.focus();
+    if (first) {
+      first.focus();
+    }
   });
 }
 function closeDialog(force) {
@@ -26,14 +32,19 @@ function closeDialog(force) {
     return;
   }
   const dialog = this.$refs && this.$refs.dialog;
-  if (dialog && dialog.open && dialog.close) dialog.close();
+  if (dialog && dialog.open && dialog.close) {
+    dialog.close();
+  }
   this.sheet = '';
   this.confirmDiscard = false;
   const opener = this.opener;
   this.opener = null;
-  if (opener && opener.focus && this.$nextTick)
+  if (opener && opener.focus && this.$nextTick) {
     this.$nextTick(() => {
-      if (opener.isConnected !== false) opener.focus();
+      if (opener.isConnected !== false) {
+        opener.focus();
+      }
     });
+  }
 }
 module.exports = { showDialog, closeDialog };

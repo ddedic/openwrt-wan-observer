@@ -8,7 +8,9 @@ function find(node, predicate) {
   if (Array.isArray(node)) {
     return node.flatMap((child) => find(child, predicate));
   }
-  if (!node || typeof node !== 'object') return [];
+  if (!node || typeof node !== 'object') {
+    return [];
+  }
   return [
     ...(predicate(node) ? [node] : []),
     ...find(node.children, predicate),
@@ -16,8 +18,12 @@ function find(node, predicate) {
 }
 
 function text(node) {
-  if (Array.isArray(node)) return node.map(text).join(' ');
-  if (node && typeof node === 'object') return text(node.children);
+  if (Array.isArray(node)) {
+    return node.map(text).join(' ');
+  }
+  if (node && typeof node === 'object') {
+    return text(node.children);
+  }
   return node == null ? '' : String(node);
 }
 

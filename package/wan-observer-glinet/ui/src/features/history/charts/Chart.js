@@ -12,6 +12,7 @@ function nearest(points, x) {
   });
   return best;
 }
+/** @param {import('./Chart.types').ChartOptions} options */
 function Chart(h, g, { label, active, format, onPick }) {
   const items = chartItems(g);
   const current = active >= 0 && active < items.length ? items[active] : null;
@@ -47,7 +48,7 @@ function Chart(h, g, { label, active, format, onPick }) {
       ),
     ),
   );
-  if (g.kind === 'speed')
+  if (g.kind === 'speed') {
     children.push(
       h('line', {
         attrs: {
@@ -59,6 +60,7 @@ function Chart(h, g, { label, active, format, onPick }) {
         },
       }),
     );
+  }
   g.segments.forEach((s) =>
     children.push(
       h('polyline', { attrs: { points: line(s), class: 'wo-series' } }),
@@ -133,12 +135,13 @@ function Chart(h, g, { label, active, format, onPick }) {
         },
       }),
     );
-    if (!current.failed)
+    if (!current.failed) {
       children.push(
         h('circle', {
           attrs: { cx: current.x, cy: current.y, r: 6, class: 'wo-focus-ring' },
         }),
       );
+    }
   }
   const pick = (event, index) => {
     event.preventDefault && event.preventDefault();
@@ -152,6 +155,7 @@ function Chart(h, g, { label, active, format, onPick }) {
       box.width;
     onPick(nearest(items, x));
   };
+
   return h(
     'svg',
     {
@@ -172,7 +176,9 @@ function Chart(h, g, { label, active, format, onPick }) {
             pointerleave: () => onPick(-1),
             blur: () => onPick(-1),
             focus: () => {
-              if (active < 0) onPick(items.length - 1);
+              if (active < 0) {
+                onPick(items.length - 1);
+              }
             },
             keydown: (event) => {
               const keys = {
@@ -181,9 +187,9 @@ function Chart(h, g, { label, active, format, onPick }) {
                 Home: 0,
                 End: items.length - 1,
               };
-              if (event.key in keys)
+              if (event.key in keys) {
                 pick(event, active < 0 ? items.length - 1 : keys[event.key]);
-              else if (event.key === 'Escape' && active >= 0) {
+              } else if (event.key === 'Escape' && active >= 0) {
                 event.stopPropagation();
                 onPick(-1);
               }

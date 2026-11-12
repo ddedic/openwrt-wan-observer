@@ -50,6 +50,7 @@ function ObserverHeader(vm, h, button) {
         : [],
     ),
   ]);
+
   return head;
 }
 module.exports = { ObserverHeader };

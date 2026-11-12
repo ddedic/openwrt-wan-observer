@@ -8,27 +8,46 @@ config=${WAN_OBSERVER_CONFIG:-/etc/wan-observer/collector.json}
 runtime=${WAN_OBSERVER_RUNTIME:-/tmp/wan-observer-collector}
 store=${WAN_OBSERVER_STORE:-/etc/wan-observer/history}
 limit=${WAN_OBSERVER_MAX_RECORDS:-1000}
-case "$limit" in ''|*[!0-9]*) printf '%s\n' 'wan-observer: invalid retention count' >&2; exit 1;; esac
-[ "$limit" -ge 1 ] && [ "$limit" -le 10000 ] || { printf '%s\n' 'wan-observer: retention must be 1..10000 records' >&2; exit 1; }
+case "$limit" in '' | *[!0-9]*)
+  printf '%s\n' 'wan-observer: invalid retention count' >&2
+  exit 1
+  ;;
+esac
+[ "$limit" -ge 1 ] && [ "$limit" -le 10000 ] || {
+  printf '%s\n' 'wan-observer: retention must be 1..10000 records' >&2
+  exit 1
+}
 export WAN_OBSERVER_STORE="$store" WAN_OBSERVER_LIB="$lib"
-fail() { printf '%s\n' "wan-observer: $1" >&2; exit 1; }
+fail() {
+  printf '%s\n' "wan-observer: $1" >&2
+  exit 1
+}
 [ "$#" = 1 ] || fail 'usage: wan-observer-collect configure|schedule|tick|run|start|status'
 [ ! -L "$runtime" ] && [ ! -L "$runtime/state.next" ] && [ ! -L "$config" ] || fail 'symlink refused'
 mkdir -p "$runtime"
 chmod 700 "$runtime"
 work=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer-collect.XXXXXX")
 locked=0
-cleanup() { rm -rf "$work"; if [ "$locked" = 1 ]; then rm -f "$runtime/manual.json"; rmdir "$runtime/.lock" 2>/dev/null || :; fi; }
+cleanup() {
+  rm -rf "$work"
+  if [ "$locked" = 1 ]; then
+    rm -f "$runtime/manual.json"
+    rmdir "$runtime/.lock" 2>/dev/null || :
+  fi
+}
 trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM HUP
-lock() { mkdir "$runtime/.lock" 2>/dev/null || fail 'collector busy or interrupted'; locked=1; }
+lock() {
+  mkdir "$runtime/.lock" 2>/dev/null || fail 'collector busy or interrupted'
+  locked=1
+}
 validate() { jq -L "$lib" -sce 'import "collector" as c; if length==1 then .[0]|c::valid_config else error("one object required") end' "$1" 2>/dev/null; }
 case "$1" in
- configure|schedule)
+configure | schedule)
   lock
-  head -c 8193 > "$work/input"
-  [ "$(wc -c < "$work/input")" -le 8192 ] || fail 'configuration too large'
+  head -c 8193 >"$work/input"
+  [ "$(wc -c <"$work/input")" -le 8192 ] || fail 'configuration too large'
   if [ "$1" = schedule ]; then
     [ -f "$config" ] || fail 'collector is not configured'
     jq -L "$lib" -sce --slurpfile current "$config" '
@@ -36,22 +55,22 @@ case "$1" in
       if length == 1 and (.[0] | c::schedule_patch)
       then ($current[0] + .[0]) | c::valid_config
       else error("invalid schedule") end
-    ' "$work/input" > "$work/config" 2>/dev/null || fail 'invalid schedule'
+    ' "$work/input" >"$work/config" 2>/dev/null || fail 'invalid schedule'
   else
     # Older full configuration clients omit the optional guard; preserve it.
     if [ -f "$config" ]; then
       jq --slurpfile old "$config" '
         reduce ["monthly_budget_bytes","quality_history_enabled","window_timezone"][] as $key (.;
           if has($key) or ($old[0]|has($key)|not) then . else .[$key]=$old[0][$key] end)
-      ' "$work/input" > "$work/merged" 2>/dev/null || fail 'invalid configuration'
+      ' "$work/input" >"$work/merged" 2>/dev/null || fail 'invalid configuration'
       mv "$work/merged" "$work/input"
     fi
-    validate "$work/input" > "$work/config" || fail 'invalid configuration'
+    validate "$work/input" >"$work/config" || fail 'invalid configuration'
   fi
   # Compare semantics, so adding normalized optional defaults does not rewrite
   # old files or turn an unchanged save into an extra due test.
-  if [ -f "$config" ] && validate "$config" > "$work/old-config" &&
-     cmp -s "$work/config" "$work/old-config"; then
+  if [ -f "$config" ] && validate "$config" >"$work/old-config" &&
+    cmp -s "$work/config" "$work/old-config"; then
     printf '%s\n' 'Collector configuration unchanged.'
     exit 0
   fi
@@ -66,274 +85,291 @@ case "$1" in
   chmod 600 "$config.next"
   mv "$config.next" "$config"
   if [ "$retime" = 1 ] && [ -f "$runtime/state.json" ]; then
-    jq ' .next_epoch=0 | .next_normal=0 | .burst=0 ' "$runtime/state.json" > "$runtime/state.next"
+    jq ' .next_epoch=0 | .next_normal=0 | .burst=0 ' "$runtime/state.json" >"$runtime/state.next"
     mv "$runtime/state.next" "$runtime/state.json"
   fi
   printf '%s\n' 'Collector configuration saved.'
-  exit 0;;
- tick|run|start|status) :;;
- *) fail 'unknown command';;
+  exit 0
+  ;;
+tick | run | start | status) : ;;
+*) fail 'unknown command' ;;
 esac
 [ -f "$config" ] || fail 'collector is not configured'
 [ "$1" = status ] || lock
-validate "$config" > "$work/config" || fail 'invalid configuration'
+validate "$config" >"$work/config" || fail 'invalid configuration'
 if [ -f "$runtime/state.json" ]; then
   [ ! -L "$runtime/state.json" ] || fail 'symlink state refused'
   cp "$runtime/state.json" "$work/state"
 else
-  jq -n -L "$lib" 'import "collector" as c; c::initial' > "$work/state"
+  jq -n -L "$lib" 'import "collector" as c; c::initial' >"$work/state"
   if [ -f "$store/collector-events.json" ]; then
-    jq --slurpfile saved "$store/collector-events.json" ' .events=$saved[0].events | .coverage=$saved[0].coverage ' "$work/state" > "$work/updated"
+    jq --slurpfile saved "$store/collector-events.json" ' .events=$saved[0].events | .coverage=$saved[0].coverage ' "$work/state" >"$work/updated"
     mv "$work/updated" "$work/state"
   fi
 fi
 # Read-time adaptation never rewrites legacy evidence.
-jq -L "$lib" --argjson limit "$limit" 'import "collector" as c; c::coverage($limit)' "$work/state" > "$work/updated"
+jq -L "$lib" --argjson limit "$limit" 'import "collector" as c; c::coverage($limit)' "$work/state" >"$work/updated"
 mv "$work/updated" "$work/state"
 # OpenWrt stores the trusted POSIX timezone in /etc/TZ. Read it as data,
 # never source it; libc localtime also handles native zoneinfo when absent.
 tz_file=${WAN_OBSERVER_TZ_FILE:-/etc/TZ}
 if [ -r "$tz_file" ]; then
- router_tz=$(head -c 513 "$tz_file" 2>/dev/null) || fail 'router timezone unavailable'
- [ "${#router_tz}" -le 512 ] || fail 'router timezone unavailable'
- TZ=$router_tz
- export TZ
+  router_tz=$(head -c 513 "$tz_file" 2>/dev/null) || fail 'router timezone unavailable'
+  [ "${#router_tz}" -le 512 ] || fail 'router timezone unavailable'
+  TZ=$router_tz
+  export TZ
 fi
 now=${WAN_OBSERVER_NOW:-$(date +%s)}
-case "$now" in ''|*[!0-9]*) fail 'invalid clock';; esac
+case "$now" in '' | *[!0-9]*) fail 'invalid clock' ;; esac
 [ "$now" -ge 1704067200 ] || fail 'clock not initialized'
 # Only tick observes passive native quality. Failures never trigger extra full
 # tests; reserve the runtime minute before invoking the existing bounded CLI.
 if [ "$1" = tick ] && [ "$(jq -r .quality_history_enabled "$work/config")" = true ]; then
- quality_cli=${WAN_OBSERVER_QUALITY_CLI:-/usr/bin/wan-observer-quality}
- quality_minute=$((now / 60))
- quality_previous=
- if [ ! -L "$runtime/quality-minute" ] && [ ! -L "$runtime/quality-minute.next" ]; then
-  if [ -f "$runtime/quality-minute" ]; then quality_previous=$(head -c 32 "$runtime/quality-minute" 2>/dev/null) || quality_previous=; fi
-  if [ "$quality_previous" != "$quality_minute" ] && [ -f "$quality_cli" ]; then
-   if { printf '%s' "$quality_minute" > "$runtime/quality-minute.next" &&
+  quality_cli=${WAN_OBSERVER_QUALITY_CLI:-/usr/bin/wan-observer-quality}
+  quality_minute=$((now / 60))
+  quality_previous=
+  if [ ! -L "$runtime/quality-minute" ] && [ ! -L "$runtime/quality-minute.next" ]; then
+    if [ -f "$runtime/quality-minute" ]; then quality_previous=$(head -c 32 "$runtime/quality-minute" 2>/dev/null) || quality_previous=; fi
+    if [ "$quality_previous" != "$quality_minute" ] && [ -f "$quality_cli" ]; then
+      if { printf '%s' "$quality_minute" >"$runtime/quality-minute.next" &&
         mv "$runtime/quality-minute.next" "$runtime/quality-minute"; } 2>/dev/null; then
-    WAN_OBSERVER_QUALITY_NOW="$now" WAN_OBSERVER_QUALITY_STORE="${WAN_OBSERVER_QUALITY_STORE:-/etc/wan-observer/quality}" \
-      sh "$quality_cli" tick >/dev/null 2>&1 || :
-   fi
+        WAN_OBSERVER_QUALITY_NOW="$now" WAN_OBSERVER_QUALITY_STORE="${WAN_OBSERVER_QUALITY_STORE:-/etc/wan-observer/quality}" \
+          sh "$quality_cli" tick >/dev/null 2>&1 || :
+      fi
+    fi
   fi
- fi
 fi
 usage_readable=1
 [ ! -L "$store" ] && [ ! -L "$store/collector-usage.json" ] || fail 'symlink usage refused'
-jq -n -L "$lib" --argjson now "$now" 'import "collector" as c; c::usage_initial($now)' > "$work/usage"
+jq -n -L "$lib" --argjson now "$now" 'import "collector" as c; c::usage_initial($now)' >"$work/usage"
 if [ -e "$store/collector-usage.json" ]; then
- if jq -L "$lib" -se --argjson now "$now" 'import "collector" as c;
+  if jq -L "$lib" -se --argjson now "$now" 'import "collector" as c;
    if length==1 and (.[0]|c::usage_valid) then .[0]|c::usage_month($now) else error("invalid usage") end
- ' "$store/collector-usage.json" > "$work/updated" 2>/dev/null; then
-  mv "$work/updated" "$work/usage"
- else
-  usage_readable=0
-  jq '.accounting_error=true | .unknown_attempts=1' "$work/usage" > "$work/updated"
-  mv "$work/updated" "$work/usage"
- fi
+ ' "$store/collector-usage.json" >"$work/updated" 2>/dev/null; then
+    mv "$work/updated" "$work/usage"
+  else
+    usage_readable=0
+    jq '.accounting_error=true | .unknown_attempts=1' "$work/usage" >"$work/updated"
+    mv "$work/updated" "$work/usage"
+  fi
 fi
-jq -L "$lib" --slurpfile c "$work/config" 'import "collector" as ledger; ledger::usage_status($c[0].monthly_budget_bytes)' "$work/usage" > "$work/usage-status"
+jq -L "$lib" --slurpfile c "$work/config" 'import "collector" as ledger; ledger::usage_status($c[0].monthly_budget_bytes)' "$work/usage" >"$work/usage-status"
 if [ "$1" = status ]; then
- busy=false; [ -d "$runtime/.lock" ] && busy=true
- started=null
- if [ -f "$runtime/manual.json" ] && [ ! -L "$runtime/manual.json" ]; then
-  started=$(jq -e '.started|numbers' "$runtime/manual.json" 2>/dev/null) || started=null
- fi
- # Flint jq1.6 loses timezone offsets when formatting localtime; use native
- # date for current timezone metadata, never for epoch window arithmetic.
- date '+%Z %z' | jq -R '
+  busy=false
+  [ -d "$runtime/.lock" ] && busy=true
+  started=null
+  if [ -f "$runtime/manual.json" ] && [ ! -L "$runtime/manual.json" ]; then
+    started=$(jq -e '.started|numbers' "$runtime/manual.json" 2>/dev/null) || started=null
+  fi
+  # Flint jq1.6 loses timezone offsets when formatting localtime; use native
+  # date for current timezone metadata, never for epoch window arithmetic.
+  date '+%Z %z' | jq -R '
   split(" ") | {label:.[0],utc_offset:.[1]} |
   if (.label|type=="string" and length<=32 and (explode|all(.>=32 and .<127))) and
      (.utc_offset|type=="string" and length==5)
   then . else {label:"router",utc_offset:null} end
- ' > "$work/timezone" 2>/dev/null || printf '{"label":"router","utc_offset":null}\n' > "$work/timezone"
- jq -n --slurpfile config "$work/config" --slurpfile state "$work/state" --slurpfile usage "$work/usage-status" --slurpfile zone "$work/timezone" --argjson busy "$busy" --argjson started "$started" \
-  '$state[0] + {config:($config[0]|del(.binary,.interface)), busy:$busy, manual_started:$started, usage:$usage[0],router_timezone:$zone[0]}'
- exit 0
+ ' >"$work/timezone" 2>/dev/null || printf '{"label":"router","utc_offset":null}\n' >"$work/timezone"
+  jq -n --slurpfile config "$work/config" --slurpfile state "$work/state" --slurpfile usage "$work/usage-status" --slurpfile zone "$work/timezone" --argjson busy "$busy" --argjson started "$started" \
+    '$state[0] + {config:($config[0]|del(.binary,.interface)), busy:$busy, manual_started:$started, usage:$usage[0],router_timezone:$zone[0]}'
+  exit 0
 fi
 if [ "$1" = tick ] && [ "$(jq -r .enabled "$work/config")" != true ]; then exit 0; fi
 # The optional budget limits future starts; a full test may overshoot.
 budget_state=$(jq -r .budget_state "$work/usage-status")
 case "$budget_state" in
- reached|unknown)
+reached | unknown)
   if [ "$1" = tick ]; then exit 0; fi
   [ "$budget_state" != reached ] || fail 'monthly test budget reached (start guard)'
-  fail 'usage accounting unknown; clear budget or repair accounting before testing';;
+  fail 'usage accounting unknown; clear budget or repair accounting before testing'
+  ;;
 esac
 
 # Replace one aggregate atomically on its own filesystem. Never replay a pending
 # reservation from retained events: interruption remains unknown, not double charged.
 usage_save() {
- [ "$usage_readable" = 1 ] || fail 'usage accounting unreadable; repair accounting before testing'
- [ ! -L "$store" ] && [ ! -L "$store/collector-usage.json" ] && [ ! -L "$store/collector-usage.next" ] &&
- [ ! -d "$store/collector-usage.json" ] && [ ! -d "$store/collector-usage.next" ] || fail 'usage accounting persistence failed'
- mkdir -p "$store"
- chmod 700 "$store"
- cp "$work/usage-next" "$store/collector-usage.next" 2>/dev/null || fail 'usage accounting persistence failed'
- mv "$store/collector-usage.next" "$store/collector-usage.json" 2>/dev/null || fail 'usage accounting persistence failed'
- mv "$work/usage-next" "$work/usage"
+  [ "$usage_readable" = 1 ] || fail 'usage accounting unreadable; repair accounting before testing'
+  [ ! -L "$store" ] && [ ! -L "$store/collector-usage.json" ] && [ ! -L "$store/collector-usage.next" ] &&
+    [ ! -d "$store/collector-usage.json" ] && [ ! -d "$store/collector-usage.next" ] || fail 'usage accounting persistence failed'
+  mkdir -p "$store"
+  chmod 700 "$store"
+  cp "$work/usage-next" "$store/collector-usage.next" 2>/dev/null || fail 'usage accounting persistence failed'
+  mv "$store/collector-usage.next" "$store/collector-usage.json" 2>/dev/null || fail 'usage accounting persistence failed'
+  mv "$work/usage-next" "$work/usage"
 }
 usage_reserve() {
- jq -L "$lib" --argjson now "$now" 'import "collector" as c; c::usage_reserve($now)' "$work/usage" > "$work/usage-next"
- usage_save
+  jq -L "$lib" --argjson now "$now" 'import "collector" as c; c::usage_reserve($now)' "$work/usage" >"$work/usage-next"
+  usage_save
 }
 usage_finish() {
- # normalize-ookla already validates optional safe integer bytes; import failure
- # does not undo network consumption. Failed/invalid output remains unknown.
- if [ ! -f "$work/record" ] || [ ! -s "$work/record" ]; then printf '{}\n' > "$work/record"; fi
- finished=${WAN_OBSERVER_NOW:-$(date +%s)}
- jq -L "$lib" --argjson finished "$finished" --slurpfile record "$work/record" 'import "collector" as c; c::usage_finish($record[0];$finished)' "$work/usage" > "$work/usage-next"
- usage_save
+  # normalize-ookla already validates optional safe integer bytes; import failure
+  # does not undo network consumption. Failed/invalid output remains unknown.
+  if [ ! -f "$work/record" ] || [ ! -s "$work/record" ]; then printf '{}\n' >"$work/record"; fi
+  finished=${WAN_OBSERVER_NOW:-$(date +%s)}
+  jq -L "$lib" --argjson finished "$finished" --slurpfile record "$work/record" 'import "collector" as c; c::usage_finish($record[0];$finished)' "$work/usage" >"$work/usage-next"
+  usage_save
 }
 # One attempt with the validated binary, server and interface; sets $outcome.
 measure() {
- binary=$(jq -r .binary "$work/config")
- server=$(jq -r .server_id "$work/config")
- interface=$(jq -r .interface "$work/config")
- set -- "$binary" --format=json --progress=no "--server-id=$server"
- if [ -n "$interface" ]; then set -- "$@" "--interface=$interface"; fi
- # Ookla CLI keeps its accepted license under $HOME/.config/ookla. Cron sets HOME to
- # the account's home, but the dashboard's fcgiwrap passes HOME=/ (or none), which
- # makes the CLI prompt for the license and exit. Always use the account's home.
- account_home=$(awk -F: -v uid="$(id -u)" '$3 == uid { print $6; exit }' "${WAN_OBSERVER_PASSWD:-/etc/passwd}" 2>/dev/null) || account_home=
- if [ -n "$account_home" ] && [ -d "$account_home" ]; then HOME=$account_home
- elif [ -z "${HOME:-}" ]; then HOME=/root
- fi
- export HOME
- outcome=failed
- failure_code=backend_exit
- # BusyBox reports signal termination rather than GNU's deadline status124.
- rc=0
- timeout -k 10 120 "$@" > "$work/raw" 2>/dev/null || rc=$?
- if [ "$rc" -ne 0 ]; then
-  case "$rc" in 124) failure_code=timeout;; 137|143) failure_code=execution_terminated;; esac
- elif ! sh "$cli" normalize-ookla < "$work/raw" > "$work/record" 2>/dev/null; then
-  failure_code=invalid_result
- elif ! sh "$cli" import-ookla < "$work/raw" >/dev/null 2>&1; then
-  failure_code=storage_error
- else
-  outcome=healthy
-  failure_code=
-  if jq -e --slurpfile c "$work/config" '.download_mbps < ($c[0].download_mbps*$c[0].threshold_percent/100) or .upload_mbps < ($c[0].upload_mbps*$c[0].threshold_percent/100)' "$work/record" >/dev/null; then outcome=degraded; fi
- fi
+  binary=$(jq -r .binary "$work/config")
+  server=$(jq -r .server_id "$work/config")
+  interface=$(jq -r .interface "$work/config")
+  set -- "$binary" --format=json --progress=no "--server-id=$server"
+  if [ -n "$interface" ]; then set -- "$@" "--interface=$interface"; fi
+  # Ookla CLI keeps its accepted license under $HOME/.config/ookla. Cron sets HOME to
+  # the account's home, but the dashboard's fcgiwrap passes HOME=/ (or none), which
+  # makes the CLI prompt for the license and exit. Always use the account's home.
+  account_home=$(awk -F: -v uid="$(id -u)" '$3 == uid { print $6; exit }' "${WAN_OBSERVER_PASSWD:-/etc/passwd}" 2>/dev/null) || account_home=
+  if [ -n "$account_home" ] && [ -d "$account_home" ]; then
+    HOME=$account_home
+  elif [ -z "${HOME:-}" ]; then
+    HOME=/root
+  fi
+  export HOME
+  outcome=failed
+  failure_code=backend_exit
+  # BusyBox reports signal termination rather than GNU's deadline status124.
+  rc=0
+  timeout -k 10 120 "$@" >"$work/raw" 2>/dev/null || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    case "$rc" in 124) failure_code=timeout ;; 137 | 143) failure_code=execution_terminated ;; esac
+  elif ! sh "$cli" normalize-ookla <"$work/raw" >"$work/record" 2>/dev/null; then
+    failure_code=invalid_result
+  elif ! sh "$cli" import-ookla <"$work/raw" >/dev/null 2>&1; then
+    failure_code=storage_error
+  else
+    outcome=healthy
+    failure_code=
+    if jq -e --slurpfile c "$work/config" '.download_mbps < ($c[0].download_mbps*$c[0].threshold_percent/100) or .upload_mbps < ($c[0].upload_mbps*$c[0].threshold_percent/100)' "$work/record" >/dev/null; then outcome=degraded; fi
+  fi
 }
 # A valid measurement can outlive a failed attempt-history write. Never label the
 # attempt healthy in volatile status when its final durable evidence was not saved.
 persistence_failure() {
- jq -L "$lib" 'import "collector" as c;
+  jq -L "$lib" 'import "collector" as c;
    c::finish("failed";"storage_error") | .coverage.persistence_error=true
- ' "$runtime/state.json" > "$runtime/state.next" 2>/dev/null &&
-   mv "$runtime/state.next" "$runtime/state.json"
- fail 'attempt history persistence failed'
+ ' "$runtime/state.json" >"$runtime/state.next" 2>/dev/null &&
+    mv "$runtime/state.next" "$runtime/state.json"
+  fail 'attempt history persistence failed'
 }
 # Sanitized execution history persists independently of volatile burst accounting.
 persist() {
- [ ! -L "$store" ] && [ ! -L "$store/collector-events.json" ] && [ ! -L "$store/collector-events.next" ] || fail 'symlink history refused'
- mkdir -p "$store"
- chmod 700 "$store"
- # Preserve the original legacy event document once, before extending its schema.
- [ ! -L "$store/collector-events.legacy.json" ] || fail 'symlink history refused'
- if [ -f "$store/collector-events.json" ] && [ ! -e "$store/collector-events.legacy.json" ] &&
+  [ ! -L "$store" ] && [ ! -L "$store/collector-events.json" ] && [ ! -L "$store/collector-events.next" ] || fail 'symlink history refused'
+  mkdir -p "$store"
+  chmod 700 "$store"
+  # Preserve the original legacy event document once, before extending its schema.
+  [ ! -L "$store/collector-events.legacy.json" ] || fail 'symlink history refused'
+  if [ -f "$store/collector-events.json" ] && [ ! -e "$store/collector-events.legacy.json" ] &&
     jq -e '.coverage == null' "$store/collector-events.json" >/dev/null 2>&1; then
-  cp "$store/collector-events.json" "$store/collector-events.legacy.json" 2>/dev/null || fail 'legacy history backup failed'
- fi
- [ ! -d "$store/collector-events.next" ] || persistence_failure
- cp "$runtime/state.json" "$store/collector-events.next" 2>/dev/null || persistence_failure
- mv "$store/collector-events.next" "$store/collector-events.json" 2>/dev/null || persistence_failure
+    cp "$store/collector-events.json" "$store/collector-events.legacy.json" 2>/dev/null || fail 'legacy history backup failed'
+  fi
+  [ ! -d "$store/collector-events.next" ] || persistence_failure
+  cp "$runtime/state.json" "$store/collector-events.next" 2>/dev/null || persistence_failure
+  mv "$store/collector-events.next" "$store/collector-events.json" 2>/dev/null || persistence_failure
 }
 # Reserve evidence before running the backend. If interrupted, the durable event stays
 # failed/interrupted; finalization updates it instead of adding a second attempt.
 reserve() {
- # Linux provides a fresh UUID on each read; boot_id must never be reused.
- uuid_source=${WAN_OBSERVER_UUID_SOURCE:-/proc/sys/kernel/random/uuid}
- if [ -r "$uuid_source" ]; then
-  uuid=$(head -c 128 "$uuid_source" 2>/dev/null) || fail 'attempt identity unavailable'
-  case "$uuid" in
-   ????????-????-????-????-????????????) :;;
-   *) fail 'attempt identity unavailable';;
-  esac
-  WAN_OBSERVER_ATTEMPT_ID=$(printf '%s' "$uuid" | tr -d '-')
- else
-  # NonLinux/local fallback only when the existing od applet is available.
-  command -v od >/dev/null 2>&1 || fail 'attempt identity unavailable'
-  head -c 16 /dev/urandom > "$work/random" 2>/dev/null || fail 'attempt identity unavailable'
-  [ "$(wc -c < "$work/random")" -eq 16 ] || fail 'attempt identity unavailable'
-  LC_ALL=C od -x "$work/random" > "$work/random-hex" 2>/dev/null || fail 'attempt identity unavailable'
-  WAN_OBSERVER_ATTEMPT_ID=$(head -n 1 "$work/random-hex" | cut -c 9- | tr -d ' ')
- fi
- export WAN_OBSERVER_ATTEMPT_ID
- jq -n -e -L "$lib" 'import "record" as r; env.WAN_OBSERVER_ATTEMPT_ID | r::attempt_id' >/dev/null 2>&1 || fail 'attempt identity unavailable'
- jq -L "$lib" --argjson now "$now" --arg reason "$reason" --argjson limit "$limit" '
+  # Linux provides a fresh UUID on each read; boot_id must never be reused.
+  uuid_source=${WAN_OBSERVER_UUID_SOURCE:-/proc/sys/kernel/random/uuid}
+  if [ -r "$uuid_source" ]; then
+    uuid=$(head -c 128 "$uuid_source" 2>/dev/null) || fail 'attempt identity unavailable'
+    case "$uuid" in
+    ????????-????-????-????-????????????) : ;;
+    *) fail 'attempt identity unavailable' ;;
+    esac
+    WAN_OBSERVER_ATTEMPT_ID=$(printf '%s' "$uuid" | tr -d '-')
+  else
+    # NonLinux/local fallback only when the existing od applet is available.
+    command -v od >/dev/null 2>&1 || fail 'attempt identity unavailable'
+    head -c 16 /dev/urandom >"$work/random" 2>/dev/null || fail 'attempt identity unavailable'
+    [ "$(wc -c <"$work/random")" -eq 16 ] || fail 'attempt identity unavailable'
+    LC_ALL=C od -x "$work/random" >"$work/random-hex" 2>/dev/null || fail 'attempt identity unavailable'
+    WAN_OBSERVER_ATTEMPT_ID=$(head -n 1 "$work/random-hex" | cut -c 9- | tr -d ' ')
+  fi
+  export WAN_OBSERVER_ATTEMPT_ID
+  jq -n -e -L "$lib" 'import "record" as r; env.WAN_OBSERVER_ATTEMPT_ID | r::attempt_id' >/dev/null 2>&1 || fail 'attempt identity unavailable'
+  jq -L "$lib" --argjson now "$now" --arg reason "$reason" --argjson limit "$limit" '
   import "collector" as c; c::attempt($now;$reason;"failed";"interrupted";$limit) |
   .events[-1].pending=true | .events[-1].attempt_id=env.WAN_OBSERVER_ATTEMPT_ID
- ' "$work/state" > "$runtime/state.next"
- mv "$runtime/state.next" "$runtime/state.json"
- persist
- cp "$runtime/state.json" "$work/state"
- usage_reserve
+ ' "$work/state" >"$runtime/state.next"
+  mv "$runtime/state.next" "$runtime/state.json"
+  persist
+  cp "$runtime/state.json" "$work/state"
+  usage_reserve
 }
 # Manual attempt: works while paused or outside the window and leaves schedule, burst and allowance untouched.
 manual() {
- printf '{"started":%s}\n' "$now" > "$runtime/manual.json"
- reason=manual
- if [ "${manual_reserved:-0}" != 1 ]; then reserve; fi
- measure
- usage_finish
- jq -L "$lib" --argjson now "$now" --arg outcome "$outcome" --arg failure "$failure_code" --argjson limit "$limit" '
+  printf '{"started":%s}\n' "$now" >"$runtime/manual.json"
+  reason=manual
+  if [ "${manual_reserved:-0}" != 1 ]; then reserve; fi
+  measure
+  usage_finish
+  jq -L "$lib" --argjson now "$now" --arg outcome "$outcome" --arg failure "$failure_code" --argjson limit "$limit" '
    import "collector" as c; c::finish($outcome;(if $failure=="" then null else $failure end))
- ' "$work/state" > "$runtime/state.next"
- mv "$runtime/state.next" "$runtime/state.json"
- persist
+ ' "$work/state" >"$runtime/state.next"
+  mv "$runtime/state.next" "$runtime/state.json"
+  persist
+}
+# Own the detached worker's private workspace and cleanup traps in its child process.
+manual_worker() {
+  work=$1
+  trap cleanup EXIT
+  trap '' HUP INT
+  trap 'exit 143' TERM
+  manual
 }
 [ ! -L "$runtime/manual.json" ] || fail 'symlink refused'
-if [ "$1" = run ]; then manual; printf '%s\n' "Manual test $outcome."; exit 0; fi
+if [ "$1" = run ]; then
+  manual
+  printf '%s\n' "Manual test $outcome."
+  exit 0
+fi
 if [ "$1" = start ]; then
- # Reserve durably before claiming a background start; writes can fail before
- # the backend is invoked. The detached child settles this same reservation.
- reason=manual
- reserve
- manual_reserved=1
- child=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer-collect.XXXXXX")
- cp "$work/config" "$work/state" "$work/usage" "$child/"
- printf '{"started":%s}\n' "$now" > "$runtime/manual.json"
- ( work=$child; trap cleanup EXIT; trap '' HUP INT; trap 'exit 143' TERM; manual ) </dev/null >/dev/null 2>&1 &
- locked=0
- printf '%s\n' 'Manual test started.'
- exit 0
+  # Reserve durably before claiming a background start; writes can fail before
+  # the backend is invoked. The detached child settles this same reservation.
+  reason=manual
+  reserve
+  manual_reserved=1
+  child=$(mktemp -d "${TMPDIR:-/tmp}/wan-observer-collect.XXXXXX")
+  cp "$work/config" "$work/state" "$work/usage" "$child/"
+  printf '{"started":%s}\n' "$now" >"$runtime/manual.json"
+  (manual_worker "$child") </dev/null >/dev/null 2>&1 &
+  locked=0
+  printf '%s\n' 'Manual test started.'
+  exit 0
 fi
 next=$(jq -r .next_epoch "$work/state")
 [ "$now" -ge "$next" ] || exit 0
 # Only window eligibility uses router localtime. The UTC epoch interval grid
 # below remains unchanged across skipped/repeated DST hours.
 if [ "$(jq -r .window_timezone "$work/config")" = router ]; then
- hour=$(jq -nr --argjson now "$now" '$now|localtime|.[3]') || fail 'router timezone unavailable'
+  hour=$(jq -nr --argjson now "$now" '$now|localtime|.[3]') || fail 'router timezone unavailable'
 else
- hour=$(( (now / 3600) % 24 ))
+  hour=$(((now / 3600) % 24))
 fi
 start=$(jq -r .start_hour "$work/config")
 end=$(jq -r .end_hour "$work/config")
 if [ "$start" -lt "$end" ]; then
- [ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ] || exit 0
+  [ "$hour" -ge "$start" ] && [ "$hour" -lt "$end" ] || exit 0
 else
- [ "$hour" -ge "$start" ] || [ "$hour" -lt "$end" ] || exit 0
+  [ "$hour" -ge "$start" ] || [ "$hour" -lt "$end" ] || exit 0
 fi
 interval=$(jq -r .interval_minutes "$work/config")
 normal=$(jq -r .next_normal "$work/state")
 reason=degradation_followup
 if [ "$now" -ge "$normal" ]; then
- reason=scheduled
- normal=$(( (now / (interval * 60) + 1) * interval * 60 ))
- jq '.burst=0' "$work/state" > "$work/updated"
- mv "$work/updated" "$work/state"
+  reason=scheduled
+  normal=$(((now / (interval * 60) + 1) * interval * 60))
+  jq '.burst=0' "$work/state" >"$work/updated"
+  mv "$work/updated" "$work/state"
 fi
 day=$((now / 86400))
 if [ "$(jq -r .day "$work/state")" != "$day" ]; then
- jq --argjson day "$day" '.day=$day | .extras=0' "$work/state" > "$work/updated"
- mv "$work/updated" "$work/state"
+  jq --argjson day "$day" '.day=$day | .extras=0' "$work/state" >"$work/updated"
+  mv "$work/updated" "$work/state"
 fi
 # Persist a reservation before invoking the external tool, so a terminated test is not immediately retried.
-jq --argjson normal "$normal" '.next_epoch=$normal | .next_normal=$normal' "$work/state" > "$runtime/state.next"
+jq --argjson normal "$normal" '.next_epoch=$normal | .next_normal=$normal' "$work/state" >"$runtime/state.next"
 mv "$runtime/state.next" "$runtime/state.json"
 cp "$runtime/state.json" "$work/state"
 reserve
@@ -346,6 +382,6 @@ jq -L "$lib" --argjson now "$now" --argjson normal "$normal" --arg reason "$reas
   if $outcome!="healthy" and $c[0].adaptive and .burst<3 and .extras<24
     then .next_epoch=([$now+300,$normal]|min) else . end |
   ledger::finish($outcome;(if $failure=="" then null else $failure end))
-' "$work/state" > "$runtime/state.next"
+' "$work/state" >"$runtime/state.next"
 mv "$runtime/state.next" "$runtime/state.json"
 persist

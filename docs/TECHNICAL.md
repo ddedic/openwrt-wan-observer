@@ -140,6 +140,11 @@ python3 -m http.server 8000 --bind 127.0.0.1 --directory /tmp/wan-observer-site
 
 ## Development
 
+See [Contributing](../CONTRIBUTING.md#development-and-validation) for pinned native
+quality setup, all-language lint/formatting and built-IPK browser smoke commands.
+The [engineering profile](architecture/technabit-profile.md) records source ownership
+and the limits of synthetic/SDK validation.
+
 Install a POSIX shell, jq, Python 3, Node/npm, Lua 5.1 and its matching lua-cjson module. On Debian/Ubuntu, `sudo apt-get install jq lua5.1 lua-cjson` supplies the CGI test dependencies. CGI tests execute the actual Lua entry point with real cjson and synthetic ubus/process boundaries; they do not need a router.
 
 ```sh
@@ -171,12 +176,12 @@ The bundled UI uses jsPDF and esbuild-generated third-party license notices. Pre
 
 ## Roadmap
 
-| Stage | Status |
-| --- | --- |
-| Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test |
-| GL.iNet SDK4 router dashboard and direct PDF | 0.5.0-1 installed and checked on Flint 2 firmware 4.11.0; 98 Python/Lua and 48 JavaScript tests pass |
-| Opt-in collection with adaptive follow-ups | Count caps and optional CLI byte start guard; partial accounting |
-| Disposable local dashboard and browser printing | Developer-only |
-| OpenWrt SDK build and package lifecycle | Not yet verified |
-| Native-quality history | Optional GL.iNet 4.11 snapshots, Settings/CLI opt-in through the minute tick; no extra WAN probes |
-| Whole-router traffic and router load | Planned |
+| Stage                                            | Status                                                                                               |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Normalize existing results, bounded history, CSV | Available; synthetic tests and hardware smoke test                                                   |
+| GL.iNet SDK4 router dashboard and direct PDF     | 0.5.0-1 installed and checked on Flint 2 firmware 4.11.0; 98 Python/Lua and 48 JavaScript tests pass |
+| Opt-in collection with adaptive follow-ups       | Count caps and optional CLI byte start guard; partial accounting                                     |
+| Disposable local dashboard and browser printing  | Developer-only                                                                                       |
+| OpenWrt SDK build and package lifecycle          | Not yet verified                                                                                     |
+| Native-quality history                           | Optional GL.iNet 4.11 snapshots, Settings/CLI opt-in through the minute tick; no extra WAN probes    |
+| Whole-router traffic and router load             | Planned                                                                                              |

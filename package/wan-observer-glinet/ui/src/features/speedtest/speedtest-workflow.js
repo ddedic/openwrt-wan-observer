@@ -30,17 +30,21 @@ function createSpeedtestWorkflow(api) {
         !this.payload.collector ||
         this.busy ||
         this.guarded
-      )
+      ) {
         return;
-      if (this.refreshRequest) await this.refreshRequest;
+      }
+      if (this.refreshRequest) {
+        await this.refreshRequest;
+      }
       if (
         this.disposed ||
         this.running ||
         !this.payload ||
         !this.payload.collector ||
         this.busy
-      )
+      ) {
         return;
+      }
       const known = new Set(
         this.payload.collector.events
           .filter((e) => e.reason === 'manual')
@@ -58,8 +62,12 @@ function createSpeedtestWorkflow(api) {
       this.follow(known);
     },
     async follow(known) {
-      if (this.refreshRequest) await this.refreshRequest;
-      if (this.disposed) return;
+      if (this.refreshRequest) {
+        await this.refreshRequest;
+      }
+      if (this.disposed) {
+        return;
+      }
       const started =
         this.payload &&
         this.payload.collector &&
@@ -80,20 +88,28 @@ function createSpeedtestWorkflow(api) {
         data = this.payload;
       for (let i = 0; i < pollLimit && !this.disposed; i++) {
         await wait(pollMs, this.abort.signal);
-        if (this.disposed) return;
+        if (this.disposed) {
+          return;
+        }
         try {
           const next = await api(
             this.abort.signal,
             null,
             `?period=${this.days}`,
           );
-          if (this.disposed) return;
-          if (!next.collector) continue;
+          if (this.disposed) {
+            return;
+          }
+          if (!next.collector) {
+            continue;
+          }
           data = next;
         } catch {
           continue;
         }
-        if (data.collector.busy) continue;
+        if (data.collector.busy) {
+          continue;
+        }
         event = data.collector.events
           .filter(
             (e) => e.reason === 'manual' && !(known || new Set()).has(e.epoch),

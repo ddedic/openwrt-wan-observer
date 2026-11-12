@@ -1,4 +1,5 @@
 """Loopback preview contract; synthetic data only."""
+
 import http.client
 import importlib.util
 import json
@@ -44,8 +45,12 @@ class PreviewTests(unittest.TestCase):
     def test_fixed_routes_and_host_boundary(self):
         for path in ['/../README.md', '/.env', '/api/measurements?file=/etc/passwd']:
             self.assertEqual(self.request(path)[0], 404)
-        self.assertEqual(self.request('/api/measurements', headers={'Host': 'evil.example'})[0], 403)
-        self.assertEqual(self.request('/api/measurements', headers={'Sec-Fetch-Site': 'cross-site'})[0], 403)
+        self.assertEqual(
+            self.request('/api/measurements', headers={'Host': 'evil.example'})[0], 403
+        )
+        self.assertEqual(
+            self.request('/api/measurements', headers={'Sec-Fetch-Site': 'cross-site'})[0], 403
+        )
         self.assertEqual(self.request('/api/measurements', method='POST')[0], 405)
 
     def test_dashboard_assets_and_csp(self):
@@ -59,6 +64,7 @@ class PreviewTests(unittest.TestCase):
     def test_failure_does_not_disclose_backend_details(self):
         def broken():
             raise RuntimeError('PRIVATE_MARKER')
+
         self.server.load = broken
         status, _, body = self.request('/api/measurements')
         self.assertEqual(status, 503)
@@ -85,26 +91,41 @@ class ScheduleSecurityTests(unittest.TestCase):
     def test_schedule_requires_origin_and_token(self):
         class FakeRouter:
             saved = None
+
             def load(self):
                 return {'source': 'synthetic', 'measurements': []}
+
             def configure(self, patch):
                 self.saved = patch
+
         router = FakeRouter()
         server = preview.make_server(0, None, router)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         try:
             host = f'127.0.0.1:{server.server_port}'
-            for token, origin, expected in [('', f'http://{host}', 403),
-                                            (server.token, 'https://evil.example', 403),
-                                            (server.token, f'http://{host}', 200)]:
+            for token, origin, expected in [
+                ('', f'http://{host}', 403),
+                (server.token, 'https://evil.example', 403),
+                (server.token, f'http://{host}', 200),
+            ]:
                 conn = http.client.HTTPConnection(host)
-                conn.request('POST', '/api/schedule', body='{}', headers={
-                    'Content-Type': 'application/json', 'Origin': origin,
-                    'X-Schedule-Token': token})
+                conn.request(
+                    'POST',
+                    '/api/schedule',
+                    body='{}',
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Origin': origin,
+                        'X-Schedule-Token': token,
+                    },
+                )
                 response = conn.getresponse()
                 self.assertEqual(response.status, expected)
-                response.read(); conn.close()
+                response.read()
+                conn.close()
             self.assertEqual(router.saved, {})
         finally:
-            server.shutdown(); server.server_close(); thread.join()
+            server.shutdown()
+            server.server_close()
+            thread.join()

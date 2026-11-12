@@ -60,7 +60,9 @@ function renderScenario(source, scenario, native = false) {
   }
 
   component.created.call(page);
-  if (scenario === 'error') page.error = 'Synthetic unavailable state';
+  if (scenario === 'error') {
+    page.error = 'Synthetic unavailable state';
+  }
   if (!['loading', 'error'].includes(scenario)) {
     page.payload = {
       collector:
@@ -104,8 +106,12 @@ function renderScenario(source, scenario, native = false) {
       },
     };
   }
-  if (scenario === 'settings') page.openSettings();
-  if (scenario === 'export') page.openExport();
+  if (scenario === 'settings') {
+    page.openSettings();
+  }
+  if (scenario === 'export') {
+    page.openExport();
+  }
 
   const h = (tag, data, children) => {
     if (

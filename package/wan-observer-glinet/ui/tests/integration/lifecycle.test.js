@@ -1,8 +1,10 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 const vmModule = require('node:vm');
-const { componentSource } = require('../component-source');
+
 const { createRequire } = require('node:module');
+
+const { componentSource } = require('../component-source');
 function harness(fetcher) {
   const timers = new Map(),
     listeners = new Map();
@@ -37,8 +39,9 @@ function harness(fetcher) {
   vmModule.runInNewContext(componentSource(), context);
   const component = context.module.exports,
     vm = { ...component.data(), $el: {}, ...component.methods };
-  for (const k of Object.keys(component.methods))
+  for (const k of Object.keys(component.methods)) {
     vm[k] = component.methods[k].bind(vm);
+  }
   component.created.call(vm);
   return { vm, component, document, timers, listeners };
 }
@@ -48,7 +51,9 @@ const payload = {
 };
 const response = (data) => ({ ok: true, json: async () => data });
 const settle = async () => {
-  for (let i = 0; i < 8; i++) await Promise.resolve();
+  for (let i = 0; i < 8; i++) {
+    await Promise.resolve();
+  }
 };
 test('visible periodic GET refresh preserves unsaved form and pauses for hidden/manual states', async () => {
   let calls = 0;
@@ -126,11 +131,14 @@ test('saving waits for background GET before writing and reloads saved configura
   const methods = [];
   const h = harness(async (url, options) => {
     methods.push(options.method || 'GET');
-    if (options.method === 'POST') return response({});
-    if (++reads === 1)
+    if (options.method === 'POST') {
+      return response({});
+    }
+    if (++reads === 1) {
       return new Promise((r) => {
         release = r;
       });
+    }
     return response({
       ...payload,
       collector: { ...payload.collector, config: { download_mbps: 432 } },
@@ -174,23 +182,29 @@ test('scheduled activity refresh clears busy status without starting a speed tes
 function renderText(harness) {
   const { vm, component } = harness;
   vm.$options = { components: {} };
-  for (const [key, fn] of Object.entries(component.computed))
+  for (const [key, fn] of Object.entries(component.computed)) {
     Object.defineProperty(vm, key, {
       configurable: true,
       get: () => fn.call(vm),
     });
+  }
   const h = (tag, data, children) => ({
     tag,
     children: children === undefined ? data : children,
   });
-  const text = (node) =>
-    node == null || node === false
-      ? ''
-      : Array.isArray(node)
-        ? node.map(text).join(' ')
-        : typeof node === 'object'
-          ? text(node.children)
-          : String(node);
+  const text = (node) => {
+    if (node == null || node === false) {
+      return '';
+    }
+    if (Array.isArray(node)) {
+      return node.map(text).join(' ');
+    }
+    if (typeof node === 'object') {
+      return text(node.children);
+    }
+    return String(node);
+  };
+
   return text(component.render.call(vm, h));
 }
 const configured = {
@@ -212,7 +226,9 @@ const configured = {
 test('rendered stale warning survives existing history without replacing manual notice or settings', async () => {
   let n = 0;
   const h = harness(async () => {
-    if (++n === 2) throw Error('unreachable');
+    if (++n === 2) {
+      throw Error('unreachable');
+    }
     return response(configured);
   });
   await h.vm.refresh();
@@ -382,11 +398,12 @@ test('busy retry shares its pending GET with periodic refresh instead of overlap
   let calls = 0,
     release;
   const h = harness(async () => {
-    if (++calls === 1)
+    if (++calls === 1) {
       return response({
         ...configured,
         collector: { ...configured.collector, busy: true },
       });
+    }
     return new Promise((resolve) => {
       release = resolve;
     });
