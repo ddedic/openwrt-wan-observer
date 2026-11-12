@@ -118,3 +118,11 @@ this UI packet. No universal compatibility or whole-repository compliance claim.
 
 Publication follows the reviewed source/fix commit on the existing review branch;
 no merge, deployment or release. Final remote identity is checked by coordinator.
+
+## Publication receipt
+
+Published source/fix `5c1389e122cbc186508f6bbb7d9f84410e7f7a74` on
+`codex/technabit-foundation`; local HEAD and `git ls-remote` matched, with clean
+working tree and zero ahead/behind. This documentation-only receipt follows that
+source commit; its final push/synchronization is verified in the coordinator
+transcript. Main and installed routers were not changed.
