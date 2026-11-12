@@ -2,6 +2,14 @@
 
 Notable changes to WAN Observer. Router package versions follow the tags below; download builds and checksums from [Releases](https://github.com/ddedic/openwrt-wan-observer/releases).
 
+## Unreleased
+
+Internal structure and verification.
+
+- Organized the dashboard into feature-owned views, workflows, transport and shared rules; split the CGI into authentication, HTTP, service, validation and command modules.
+- Added pinned linting, formatting, dependency-boundary checks and CI coverage across the repository's languages.
+- Added installed-package and browser tests for settings, keyboard focus and CSV/PDF downloads. Verified the candidate on a real Flint 2 running firmware 4.11.0, including an isolated manual-worker test; existing configuration, history, cron and scheduler state were preserved byte-for-byte.
+
 ## 0.5.3 — 2026-11-12
 
 Run Speedtest fixed for the dashboard.
