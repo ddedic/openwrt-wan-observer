@@ -6,6 +6,24 @@ Never attach passwords, tokens, SSH keys, router backups, private addresses, raw
 
 ## Development and validation
 
+Use the [engineering profile](docs/architecture/technabit-profile.md) for ownership,
+naming, dependency direction and the current Technabit adoption scope. With Node 24,
+install root development tools using `npm ci` as well as the dashboard dependencies.
+Run `npm test` for quality-tool contracts and `npm run lint` for all live JavaScript
+(including preview and verification code). After each logical JavaScript edit run
+`npm run quality -- --base <starting-commit>`: this includes untracked/renamed files,
+checks formatting of supported changed files and checks resolved module boundaries.
+An empty JavaScript selection is an error; docs-only work can run full lint instead.
+Do not add rule overrides or suppression comments. Format only the files you edit
+with the root pinned Prettier; do not mass-format unrelated legacy source.
+
+Focused UI tests live beside their owning modules under `ui/src/`; the UI test
+command also retains all existing integration/report tests. See the
+[source inventory](docs/architecture/source-inventory.json) for retained files and
+the [foundation worklog](docs/worklogs/2026-11-12-technabit-foundation.md) for proof
+and pending language/structural checks. JavaScript adoption does not establish
+Python/Lua/shell/jq lint compliance. CI keeps their existing behavior/syntax checks.
+
 See the [technical guide](docs/TECHNICAL.md#development) for prerequisites and exact offline test commands. Run the Python/Lua contracts, shell syntax checks and UI tests; build the UI and IPKs when package content changes. These checks do not require a live speed test. State which tests you ran and mark untested assumptions explicitly.
 
 - Add regression coverage for parsing, units, privacy and persistence changes.

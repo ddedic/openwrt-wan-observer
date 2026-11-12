@@ -1,0 +1,285 @@
+{
+  "baseline": "d2a10426f55aa6e5c01bb0fb2392b41de69b46a3",
+  "files": [
+    {
+      "source": "package/wan-observer-glinet/files/wan-observer.cgi",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/files/wan-observer.cgi",
+      "baselineSha256": "8db949607d87660b623b1636014e7e3593a08599e4971b60675876f2552cd306",
+      "owner": "repository maintainer",
+      "nextPacket": "CGI boundary extraction"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/chart.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/chart.js",
+      "baselineSha256": "10c9c316ff276489c66068266545dbfe3cf102afbc2d18bc42525b310a01b24a",
+      "owner": "repository maintainer",
+      "nextPacket": "chart geometry and rendering separation"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/component.test.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/component.test.js",
+      "baselineSha256": "0725014f2e950e35b84031a6e2cca4e7f7642452f8dfbc95c1d43aaef3424bab",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/index.js",
+      "firstPacketDisposition": "partial extraction: transport and validation; page/workflows/rendering retained",
+      "retainedPath": "package/wan-observer-glinet/ui/index.js",
+      "baselineSha256": "9590fd5a0000993d3e7a60c2f608f27896eaa34761bd2d34df6738d12af39727",
+      "owner": "repository maintainer",
+      "nextPacket": "UI composition/component/workflow extraction"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/octicon.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/octicon.js",
+      "baselineSha256": "7860e426181e75288920c44fe305bc3ca462671443d15751e4b17066ca9a5be1",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/pdf.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/pdf.js",
+      "baselineSha256": "dc79fee9be670a9ca4a09af36e71f6ea8ebbf911a31f3f555b323102e04fb868",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/report-data.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/report-data.js",
+      "baselineSha256": "773dcab94ebf69fa88e953f7338625c56cb89604184c3b7d4037b17d03380a77",
+      "owner": "repository maintainer",
+      "nextPacket": "report model and export separation"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/report.test.js",
+      "firstPacketDisposition": "retained; remove unused binding or document intentional catch; format changed file",
+      "retainedPath": "package/wan-observer-glinet/ui/report.test.js",
+      "baselineSha256": "f03f30417a73e9416b6b98d38a2ebfe5f02632ee456049d9b3ba7c30bf93f80f",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/time.js",
+      "firstPacketDisposition": "retained; remove unused binding or document intentional catch; format changed file",
+      "retainedPath": "package/wan-observer-glinet/ui/time.js",
+      "baselineSha256": "323a2344f0db62dbab331ad439855eba17efb3ee0adc2e4100de4def48c6c261",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/ui.test.js",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/ui.test.js",
+      "baselineSha256": "d85213d6fa430a78b1de12dec5adb8850045b4415401953699a68b32e3aa8dd1",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer-glinet/ui/view.css",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer-glinet/ui/view.css",
+      "baselineSha256": "09cf772a9e8260e21fc59d4f7790dd6720e9c490263effa33dafe98126478221",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/Makefile",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/Makefile",
+      "baselineSha256": "5fba7db4a55e559795500d570709caa75e0fb5ed40ced006731827ac410e25ba",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/collector.jq",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/collector.jq",
+      "baselineSha256": "1e6346b52abd5401f8ff7cabe0ccff322b3a654aa19d338bccd33cb58ecb87e2",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/quality.jq",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/quality.jq",
+      "baselineSha256": "202fe7e25c2f9d1d79b66bf967fd17dd1d48354f4e8a1c460c19c5c9ebfeee9e",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/record.jq",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/record.jq",
+      "baselineSha256": "7a05d226c6a4720360e7fb0cca7a23d751498e32751061ad171cfd59370753c5",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/wan-observer",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/wan-observer",
+      "baselineSha256": "c3efcd515f6e648593bf2ce885aa234784ecabf30a4f01a4541d273719a65e52",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/wan-observer-collect",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/wan-observer-collect",
+      "baselineSha256": "5440b56c101e33018151d16ed5acafd57cfdc8b31b31cce07a040efae7b2d056",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/wan-observer-quality",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/wan-observer-quality",
+      "baselineSha256": "d44b1079e4fbf9859ce770ab3be7598be5c9be4b438360d2bd027a952e11fb5d",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/wan-observer-readiness",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/wan-observer-readiness",
+      "baselineSha256": "8aec3f69960057ded25d5dfb57381685c85eccbfcc553ea792edcc4d44cc9414",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "package/wan-observer/files/wan-observer.keep",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "package/wan-observer/files/wan-observer.keep",
+      "baselineSha256": "c01c35afa45110b8c7fe3c4fb62b90585cf221f6d229eeec072fe4ac689ff91b",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "site/index.html",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "site/index.html",
+      "baselineSha256": "c219d5488318a66c4e6275a1c357e3956b7ff9eee09c258401b124b7f919e0e6",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "site/styles.css",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "site/styles.css",
+      "baselineSha256": "23f47d90e277b71335ec4bee93fef53eeb1be47dbcd0723e34f34493f916f95f",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_budget.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_budget.py",
+      "baselineSha256": "44bcaaa8ea5de29d8ba098a290d77a62e0453738948dd31f6499ba8c5b1b6045",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_cgi.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_cgi.py",
+      "baselineSha256": "046352cb70debc9d38e0afe78fe496dfa6eea610f53616399e6dfbbdc298b7fd",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_cli.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_cli.py",
+      "baselineSha256": "2a94cef6bf779c1eee32d572f9254b6b7ff946ee9bdfd7b90f33df721d669de1",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_collector.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_collector.py",
+      "baselineSha256": "28e05d499f5905334db9e7614225ada984b9c7c7db0507174972035039083c21",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_lifecycle.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_lifecycle.py",
+      "baselineSha256": "b55791c01441431b97230b6610b884d4212a07ba52883a82ff2e7b0cb4aff0f0",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_preview.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_preview.py",
+      "baselineSha256": "cb78073155b0bf7823206d3b5aced266578a9be03abbd1550a4068666296df36",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_quality.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_quality.py",
+      "baselineSha256": "b824ceee0a83c4746f5612bad4a3f80de5aa72d833fb4773e11a6932165dbe19",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tests/test_site.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tests/test_site.py",
+      "baselineSha256": "b556af821e8b455dbabb4291257e1268287c2975c750a962c993d989345ed572",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tools/build-ipk.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tools/build-ipk.py",
+      "baselineSha256": "8126c5c224d7fab0f81c4fcb6b03c6fd5710b49549cbd1820497e7d823d1133c",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tools/preview.py",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tools/preview.py",
+      "baselineSha256": "6335173c3d2f27f456883b9463ddc789607b2f478c21802a6ea24d39a6910896",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tools/preview/app.js",
+      "firstPacketDisposition": "retained; remove unused binding or document intentional catch; format changed file",
+      "retainedPath": "tools/preview/app.js",
+      "baselineSha256": "6db2f7ee10a9a19168b98299c37cf1e605d3131720448b43b1817fc9562f5682",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tools/preview/index.html",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tools/preview/index.html",
+      "baselineSha256": "97b2b68085fab7a5fcef861453a60d016cfd67eeb301d2be5793231ac4203ca6",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    },
+    {
+      "source": "tools/preview/style.css",
+      "firstPacketDisposition": "retained",
+      "retainedPath": "tools/preview/style.css",
+      "baselineSha256": "6bdb0a9d6afdfad3fadcba47d56fb0c35b6ec7d756ff2e59df708a0ff2ae4fb8",
+      "owner": "repository maintainer",
+      "nextPacket": "retain; review when its capability changes"
+    }
+  ]
+}

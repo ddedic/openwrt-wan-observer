@@ -3,6 +3,41 @@ on: [push, pull_request]
 permissions:
   contents: read
 jobs:
+  quality:
+    name: JavaScript quality and architecture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix package/wan-observer-glinet/ui ci
+      - run: npm test
+      - run: npm run lint
+      - name: Check changed files against an explicit base
+        env:
+          EVENT_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          base="$EVENT_BASE"
+          if [ -z "$base" ] || [ "$base" = '0000000000000000000000000000000000000000' ]; then
+            base=$(git merge-base origin/main HEAD)
+          fi
+          QUALITY_BASE="$base" node --input-type=module <<'JS'
+          import { spawnSync } from 'node:child_process';
+          import { javascriptFiles, selectFiles } from './tooling/quality/files.mjs';
+          const base = process.env.QUALITY_BASE;
+          const files = javascriptFiles(selectFiles(process.cwd(), base));
+          if (files.length === 0) {
+            console.log('No changed JavaScript; full lint, boundaries and tooling tests ran above.');
+          } else {
+            const result = spawnSync(process.execPath, ['tooling/quality/check.mjs', '--base', base], { stdio: 'inherit' });
+            process.exit(result.status ?? 1);
+          }
+          JS
   test:
     name: Offline tests (${{ matrix.os }})
     strategy:

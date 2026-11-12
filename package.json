@@ -1,0 +1,27 @@
+{
+  "name": "wan-observer-development",
+  "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "node tooling/quality/check.mjs --all --lint-only",
+    "quality": "node tooling/quality/check.mjs",
+    "test": "node --test tooling/quality/*.test.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "dependency-cruiser": "18.7.2",
+    "eslint": "10.14.0",
+    "globals": "17.14.0",
+    "prettier": "3.10.1"
+  },
+  "overrides": {
+    "eslint": {
+      "minimatch": "11.0.8"
+    },
+    "@eslint/config-array": {
+      "minimatch": "11.0.8"
+    }
+  }
+}
