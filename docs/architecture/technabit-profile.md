@@ -58,7 +58,8 @@ JavaScript contracts use JSDoc where useful; TypeScript conversion is not requir
 The first packet introduces ESLint recommended rules, Prettier and resolver-based
 JavaScript boundaries. Strict changed-file checking uses an explicit Git base,
 includes untracked/renamed live files, rejects empty code selection and disallows
-rule overrides/inline suppressions. Full JavaScript lint discovers UI, tests,
+rule overrides/inline suppressions. The checker pins root ESLint and Prettier
+configuration; JavaScript formatter-ignore comments are lint errors. Full JavaScript lint discovers UI, tests,
 preview and quality tooling. Formatting applies to changed files; mass formatting
 of untouched legacy files is a separate packet. See the worklog for actual proof.
 

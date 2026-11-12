@@ -1,10 +1,12 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
 import {
+  copyFileSync,
   mkdtempSync,
   mkdirSync,
   renameSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -33,6 +35,117 @@ function write(root, file, content) {
   mkdirSync(dirname(join(root, file)), { recursive: true });
   writeFileSync(join(root, file), content);
 }
+
+function checkerFixture(t) {
+  const root = fixture(t);
+
+  for (const file of [
+    'package.json',
+    'eslint.config.mjs',
+    '.prettierrc.json',
+    '.dependency-cruiser.cjs',
+    'tooling/quality/check.mjs',
+    'tooling/quality/files.mjs',
+  ]) {
+    mkdirSync(dirname(join(root, file)), { recursive: true });
+    copyFileSync(join(ROOT, file), join(root, file));
+  }
+
+  symlinkSync(join(ROOT, 'node_modules'), join(root, 'node_modules'), 'dir');
+  write(root, '.gitignore', 'node_modules/\n');
+  execFileSync('git', ['init', '-q'], { cwd: root });
+  execFileSync('git', ['add', '.'], { cwd: root });
+  execFileSync(
+    'git',
+    [
+      '-c',
+      'user.name=Test fixture',
+      '-c',
+      'user.email=fixture@example.invalid',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '-qm',
+      'Fixture baseline',
+    ],
+    { cwd: root },
+  );
+
+  return {
+    root,
+    check: () =>
+      spawnSync(
+        process.execPath,
+        [join(root, 'tooling/quality/check.mjs'), '--base', 'HEAD'],
+        { cwd: root, encoding: 'utf8' },
+      ),
+  };
+}
+
+test('actual checker accepts a formatted module with the pinned root configuration', (t) => {
+  const { root, check } = checkerFixture(t);
+
+  write(
+    root,
+    `${UI}/src/infrastructure/probe.js`,
+    'module.exports = { value: 1 };\n',
+  );
+  const result = check();
+
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+});
+
+test('actual checker rejects inline formatter suppression', (t) => {
+  const { root, check } = checkerFixture(t);
+
+  write(
+    root,
+    `${UI}/src/infrastructure/probe.js`,
+    '// prettier-ignore\nmodule.exports={value:1};\n',
+  );
+  const result = check();
+
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /no-warning-comments/);
+});
+
+test('actual checker pins root ESLint rules despite nested overrides', (t) => {
+  const { root, check } = checkerFixture(t);
+
+  write(
+    root,
+    `${UI}/src/infrastructure/probe.js`,
+    'module.exports = missing;\n',
+  );
+  write(
+    root,
+    `${UI}/src/infrastructure/eslint.config.mjs`,
+    "import rules from '../../../../../eslint.config.mjs';\n\nexport default [...rules, { rules: { 'no-undef': 'off' } }];\n",
+  );
+  const result = check();
+
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stdout, /no-undef/);
+});
+
+test('actual checker pins root formatting despite nested overrides', (t) => {
+  const { root, check } = checkerFixture(t);
+
+  write(
+    root,
+    `${UI}/src/infrastructure/probe.js`,
+    'module.exports = "value";\n',
+  );
+  write(
+    root,
+    `${UI}/src/infrastructure/.prettierrc.json`,
+    '{\n  "singleQuote": false\n}\n',
+  );
+  const result = check();
+
+  assert.notEqual(result.status, 0, result.stdout + result.stderr);
+  assert.match(result.stderr, /Format:.*probe\.js/);
+});
 
 test('selection includes untracked and renamed paths, excludes deletions and rejects bad bases', (t) => {
   const root = fixture(t);

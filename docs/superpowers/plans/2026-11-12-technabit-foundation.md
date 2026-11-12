@@ -21,12 +21,12 @@ select untracked/renamed files and reject empty selection and hidden overrides.
 
 ## Task 1: Standards and executable quality foundation
 
-- [ ] Record upstream research/profile and original source disposition inventory.
-- [ ] Add root development package, pinned ESLint/Prettier/dependency-cruiser,
+- [x] Record upstream research/profile and original source disposition inventory.
+- [x] Add root development package, pinned ESLint/Prettier/dependency-cruiser,
       explicit contexts, formatter/editor defaults and resolver-based boundaries.
-- [ ] Test passing and failing lint/boundary cases, canonical discovery, untracked
+- [x] Test passing and failing lint/boundary cases, canonical discovery, untracked
       and renamed file discovery, empty/invalid bases and disallowed arguments.
-- [ ] Add local/CI commands with explicit base; don't call legacy code compliant.
+- [x] Add local/CI commands with explicit base; don't call legacy code compliant.
 
 Interfaces: root `npm run quality -- --base <commit>` checks changed files;
 `npm run lint` selects all live JS; `npm test` verifies tooling contracts.
@@ -34,21 +34,21 @@ Tooling tests may use isolated synthetic directories, never mutate live source.
 
 ## Task 2: Router transport and settings validation
 
-- [ ] Write adjacent tests for `createRouterApi({fetch, getCookie})` returning
+- [x] Write adjacent tests for `createRouterApi({fetch, getCookie})` returning
       `(signal, body, query = '') => Promise<payload>` and
       `validateSettings(form, initial = {}) => fieldErrors`; observe missing-module RED.
-- [ ] Move existing request/validation behavior to
+- [x] Move existing request/validation behavior to
       `ui/src/infrastructure/router-api.js` and
       `ui/src/features/settings/settings-validation.js`.
-- [ ] Bind browser dependencies in the existing entry so VM integration tests still
+- [x] Bind browser dependencies in the existing entry so VM integration tests still
       exercise the same environment and lifecycle. Leave state/rendering in place.
-- [ ] Include adjacent tests in the existing npm test discovery; run the full UI
+- [x] Include adjacent tests in the existing npm test discovery; run the full UI
       suite and strict changed-file checks.
 
 ## Task 3: Integration and completion
 
-- [ ] Run quality/tooling tests, Python integration, UI tests/build and IPK build.
-- [ ] Verify unchanged CSS and no new runtime/package dependencies; record results
+- [x] Run quality/tooling tests, Python integration, UI tests/build and IPK build.
+- [x] Verify unchanged CSS and no new runtime/package dependencies; record results
       and remaining work. Request a fresh review of this packet, fix important findings.
 - [ ] Commit and push the review branch, verify remote SHA and clean worktree.
       Do not merge or release.
@@ -60,3 +60,10 @@ command; adjacent tests must be included explicitly. No interface conflict.
 Ruling: keep the current UI entry path for this packet to preserve build/test
 consumers; full src entry/component moves remain next. Cost if wrong: the flat
 entry remains temporarily, but no undocumented install-path migration occurs.
+
+Task 1: complete — root discovery, formatter/lint and resolver negative controls
+verified. Task 2: complete — extraction RED→GREEN, UI 58/58, differential validation
+and unchanged rendering AST evidence. Task 3: review/fix/verification complete —
+Python 106/106, UI 58/58, tooling 10/10, IPKs built; publication is the final step.
+Final: fixed nested lint/format overrides and inline formatter suppression — actual
+checker regressions RED→GREEN; root suite 10/10.

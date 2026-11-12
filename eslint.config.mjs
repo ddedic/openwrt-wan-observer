@@ -13,6 +13,10 @@ export default [
     rules: {
       ...js.configs.recommended.rules,
       'no-unused-vars': ['error', { caughtErrors: 'all' }],
+      'no-warning-comments': [
+        'error',
+        { terms: ['prettier-ignore'], location: 'anywhere' },
+      ],
     },
   },
   {

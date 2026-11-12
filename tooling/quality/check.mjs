@@ -26,7 +26,10 @@ const files = requireJavaScript(selected);
 
 console.log(`Checking ${files.length} JavaScript files:\n${files.join('\n')}`);
 
-const eslint = new ESLint({ cwd: root });
+const eslint = new ESLint({
+  cwd: root,
+  overrideConfigFile: resolve(root, 'eslint.config.mjs'),
+});
 const results = await eslint.lintFiles(files);
 
 if (results.length !== files.length) {
@@ -41,12 +44,15 @@ if (diagnostics) process.stdout.write(diagnostics);
 let failed = results.some((result) => result.errorCount || result.warningCount);
 
 if (!all) {
+  const options = JSON.parse(
+    await readFile(resolve(root, '.prettierrc.json'), 'utf8'),
+  );
+
   for (const file of selected) {
     const info = await prettier.getFileInfo(resolve(root, file));
 
     if (!info.inferredParser) continue;
 
-    const options = await prettier.resolveConfig(resolve(root, file));
     const content = await readFile(resolve(root, file), 'utf8');
 
     if (!(await prettier.check(content, { ...options, filepath: file }))) {
