@@ -341,6 +341,12 @@ test('resolver rejects production fixture imports, normalized back-edges, re-exp
       `${UI}/src/features/reports/private.js`,
       'settings-cannot-import-another-feature',
     ],
+    [
+      'index.js',
+      "require('../../../site/probe.js');",
+      'site/probe.js',
+      'production-cannot-import-development',
+    ],
   ];
 
   for (const [entry, source, target, rule] of cases) {

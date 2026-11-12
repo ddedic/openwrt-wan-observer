@@ -66,7 +66,9 @@
         "package/wan-observer-glinet/ui/src/features/settings/components/SettingsDialog.js",
         "package/wan-observer-glinet/ui/src/app/components/ObserverHeader.js",
         "package/wan-observer-glinet/ui/src/app/components/ObserverFooter.js",
-        "package/wan-observer-glinet/ui/src/app/components/BrandMark.js"
+        "package/wan-observer-glinet/ui/src/app/components/BrandMark.js",
+        "package/wan-observer-glinet/ui/src/infrastructure/router-api.js",
+        "package/wan-observer-glinet/ui/src/features/settings/settings-validation.js"
       ],
       "secondPacketDisposition": "ownership extraction; existing contract preserved"
     },

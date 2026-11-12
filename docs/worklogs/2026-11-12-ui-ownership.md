@@ -90,4 +90,31 @@ with a failing regression before changing it. Record actual results below.
   (2,008 bytes larger). Browser bundle 876.4 KiB. No new router library/dependency,
   kernel requirement or deployment. Real firmware/browser proof remains untested.
 
-Python integration, final review and publication: pending.
+## Integration and final review
+
+Python integration passed 106/106 with the project's existing local Lua 5.1/cjson
+runtime. All 12 workflow method ASTs and page name/data/computed/lifecycle ASTs
+independently match baseline. No test assertions were dropped: review compared
+all 49 legacy test bodies and found only module/CSS path updates.
+
+Fresh review of `d8bcf8e..72c1b9a` independently passed UI 77/77, tooling 10/10,
+strict quality (47 changed JS files, 74 graph modules), all 14 baseline VNode hashes,
+PDF AST and exact CSS parity. Its in-memory release build confirmed jsPDF bundled,
+no test/fixture/preview inputs, and exactly one version marker. Explicit completion
+handoff was delivered through the native parent channel.
+
+The reviewer identified one dropped public-site exclusion while the production
+boundary rule was expanded. Although graded Minor because no live source used that
+edge, the coordinator treated it as an Important regression of an existing
+ownership contract. Added a real resolver control, observed RED, restored `^site/`,
+then GREEN: tooling 10/10, UI 77/77, strict quality zero violations. No remaining
+reported findings. No second review substitutes for that regression proof.
+
+Evidence limits: no real Vue/native DOM, browser or firmware execution; JSDoc is
+not static type checking. Reviewer did not independently repeat Python/IPKs, but
+coordinator results above bind to the same runtime source; only boundary tooling
+and documentation changed afterward. CGI/non-JS semantic auditing remains outside
+this UI packet. No universal compatibility or whole-repository compliance claim.
+
+Publication follows the reviewed source/fix commit on the existing review branch;
+no merge, deployment or release. Final remote identity is checked by coordinator.

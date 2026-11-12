@@ -27,7 +27,7 @@ Python consumer. Non-JS semantic checks and CGI changes remain separate packets.
 - [x] Update legacy integration test imports/harness without removing assertions;
       add narrow view/workflow contracts and boundary negative controls.
 - [x] Format changed files and run strict checks against `d8bcf8e` after logical edits.
-- [ ] Run UI/tooling tests, Python affected integration checkpoint, build/IPKs and
+- [x] Run UI/tooling tests, Python affected integration checkpoint, build/IPKs and
       source/rendering parity. Update source dispositions/profile/evidence.
 - [ ] Obtain fresh read-only review; fix important findings with RED→GREEN proof.
       Commit/push the existing review branch and verify remote SHA and cleanliness.
@@ -43,3 +43,7 @@ Tasks 1–3: ownership extraction and module contract RED→GREEN, UI 77/77.
 Task 4: resolver controls RED→GREEN; tooling 10/10 and strict changed-file checks pass.
 Ruling: retain exact CSS bytes/path; a style move requires rendered evidence.
 Initial formatting was reverted and original assertions remain strict.
+
+Task 5: complete — Python 106/106, UI 77/77, tooling 10/10, IPKs built.
+Task 6: reviewed at 72c1b9a; restored public-site boundary with resolver RED→GREEN;
+post-fix UI/tooling/quality pass. Publication is the remaining final operation.

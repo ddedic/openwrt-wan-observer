@@ -9,7 +9,7 @@ module.exports = {
       severity: 'error',
       from: { path: `^${UI}/`, pathNot: TEST_SOURCE },
       to: {
-        path: '(^tools/|^tooling/|(^|/)(tests|preview|fixtures)/|\\.test\\.[cm]?js$)',
+        path: '(^tools/|^tooling/|^site/|(^|/)(tests|preview|fixtures)/|\\.test\\.[cm]?js$)',
       },
     },
     {
